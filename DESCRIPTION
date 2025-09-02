@@ -1,0 +1,37 @@
+Package: ezGenomeTracks
+Title: A ggplot2-based R package for plotting genome browser tracks easily.
+Version: 0.0.0.9000
+Authors@R:
+    person("Zepeng", "Mu", , "zmu@broadinstitute.org", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: A package for creating genome browser-style visualizations using ggplot2 and aplot.
+    Provides custom geoms for genomic data types including signal tracks, peaks, gene models,
+    interaction arcs, and Hi-C contact matrices. Supports stacked track visualization with
+    a common genomic coordinate system.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    ggplot2,
+    aplot,
+    rtracklayer,
+    GenomicRanges,
+    IRanges,
+    S4Vectors,
+    methods,
+    dplyr,
+    tidyr,
+    rlang,
+    scales
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    BiocStyle
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+BiocViews: Visualization, Sequencing, HiC
+Depends: 
+    R (>= 2.10)
+LazyData: true
