@@ -28,7 +28,9 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    BiocStyle
+    BiocStyle,
+    roxygen2,
+    pkgdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BiocViews: Visualization, Sequencing, HiC

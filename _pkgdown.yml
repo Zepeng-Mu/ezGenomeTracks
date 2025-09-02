@@ -1,0 +1,93 @@
+destination: docs
+
+url: https://yourusername.github.io/ezGenomeTracks/
+
+home:
+  title: Easy Visualization of Genomic Tracks
+  description: A ggplot2-based R package for creating publication-quality genomic track visualizations
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+reference:
+- title: "Core Functions"
+  desc: >-
+    Main functions for creating genomic tracks
+  contents:
+  - ez_signal
+  - ez_peak
+  - ez_gene
+  - ez_arc
+  - ez_hic
+  - genome_plot
+
+- title: "Geom Functions"
+  desc: "Low-level geometric objects for genomic data"
+  contents:
+  - geom_signal
+  - geom_peak
+  - geom_gene
+  - geom_arc
+  - geom_hic
+
+- title: "Track Functions"
+  desc: "Functions for importing and formatting track data"
+  contents:
+  - signal_track
+  - peak_track
+  - gene_track
+  - interaction_track
+  - hic_track
+
+- title: "Themes and Scales"
+  desc: "Functions for customizing track appearance"
+  contents:
+  - ez_theme
+  - ez_signal_theme
+  - ez_gene_theme
+  - ez_peak_theme
+  - scale_x_genome
+  - scale_x_genome_region
+
+- title: "Annotation Functions"
+  desc: "Functions for adding annotations to tracks"
+  contents:
+  - add_vline
+  - add_hline
+  - add_rect
+  - add_text
+
+- title: "Helper Functions"
+  desc: "Utility functions for data conversion"
+  contents:
+  - granges_to_df
+  - df_to_granges
+  - parse_region
+  - format_genomic_coord
+
+- title: "Example Datasets"
+  desc: "Example datasets for demonstration"
+  contents:
+  - example_signal
+  - example_peaks
+  - example_genes
+  - example_interactions
+  - example_hic
+
+navbar:
+  structure:
+    left: [intro, reference, articles, tutorials, news]
+    right: [github]
+  components:
+    intro:
+      text: Introduction
+      href: articles/introduction.html
+    articles:
+      text: Articles
+      menu:
+      - text: Advanced Usage
+        href: articles/advanced_usage.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/yourusername/ezGenomeTracks
