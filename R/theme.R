@@ -19,8 +19,8 @@
 #' library(ggplot2)
 #' p <- ggplot(data, aes(x = start, y = score)) + geom_line() + ez_theme()
 #' }
-ez_theme <- function(base_size = 11, base_family = "", base_line_size = base_size/22, 
-                      base_rect_size = base_size/22, show_grid = FALSE, 
+ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2, 
+                      base_rect_size = 0.2, show_grid = FALSE, 
                       show_ticks = TRUE, show_x_axis = TRUE, show_y_axis = FALSE) {
   
   # Start with a minimal theme

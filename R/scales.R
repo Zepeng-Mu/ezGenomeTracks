@@ -10,7 +10,7 @@
 #' @return A ggplot2 scale object
 #' @export
 #' @importFrom ggplot2 scale_x_continuous
-#' @importFrom scales label_number_si
+#' @importFrom scales label_number
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
@@ -20,17 +20,17 @@ scale_x_genome <- function(..., unit_suffix = "b", breaks = waiver(), labels = w
   if (is.function(labels)) {
     # Use provided label function
     label_fun <- labels
-  } else if (is.waive(labels)) {
+  } else if (inherits(labels, "waiver")) {
     # Create a function to format genomic coordinates
     label_fun <- function(x) {
-      scales::label_number_si(unit = unit_suffix)(x)
+      scales::label_number(scale_cut = scales::cut_short_scale(), unit = unit_suffix)(x)
     }
   } else {
     # Use provided labels
     label_fun <- labels
   }
-  
-  ggplot2::scale_x_continuous(..., breaks = breaks, labels = label_fun)
+
+  ggplot2::scale_x_continuous(..., breaks = breaks, labels = label_fun, expand = c(0, 0))
 }
 
 #' Format genomic coordinates
@@ -41,14 +41,14 @@ scale_x_genome <- function(..., unit_suffix = "b", breaks = waiver(), labels = w
 #' @param unit_suffix Suffix to use for the unit (default: "b" for base pairs)
 #' @return Character vector of formatted coordinates
 #' @export
-#' @importFrom scales label_number_si
+#' @importFrom scales label_number
 #' @examples
 #' \dontrun{
 #' format_genomic_coord(c(1000, 1000000, 1500000))
 #' # [1] "1kb" "1Mb" "1.5Mb"
 #' }
 format_genomic_coord <- function(x, unit_suffix = "b") {
-  scales::label_number_si(unit = unit_suffix)(x)
+  scales::label_number(scale_cut = scales::cut_short_scale(), unit = unit_suffix)(x)
 }
 
 #' Create a genomic position scale for a specific chromosome region
@@ -66,7 +66,7 @@ format_genomic_coord <- function(x, unit_suffix = "b") {
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
-#' p <- ggplot(data, aes(x = start)) + geom_point() + 
+#' p <- ggplot(data, aes(x = start)) + geom_point() +
 #'      scale_x_genome_region("chr1:1000000-2000000")
 #' }
 scale_x_genome_region <- function(region, ...) {
@@ -78,11 +78,11 @@ scale_x_genome_region <- function(region, ...) {
   } else {
     stop("Region must be a character string or GRanges object")
   }
-  
+
   # Extract start and end positions
   start_pos <- GenomicRanges::start(region_gr)
   end_pos <- GenomicRanges::end(region_gr)
-  
+
   # Create scale with limits set to the region
   scale_x_genome(..., limits = c(start_pos, end_pos))
 }

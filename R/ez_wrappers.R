@@ -37,7 +37,8 @@ ez_signal <- function(data, region, type = "area", color = "steelblue",
     
     # Apply the appropriate theme and scale
     p <- p + ez_signal_theme() +
-      scale_x_genome_region(region)
+      scale_x_genome_region(region) +
+      scale_y_continuous(expand = c(0, 0))
     
     return(p)
   } else {
