@@ -19,7 +19,7 @@
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' }
 ez_signal <- function(data, region, type = "area", color = "steelblue",
-                      fill = "steelblue", alpha = 0.5, binwidth = NULL, ...) {
+                      fill = "steelblue", yrange = NULL, alpha = 0.5, binwidth = NULL, ...) {
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use signal_track
@@ -29,17 +29,17 @@ ez_signal <- function(data, region, type = "area", color = "steelblue",
     # It's a data frame, create the plot directly
     p <- ggplot2::ggplot(data, ggplot2::aes(x = start, y = score)) +
       geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...)
-    
+
     # Apply binning if requested
     if (!is.null(binwidth)) {
       p <- p + stat_bin_signal(binwidth = binwidth)
     }
-    
+
     # Apply the appropriate theme and scale
     p <- p + ez_signal_theme() +
       scale_x_genome_region(region) +
-      scale_y_continuous(expand = c(0, 0))
-    
+      scale_y_continuous(expand = c(0, 0), limits = yrange)
+
     return(p)
   } else {
     stop("Data must be a file path or data frame")
@@ -85,12 +85,12 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
         geom_peak(ggplot2::aes(xmin = start, xmax = end),
                   color = color, fill = fill, alpha = alpha, height = height, ...)
     }
-    
+
     # Apply the appropriate theme and scale
     p <- p + ez_peak_theme() +
       scale_x_genome_region(region) +
       ggplot2::ylim(0, 1)  # Fixed y-axis for peaks
-    
+
     return(p)
   } else {
     stop("Data must be a file path or data frame")
@@ -135,11 +135,11 @@ ez_gene <- function(data, region, exon_height = 0.75, intron_height = 0.4,
                 exon_height = exon_height, intron_height = intron_height,
                 exon_color = exon_color, exon_fill = exon_fill,
                 intron_color = intron_color, ...)
-    
+
     # Apply the appropriate theme and scale
     p <- p + ez_gene_theme() +
       scale_x_genome_region(region)
-    
+
     return(p)
   } else {
     stop("Data must be a file path or data frame")
@@ -185,12 +185,12 @@ ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
         geom_arc(ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0),
                  curvature = curvature, color = color, size = size, alpha = alpha, ...)
     }
-    
+
     # Apply the appropriate theme and scale
     p <- p + ez_peak_theme() +
       scale_x_genome_region(region) +
       ggplot2::ylim(-0.5, 0.5)  # Fixed y-axis for arcs
-    
+
     return(p)
   } else {
     stop("Data must be a file path or data frame")
@@ -228,12 +228,12 @@ ez_hic <- function(data, region, resolution = 10000, log_transform = TRUE,
     p <- ggplot2::ggplot(data, ggplot2::aes(x = pos1, y = pos2, fill = count)) +
       geom_hic(low = low, high = high, ...) +
       ggplot2::coord_fixed()  # Ensure the plot is square
-    
+
     # Apply the appropriate theme and scale
     p <- p + ez_theme() +
       scale_x_genome_region(region) +
       scale_x_genome_region(region)  # Same scale for y-axis
-    
+
     return(p)
   } else {
     stop("Data must be a file path or data frame")
