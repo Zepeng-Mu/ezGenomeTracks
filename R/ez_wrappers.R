@@ -97,6 +97,34 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
   }
 }
 
+#' @importFrom ezGenomeTracks geom_manhattan
+#' @importFrom ezGenomeTracks ez_manhattan
+ez_manhattan <- function(
+    data = NULL,
+    chr = "CHR", bp = "BP", p = "P", snp = "SNP", logp = TRUE, size = 0.5,
+    lead.snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
+    highlight_snps = NULL, highlight_color = "purple",
+    threshold_p = NULL, threshold_color = "red", threshold_linetype = "dashed",
+    plot_title = NULL,
+    ...
+) {
+  p <- ggplot2::ggplot(data, ggplot2::aes_string(x = bp, y = if(logp) paste0("-log10(", p, ")") else p)) +
+    geom_manhattan(
+      data = data, chr = chr, bp = bp, p = p, snp = snp, logp = logp, size = size,
+      lead.snp = lead.snp, r2 = r2, colors = colors,
+      highlight_snps = highlight_snps, highlight_color = highlight_color,
+      threshold_p = threshold_p, threshold_color = threshold_color, threshold_linetype = threshold_linetype,
+      ...
+    ) +
+    ez_theme() # Assuming ez_theme is a predefined theme function
+
+  if (!is.null(plot_title)) {
+    p <- p + ggplot2::ggtitle(plot_title)
+  }
+
+  return(p)
+}
+
 #' Easy gene track visualization
 #'
 #' This function creates a gene track visualization from a GTF/GFF file or data frame.

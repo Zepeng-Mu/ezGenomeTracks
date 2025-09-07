@@ -21,19 +21,19 @@
 genome_plot <- function(..., region = NULL, heights = NULL, ncol = 1, align_tracks = TRUE) {
   # Collect the tracks
   tracks <- list(...)
-  
+
   # Check if we have any tracks
   if (length(tracks) == 0) {
     stop("No tracks provided")
   }
-  
+
   # If region is provided, apply it to all tracks
   if (!is.null(region)) {
     tracks <- lapply(tracks, function(track) {
       track + scale_x_genome_region(region)
     })
   }
-  
+
   # Stack the tracks using aplot
   if (align_tracks) {
     p <- aplot::plot_list(
@@ -54,7 +54,7 @@ genome_plot <- function(..., region = NULL, heights = NULL, ncol = 1, align_trac
       align = "none"
     )
   }
-  
+
   return(p)
 }
 
