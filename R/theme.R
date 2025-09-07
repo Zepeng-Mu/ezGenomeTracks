@@ -19,41 +19,41 @@
 #' library(ggplot2)
 #' p <- ggplot(data, aes(x = start, y = score)) + geom_line() + ez_theme()
 #' }
-ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2, 
-                      base_rect_size = 0.2, show_grid = FALSE, 
+ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
+                      base_rect_size = 0.2, show_grid = FALSE,
                       show_ticks = TRUE, show_x_axis = TRUE, show_y_axis = FALSE) {
-  
+
   # Start with a minimal theme
   theme <- ggplot2::theme_minimal(base_size = base_size, base_family = base_family,
                                  base_line_size = base_line_size, base_rect_size = base_rect_size)
-  
+
   # Modify the theme to be even more minimal
   theme <- theme + ggplot2::theme(
     # Remove panel grid
-    panel.grid.major = if (show_grid) ggplot2::element_line(color = "gray90", size = 0.2) else ggplot2::element_blank(),
+    panel.grid.major = if (show_grid) ggplot2::element_line(color = "gray90", linewidth = 0.15) else ggplot2::element_blank(),
     panel.grid.minor = ggplot2::element_blank(),
-    
+
     # Remove panel border
     panel.border = ggplot2::element_blank(),
-    
+
     # Customize axis
-    axis.line.x = if (show_x_axis) ggplot2::element_line(color = "black", size = 0.5) else ggplot2::element_blank(),
-    axis.line.y = if (show_y_axis) ggplot2::element_line(color = "black", size = 0.5) else ggplot2::element_blank(),
-    axis.ticks = if (show_ticks) ggplot2::element_line(color = "black", size = 0.5) else ggplot2::element_blank(),
+    axis.line.x = if (show_x_axis) ggplot2::element_line(color = "black", linewidth = 0.15) else ggplot2::element_blank(),
+    axis.line.y = if (show_y_axis) ggplot2::element_line(color = "black", linewidth = 0.15) else ggplot2::element_blank(),
+    axis.ticks = if (show_ticks) ggplot2::element_line(color = "black", linewidth = 0.15) else ggplot2::element_blank(),
     axis.ticks.length = ggplot2::unit(2, "pt"),
-    
+
     # Reduce plot margins
     plot.margin = ggplot2::margin(5, 5, 5, 5),
-    
+
     # Customize text
     axis.title = ggplot2::element_text(size = rel(0.8)),
     axis.text = ggplot2::element_text(size = rel(0.7)),
-    
+
     # Remove legend background
     legend.background = ggplot2::element_blank(),
     legend.key = ggplot2::element_blank()
   )
-  
+
   return(theme)
 }
 
