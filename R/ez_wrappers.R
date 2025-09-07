@@ -97,7 +97,62 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
   }
 }
 
-#' @importFrom ezGenomeTracks geom_manhattan
+#' @importFrom ezGenomeTracks geom_manhattan ez_manhattan
+
+#' Easy Manhattan plot visualization
+#'
+#' This function creates a Manhattan plot for GWAS results.
+#' It is a wrapper around geom_manhattan that provides a simpler interface.
+#'
+#' @param data A data frame with GWAS results. Must include columns for chromosome, base pair position, and p-value. Optional column for SNP identifier and R-squared values.
+#' @param chr Name of the chromosome column in `data` (default: "CHR").
+#' @param bp Name of the base pair position column in `data` (default: "BP").
+#' @param p Name of the p-value column in `data` (default: "P").
+#' @param snp Name of the SNP identifier column in `data` (default: "SNP").
+#' @param logp Logical. If `TRUE` (default), -log10(p-value) is used for the y-axis. If `FALSE`, raw p-value is used.
+#' @param size Point size (default: 0.5).
+#' @param lead.snp Vector of leading SNP identifiers to highlight.
+#' @param r2 Vector of R-squared values for linkage disequilibrium (LD) coloring.
+#' @param colors Vector of colors to use for alternating chromosome colors (default: c("grey", "skyblue")).
+#' @param highlight_snps Data frame of SNPs to highlight, with columns `CHR`, `BP`, and `P`.
+#' @param highlight_color Color for highlighted SNPs (default: "purple").
+#' @param threshold_p A numeric value for the p-value threshold to draw a horizontal line (e.g., 5e-8).
+#' @param threshold_color Color for the threshold line (default: "red").
+#' @param threshold_linetype Linetype for the threshold line (default: 2).
+#' @param colorBy Character string indicating how points should be colored. Options are "chr" (default, alternating chromosome colors) or "r2" (continuous color based on R-squared values).
+#' @param ... Additional arguments passed to `geom_manhattan()`.
+#' @return A `ggplot2` object.
+#' @export
+ez_manhattan <- function(
+    data,
+    chr = "CHR", bp = "BP", p = "P", snp = "SNP", logp = TRUE, size = 0.5,
+    lead.snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
+    highlight_snps = NULL, highlight_color = "purple",
+    threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
+    colorBy = "chr", ...
+  ) {
+
+    if (!is.data.frame(data)) stop("Input 'data' must be a data.frame.")
+
+    ggplot2::ggplot(data, aes(y = -log10(.data[[p]]))) +
+    geom_manhattan(
+        data = data,
+        chr = chr, bp = bp, p = p, snp = snp, logp = logp,
+        size = size,
+        lead.snp = lead.snp,
+        r2 = r2,
+        colors = colors,
+        highlight_snps = highlight_snps,
+        highlight_color = highlight_color,
+        threshold_p = threshold_p,
+        threshold_color = threshold_color,
+        threshold_linetype = threshold_linetype,
+        colorBy = colorBy,
+        ...
+      ),
+      ez_theme()
+    )
+  }
 #' @importFrom ezGenomeTracks ez_manhattan
 ez_manhattan <- function(
     data = NULL,
