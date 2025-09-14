@@ -179,12 +179,78 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
   }
 }
 
-#' Create a gene track from a GTF/GFF file
+#' Extract gene data from TxDb object
 #'
-#' This function creates a gene track from a GTF/GFF file. It imports the data
-#' for a specific region and creates a ggplot2 layer for visualization.
+#' This function extracts gene and exon information from a TxDb object
+#' for a specific genomic region.
 #'
-#' @param file Path to the GTF/GFF file
+#' @param txdb A TxDb object (e.g., TxDb.Hsapiens.UCSC.hg19.knownGene)
+#' @param region_gr A GRanges object specifying the genomic region
+#' @return A GRanges object with gene and exon information
+#' @importFrom GenomicFeatures genes exonsBy
+#' @importFrom GenomicRanges findOverlaps subsetByOverlaps
+#' @importFrom IRanges subsetByOverlaps
+#' @examples
+#' \dontrun{
+#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+#' region_gr <- parse_region("chr1:1000000-2000000")
+#' gene_data <- extract_txdb_data(txdb, region_gr)
+#' }
+extract_txdb_data <- function(txdb, region_gr) {
+  # Extract genes in the region
+  all_genes <- GenomicFeatures::genes(txdb)
+  region_genes <- GenomicRanges::subsetByOverlaps(all_genes, region_gr)
+
+  # Extract exons by gene
+  all_exons <- GenomicFeatures::exonsBy(txdb, by = "gene")
+
+  # Filter exons for genes in the region
+  gene_ids <- names(region_genes)
+  region_exons <- all_exons[gene_ids]
+
+  # Convert to a format similar to GTF data
+  gene_list <- list()
+  exon_list <- list()
+
+  for (i in seq_along(region_genes)) {
+    gene_id <- names(region_genes)[i]
+    gene_gr <- region_genes[i]
+
+    # Add gene information
+    gene_gr$type <- "gene"
+    gene_gr$gene_id <- gene_id
+    gene_gr$gene_name <- gene_id  # Use gene_id as gene_name for TxDb
+    gene_list[[i]] <- gene_gr
+
+    # Add exon information if available
+    if (gene_id %in% names(region_exons)) {
+      exons_gr <- region_exons[[gene_id]]
+      exons_gr$type <- "exon"
+      exons_gr$gene_id <- gene_id
+      exons_gr$gene_name <- gene_id
+      exon_list[[length(exon_list) + 1]] <- exons_gr
+    }
+  }
+
+  # Combine genes and exons
+  result_list <- c(gene_list, exon_list)
+  if (length(result_list) > 0) {
+    result_gr <- do.call(c, result_list)
+  } else {
+    # Return empty GRanges if no genes found
+    result_gr <- GenomicRanges::GRanges()
+  }
+
+  return(result_gr)
+}
+
+#' Create a gene track from a GTF/GFF file or TxDb object
+#'
+#' This function creates a gene track from either a GTF/GFF file or a TxDb object.
+#' It imports the data for a specific region and creates a ggplot2 layer for visualization.
+#'
+#' @param source Either a path to a GTF/GFF file (character) or a TxDb object
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param exon_height Height of exons (default: 0.75)
 #' @param intron_height Height of introns (default: 0.4)
@@ -197,18 +263,33 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
 #' @return A ggplot2 layer
 #' @export
 #' @importFrom ggplot2 ggplot aes
+#' @importFrom methods is
 #' @examples
 #' \dontrun{
-#' p <- gene_track("genes.gtf", "chr1:1000000-2000000")
+#' # Using a GTF file
+#' p1 <- gene_track("genes.gtf", "chr1:1000000-2000000")
+#'
+#' # Using a TxDb object
+#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+#' p2 <- gene_track(txdb, "chr1:1000000-2000000")
 #' }
-gene_track <- function(file, region, exon_height = 0.75, intron_height = 0.4,
+gene_track <- function(source, region, exon_height = 0.75, intron_height = 0.4,
                        exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
                        gene_id = "gene_id", gene_name = "gene_name", ...) {
   # Parse the region
   region_gr <- parse_region(region)
 
-  # Import the data
-  gene_gr <- rtracklayer::import(file, which = region_gr)
+  # Determine if source is a file path or TxDb object
+  if (is.character(source)) {
+    # Import from file
+    gene_gr <- rtracklayer::import(source, which = region_gr)
+  } else if (methods::is(source, "TxDb")) {
+    # Extract from TxDb object
+    gene_gr <- extract_txdb_data(source, region_gr)
+  } else {
+    stop("Source must be either a file path (character) or a TxDb object")
+  }
 
   # Process the gene data
   gene_data <- process_gene_data(gene_gr, gene_id = gene_id, gene_name = gene_name)

@@ -120,6 +120,7 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
 #' @param threshold_color Color for the threshold line (default: "red").
 #' @param threshold_linetype Linetype for the threshold line (default: 2).
 #' @param colorBy Character string indicating how points should be colored. Options are "chr" (default, alternating chromosome colors) or "r2" (continuous color based on R-squared values).
+#' @param y_axis_label Label for the y-axis (default: `expression(paste("-log"[10], "(P)"))`).
 #' @param ... Additional arguments passed to `geom_manhattan()`.
 #' @return A `ggplot2` object.
 #' @export
@@ -129,63 +130,42 @@ ez_manhattan <- function(
     lead.snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
     highlight_snps = NULL, highlight_color = "purple",
     threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
-    colorBy = "chr", ...
-  ) {
-
-    if (!is.data.frame(data)) stop("Input 'data' must be a data.frame.")
-
-    ggplot2::ggplot(data, aes(y = -log10(.data[[p]]))) +
-    geom_manhattan(
-        data = data,
-        chr = chr, bp = bp, p = p, snp = snp, logp = logp,
-        size = size,
-        lead.snp = lead.snp,
-        r2 = r2,
-        colors = colors,
-        highlight_snps = highlight_snps,
-        highlight_color = highlight_color,
-        threshold_p = threshold_p,
-        threshold_color = threshold_color,
-        threshold_linetype = threshold_linetype,
-        colorBy = colorBy,
-        ...
-      ),
-      ez_theme()
-    )
-  }
-#' @importFrom ezGenomeTracks ez_manhattan
-ez_manhattan <- function(
-    data = NULL,
-    chr = "CHR", bp = "BP", p = "P", snp = "SNP", logp = TRUE, size = 0.5,
-    lead.snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
-    highlight_snps = NULL, highlight_color = "purple",
-    threshold_p = NULL, threshold_color = "red", threshold_linetype = "dashed",
-    plot_title = NULL,
-    ...
+    colorBy = "chr", y_axis_label = expression(paste("-log"[10], "(P)")), ...
 ) {
-  p <- ggplot2::ggplot(data, ggplot2::aes_string(x = bp, y = if(logp) paste0("-log10(", p, ")") else p)) +
+
+  if (!is.data.frame(data)) {
+    stop("Input 'data' must be a data.frame.")
+  }
+
+  # Create the plot with minimal aesthetics
+  p <- ggplot2::ggplot(data) +
     geom_manhattan(
-      data = data, chr = chr, bp = bp, p = p, snp = snp, logp = logp, size = size,
-      lead.snp = lead.snp, r2 = r2, colors = colors,
-      highlight_snps = highlight_snps, highlight_color = highlight_color,
-      threshold_p = threshold_p, threshold_color = threshold_color, threshold_linetype = threshold_linetype,
+      data = data,
+      chr = chr, bp = bp, p = p, snp = snp, logp = logp,
+      size = size,
+      lead.snp = lead.snp,
+      r2 = r2,
+      colors = colors,
+      highlight_snps = highlight_snps,
+      highlight_color = highlight_color,
+      threshold_p = threshold_p,
+      threshold_color = threshold_color,
+      threshold_linetype = threshold_linetype,
+      colorBy = colorBy,
+      y_axis_label = y_axis_label,
       ...
     ) +
-    ez_theme() # Assuming ez_theme is a predefined theme function
-
-  if (!is.null(plot_title)) {
-    p <- p + ggplot2::ggtitle(plot_title)
-  }
+    ez_theme()
 
   return(p)
 }
 
 #' Easy gene track visualization
 #'
-#' This function creates a gene track visualization from a GTF/GFF file or data frame.
+#' This function creates a gene track visualization from a GTF/GFF file, TxDb object, or data frame.
 #' It is a wrapper around geom_gene that provides a simpler interface.
 #'
-#' @param data A GTF/GFF file path or data frame with gene data
+#' @param data A GTF/GFF file path, TxDb object, or data frame with gene data
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param exon_height Height of exons (default: 0.75)
 #' @param intron_height Height of introns (default: 0.4)
@@ -198,16 +178,23 @@ ez_manhattan <- function(
 #' @return A ggplot2 object
 #' @export
 #' @importFrom ggplot2 ggplot aes
+#' @importFrom methods is
 #' @examples
 #' \dontrun{
-#' track <- ez_gene("genes.gtf", "chr1:1000000-2000000")
+#' # Using a GTF file
+#' track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
+#'
+#' # Using a TxDb object
+#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+#' track2 <- ez_gene(txdb, "chr1:1000000-2000000")
 #' }
 ez_gene <- function(data, region, exon_height = 0.75, intron_height = 0.4,
                     exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
                     gene_id = "gene_id", gene_name = "gene_name", ...) {
-  # Check if data is a file path or data frame
-  if (is.character(data) && length(data) == 1) {
-    # It's a file path, use gene_track
+  # Check if data is a file path, TxDb object, or data frame
+  if ((is.character(data) && length(data) == 1) || methods::is(data, "TxDb")) {
+    # It's a file path or TxDb object, use gene_track
     return(gene_track(data, region, exon_height = exon_height, intron_height = intron_height,
                       exon_color = exon_color, exon_fill = exon_fill, intron_color = intron_color,
                       gene_id = gene_id, gene_name = gene_name, ...))
@@ -225,7 +212,7 @@ ez_gene <- function(data, region, exon_height = 0.75, intron_height = 0.4,
 
     return(p)
   } else {
-    stop("Data must be a file path or data frame")
+    stop("Data must be a file path, TxDb object, or data frame")
   }
 }
 
@@ -255,7 +242,7 @@ ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use interaction_track
     return(interaction_track(data, region, curvature = curvature, color = color,
-                            size = size, alpha = alpha, use_score = use_score, ...))
+                             size = size, alpha = alpha, use_score = use_score, ...))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
     if (use_score && "score" %in% colnames(data)) {

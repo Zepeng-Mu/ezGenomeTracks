@@ -20,9 +20,9 @@
 #' p <- ggplot(signal_data, aes(x = start, y = score)) + geom_signal()
 #' }
 geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
-                         position = "identity", ..., type = "area",
-                         fill = "purple2", color = "purple2",
-                         alpha = 0.5, show.legend = NA, inherit.aes = TRUE) {
+                        position = "identity", ..., type = "area",
+                        fill = "purple2", color = "purple2",
+                        alpha = 0.5, show.legend = NA, inherit.aes = TRUE) {
 
   # Create the appropriate geom based on the type
   if (type == "line") {
@@ -115,7 +115,7 @@ stat_bin_signal <- function(mapping = NULL, data = NULL, geom = "line",
 #' p <- signal_track("signal.bw", "chr1:1000000-2000000")
 #' }
 signal_track <- function(file, region, type = "area", color = "purple2",
-                        fill = "purple2", alpha = 0.5, binwidth = NULL, ...) {
+                         fill = "purple2", alpha = 0.5, binwidth = NULL, ...) {
   # Parse the region
   region_gr <- parse_region(region)
 

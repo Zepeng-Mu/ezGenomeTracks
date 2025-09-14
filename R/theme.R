@@ -21,7 +21,7 @@
 #' }
 ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
                       base_rect_size = 0.2, show_grid = FALSE,
-                      show_ticks = TRUE, show_x_axis = TRUE, show_y_axis = FALSE) {
+                      show_ticks = TRUE, show_x_axis = TRUE, show_y_axis = TRUE) {
 
   # Start with a minimal theme
   theme <- ggplot2::theme_minimal(base_size = base_size, base_family = base_family,
