@@ -119,7 +119,8 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
 #' @param threshold_p A numeric value for the p-value threshold to draw a horizontal line (e.g., 5e-8).
 #' @param threshold_color Color for the threshold line (default: "red").
 #' @param threshold_linetype Linetype for the threshold line (default: 2).
-#' @param colorBy Character string indicating how points should be colored. Options are "chr" (default, alternating chromosome colors) or "r2" (continuous color based on R-squared values).
+#' @param colorBy Character string indicating how points should be colored.
+#' Options are "chr" (default, alternating chromosome colors in colors) or "r2" (based on R-squared values).
 #' @param y_axis_label Label for the y-axis (default: `expression(paste("-log"[10], "(P)"))`).
 #' @param ... Additional arguments passed to `geom_manhattan()`.
 #' @return A `ggplot2` object.
