@@ -23,8 +23,10 @@ ez_signal <- function(data, region, type = "area", color = "steelblue",
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use signal_track
-    return(signal_track(data, region, type = type, color = color,
-                        fill = fill, alpha = alpha, binwidth = binwidth, ...))
+    return(signal_track(data, region,
+      type = type, color = color,
+      fill = fill, alpha = alpha, binwidth = binwidth, ...
+    ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
     p <- ggplot2::ggplot(data, ggplot2::aes(x = start, y = score)) +
@@ -71,25 +73,29 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use peak_track
-    return(peak_track(data, region, color = color, fill = fill,
-                      alpha = alpha, height = height, use_score = use_score, ...))
+    return(peak_track(data, region,
+      color = color, fill = fill,
+      alpha = alpha, height = height, use_score = use_score, ...
+    ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
     if (use_score && "score" %in% colnames(data)) {
       p <- ggplot2::ggplot(data) +
         geom_peak(ggplot2::aes(xmin = start, xmax = end, fill = score),
-                  color = color, alpha = alpha, height = height, ...) +
+          color = color, alpha = alpha, height = height, ...
+        ) +
         ggplot2::scale_fill_gradient(low = "white", high = fill)
     } else {
       p <- ggplot2::ggplot(data) +
         geom_peak(ggplot2::aes(xmin = start, xmax = end),
-                  color = color, fill = fill, alpha = alpha, height = height, ...)
+          color = color, fill = fill, alpha = alpha, height = height, ...
+        )
     }
 
     # Apply the appropriate theme and scale
     p <- p + ez_feature_theme() +
       scale_x_genome_region(region) +
-      ggplot2::ylim(0, 1)  # Fixed y-axis for features
+      ggplot2::ylim(0, 1) # Fixed y-axis for features
 
     return(p)
   } else {
@@ -126,14 +132,13 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
 #' @return A `ggplot2` object.
 #' @export
 ez_manhattan <- function(
-    data,
-    chr = "CHR", bp = "BP", p = "P", snp = "SNP", logp = TRUE, size = 0.5,
-    lead.snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
-    highlight_snps = NULL, highlight_color = "purple",
-    threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
-    colorBy = "chr", y_axis_label = expression(paste("-log"[10], "(P)")), ...
+  data,
+  chr = "CHR", bp = "BP", p = "P", snp = "SNP", logp = TRUE, size = 0.5,
+  lead.snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
+  highlight_snps = NULL, highlight_color = "purple",
+  threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
+  colorBy = "chr", y_axis_label = expression(paste("-log"[10], "(P)")), ...
 ) {
-
   if (!is.data.frame(data)) {
     stop("Input 'data' must be a data.frame.")
   }
@@ -196,16 +201,19 @@ ez_gene <- function(data, region, exon_height = 0.75, intron_height = 0.4,
   # Check if data is a file path, TxDb object, or data frame
   if ((is.character(data) && length(data) == 1) || methods::is(data, "TxDb")) {
     # It's a file path or TxDb object, use gene_track
-    return(gene_track(data, region, exon_height = exon_height, intron_height = intron_height,
-                      exon_color = exon_color, exon_fill = exon_fill, intron_color = intron_color,
-                      gene_id = gene_id, gene_name = gene_name, ...))
+    return(gene_track(data, region,
+      exon_height = exon_height, intron_height = intron_height,
+      exon_color = exon_color, exon_fill = exon_fill, intron_color = intron_color,
+      gene_id = gene_id, gene_name = gene_name, ...
+    ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
     p <- ggplot2::ggplot(data) +
       geom_gene(ggplot2::aes(xstart = xstart, xend = xend, y = y, strand = strand),
-                exon_height = exon_height, intron_height = intron_height,
-                exon_color = exon_color, exon_fill = exon_fill,
-                intron_color = intron_color, ...)
+        exon_height = exon_height, intron_height = intron_height,
+        exon_color = exon_color, exon_fill = exon_fill,
+        intron_color = intron_color, ...
+      )
 
     # Apply the appropriate theme and scale
     p <- p + ez_gene_theme() +
@@ -242,25 +250,29 @@ ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use interaction_track
-    return(interaction_track(data, region, curvature = curvature, color = color,
-                             size = size, alpha = alpha, use_score = use_score, ...))
+    return(interaction_track(data, region,
+      curvature = curvature, color = color,
+      size = size, alpha = alpha, use_score = use_score, ...
+    ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
     if (use_score && "score" %in% colnames(data)) {
       p <- ggplot2::ggplot(data) +
         geom_arc(ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
-                 curvature = curvature, size = size, alpha = alpha, ...) +
+          curvature = curvature, size = size, alpha = alpha, ...
+        ) +
         ggplot2::scale_color_gradient(low = "blue", high = "red")
     } else {
       p <- ggplot2::ggplot(data) +
         geom_arc(ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0),
-                 curvature = curvature, color = color, size = size, alpha = alpha, ...)
+          curvature = curvature, color = color, size = size, alpha = alpha, ...
+        )
     }
 
     # Apply the appropriate theme and scale
     p <- p + ez_feature_theme() +
       scale_x_genome_region(region) +
-      ggplot2::ylim(-0.5, 0.5)  # Fixed y-axis for arcs
+      ggplot2::ylim(-0.5, 0.5) # Fixed y-axis for arcs
 
     return(p)
   } else {
@@ -292,21 +304,73 @@ ez_hic <- function(data, region, resolution = 10000, log_transform = TRUE,
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use hic_track
-    return(hic_track(data, region, resolution = resolution, log_transform = log_transform,
-                     low = low, high = high, ...))
+    return(hic_track(data, region,
+      resolution = resolution, log_transform = log_transform,
+      low = low, high = high, ...
+    ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
     p <- ggplot2::ggplot(data, ggplot2::aes(x = pos1, y = pos2, fill = count)) +
       geom_hic(low = low, high = high, ...) +
-      ggplot2::coord_fixed()  # Ensure the plot is square
+      ggplot2::coord_fixed() # Ensure the plot is square
 
     # Apply the appropriate theme and scale
     p <- p + ez_theme() +
       scale_x_genome_region(region) +
-      scale_x_genome_region(region)  # Same scale for y-axis
+      scale_x_genome_region(region) # Same scale for y-axis
 
     return(p)
   } else {
     stop("Data must be a file path or data frame")
   }
+}
+
+#' Create a feature track from a BED file
+#'
+#' This function creates a feature track from a BED file. It imports the data
+#' for a specific region and creates a ggplot2 layer for visualization.
+#'
+#' @param file Path to the BED file
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param color Border color of the features (default: "#05b1d3")
+#' @param fill Fill color of the features (default: "#05b1d3")
+#' @param alpha Transparency (default: 0.7)
+#' @param height Height of the features (default: 0.8)
+#' @param use_score Use the score column for fill color (default: FALSE)
+#' @param ... Additional arguments passed to geom_feature
+#' @return A ggplot2 layer
+#' @export
+#' @importFrom ggplot2 ggplot aes scale_fill_gradient
+#' @examples
+#' \dontrun{
+#' p <- ez_track("features.bed", "chr1:1000000-2000000", use_score = TRUE)
+#' }
+ez_track <- function(file, region, color = "#05b1d3", fill = "#05b1d3",
+                     alpha = 0.7, height = 0.8, use_score = FALSE, ...) {
+  # Parse the region
+  region_gr <- parse_region(region)
+
+  # Import the data
+  feature_data <- import_genomic_data(file, which = region_gr)
+
+  # Create the plot
+  if (use_score && "score" %in% colnames(feature_data)) {
+    p <- ggplot2::ggplot(feature_data) +
+      geom_feature(ggplot2::aes(xmin = start, xmax = end, fill = score),
+        color = color, alpha = alpha, height = height, ...
+      ) +
+      ggplot2::scale_fill_gradient(low = "white", high = fill)
+  } else {
+    p <- ggplot2::ggplot(feature_data) +
+      geom_feature(ggplot2::aes(xmin = start, xmax = end),
+        color = color, fill = fill, alpha = alpha, height = height, ...
+      )
+  }
+
+  # Apply the appropriate theme and scale
+  p <- p + ez_feature_theme() +
+    scale_x_genome_region(region) +
+    ggplot2::ylim(0, 1) # Fixed y-axis for features
+
+  return(p)
 }

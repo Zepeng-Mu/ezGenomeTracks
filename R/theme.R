@@ -46,8 +46,8 @@ ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
     plot.margin = ggplot2::margin(5, 5, 5, 5),
 
     # Customize text
-    axis.title = ggplot2::element_text(size = rel(0.8)),
-    axis.text = ggplot2::element_text(size = rel(0.7)),
+    axis.title = ggplot2::element_text(size = ggplot2::rel(0.8)),
+    axis.text = ggplot2::element_text(size = ggplot2::rel(0.7)),
 
     # Remove legend background
     legend.background = ggplot2::element_blank(),
@@ -95,29 +95,7 @@ ez_signal_theme <- function(...) {
 #' }
 ez_gene_theme <- function(...) {
   ez_theme(...) + ggplot2::theme(
-    axis.text.y = ggplot2::element_text(size = rel(0.7)),
-    axis.title.y = ggplot2::element_blank(),
-    plot.margin = ggplot2::margin(0, 5, 0, 5)
-  )
-}
-
-#' A theme for peak tracks
-#'
-#' This function creates a theme specifically for peak tracks.
-#' It removes the y-axis text and title, and makes the plot more compact.
-#'
-#' @param ... Additional arguments passed to ez_theme
-#' @return A ggplot2 theme object
-#' @export
-#' @importFrom ggplot2 theme element_blank
-#' @examples
-#' \dontrun{
-#' library(ggplot2)
-#' p <- ggplot(data, aes(x = start, y = 1)) + geom_peak() + ez_peak_theme()
-#' }
-ez_peak_theme <- function(...) {
-  ez_theme(...) + ggplot2::theme(
-    axis.text.y = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_text(size = ggplot2::rel(0.7)),
     axis.title.y = ggplot2::element_blank(),
     plot.margin = ggplot2::margin(0, 5, 0, 5)
   )
@@ -141,5 +119,7 @@ ez_feature_theme <- function(...) {
   ez_theme(...) + ggplot2::theme(
     axis.text.y = ggplot2::element_blank(),
     axis.title.y = ggplot2::element_blank(),
+    axis.line.y = ggplot2::element_blank(),
+    axis.ticks.y = ggplot2::element_blank()
   )
 }
