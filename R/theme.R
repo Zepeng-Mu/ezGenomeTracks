@@ -122,3 +122,24 @@ ez_peak_theme <- function(...) {
     plot.margin = ggplot2::margin(0, 5, 0, 5)
   )
 }
+
+#' A theme for feature tracks
+#'
+#' This function creates a theme specifically for feature tracks.
+#' It removes the y-axis text and title, and makes the plot more compact.
+#'
+#' @param ... Additional arguments passed to ez_theme
+#' @return A ggplot2 theme object
+#' @export
+#' @importFrom ggplot2 theme element_blank
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' p <- ggplot(data, aes(x = start, y = 1)) + geom_feature() + ez_feature_theme()
+#' }
+ez_feature_theme <- function(...) {
+  ez_theme(...) + ggplot2::theme(
+    axis.text.y = ggplot2::element_blank(),
+    axis.title.y = ggplot2::element_blank(),
+  )
+}

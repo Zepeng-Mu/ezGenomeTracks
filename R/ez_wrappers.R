@@ -87,9 +87,9 @@ ez_peak <- function(data, region, color = "black", fill = "gray70",
     }
 
     # Apply the appropriate theme and scale
-    p <- p + ez_peak_theme() +
+    p <- p + ez_feature_theme() +
       scale_x_genome_region(region) +
-      ggplot2::ylim(0, 1)  # Fixed y-axis for peaks
+      ggplot2::ylim(0, 1)  # Fixed y-axis for features
 
     return(p)
   } else {
@@ -258,7 +258,7 @@ ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
     }
 
     # Apply the appropriate theme and scale
-    p <- p + ez_peak_theme() +
+    p <- p + ez_feature_theme() +
       scale_x_genome_region(region) +
       ggplot2::ylim(-0.5, 0.5)  # Fixed y-axis for arcs
 
