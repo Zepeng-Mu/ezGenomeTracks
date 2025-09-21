@@ -20,8 +20,8 @@
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' }
 ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
-                     colour = "steelblue", fill = "steelblue",
-                     y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
+                      colour = "steelblue", fill = "steelblue",
+                      y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
   # Validate inputs
   type <- match.arg(type)
   stopifnot(
@@ -84,10 +84,10 @@ ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
 #' @importFrom ggplot2 ggplot aes scale_fill_gradient
 #' @examples
 #' \dontrun{
-#' track <- ez_peak("peaks.bed", "chr1:1000000-2000000", use_score = TRUE)
+#' track <- ez_feature("peaks.bed", "chr1:1000000-2000000", use_score = TRUE)
 #' }
-ez_peak <- function(data, region, color = "black", fill = "gray70",
-                    alpha = 0.7, height = 0.8, use_score = FALSE, ...) {
+ez_feature <- function(data, region, color = "black", fill = "gray70",
+                       alpha = 0.7, height = 0.8, use_score = FALSE, ...) {
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use peak_track
