@@ -77,12 +77,12 @@ genome_plot <- function(..., region = NULL, heights = NULL, ncol = 1, align_trac
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' track <- add_vline(track, 1500000)
 #' }
-add_vline <- function(plot, position, color = "red", size = 0.5,
+add_vline <- function(plot, position, colour = "red", linewidth = 0.5,
                       linetype = "dashed", alpha = 0.7) {
   plot + ggplot2::geom_vline(
     xintercept = position,
-    color = color,
-    size = size,
+    colour = colour,
+    linewidth = linewidth,
     linetype = linetype,
     alpha = alpha
   )

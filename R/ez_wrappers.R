@@ -8,8 +8,9 @@
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
 #' @param color Line color (default: "steelblue")
 #' @param fill Fill color for area plots (default: "steelblue")
+#' @param y_range Y-axis range limits (default: NULL)
 #' @param alpha Transparency (default: 0.5)
-#' @param binwidth Width of bins in base pairs (default: NULL)
+#' @param bin_width Width of bins in base pairs (default: NULL)
 #' @param ... Additional arguments passed to geom_signal
 #' @return A ggplot2 object
 #' @export
@@ -18,29 +19,46 @@
 #' \dontrun{
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' }
-ez_signal <- function(data, region, type = "area", color = "steelblue",
-                      fill = "steelblue", yrange = NULL, alpha = 0.5, binwidth = NULL, ...) {
-  # Check if data is a file path or data frame
-  if (is.character(data) && length(data) == 1) {
-    # It's a file path, use signal_track
+ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
+                     colour = "steelblue", fill = "steelblue",
+                     y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
+  # Validate inputs
+  type <- match.arg(type)
+  stopifnot(
+    "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
+    "region must be provided" = !missing(region),
+    "bin_width must be positive" = is.null(bin_width) || bin_width > 0
+  )
+
+  # Validate data type and existence
+  if (is.character(data)) {
+    if (length(data) != 1) stop("File path must be a single character string")
+    if (!file.exists(data)) stop("File does not exist: ", data)
+
+    # It's a valid file path, use signal_track
     return(signal_track(data, region,
-      type = type, color = color,
-      fill = fill, alpha = alpha, binwidth = binwidth, ...
+      type = type, color = colour,
+      fill = fill, alpha = alpha, binwidth = bin_width, ...
     ))
   } else if (is.data.frame(data)) {
-    # It's a data frame, create the plot directly
+    # Validate required columns for data frame
+    if (!all(c("start", "score") %in% colnames(data))) {
+      stop("Data frame must contain 'start' and 'score' columns")
+    }
+
+    # Create the plot directly
     p <- ggplot2::ggplot(data, ggplot2::aes(x = start, y = score)) +
       geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...)
 
     # Apply binning if requested
-    if (!is.null(binwidth)) {
-      p <- p + stat_bin_signal(binwidth = binwidth)
+    if (!is.null(bin_width)) {
+      p <- p + stat_bin_signal(binwidth = bin_width)
     }
 
     # Apply the appropriate theme and scale
     p <- p + ez_signal_theme() +
       scale_x_genome_region(region) +
-      scale_y_continuous(expand = c(0, 0), limits = yrange)
+      scale_y_continuous(expand = c(0, 0), limits = y_range)
 
     return(p)
   } else {
