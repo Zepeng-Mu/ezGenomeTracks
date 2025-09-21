@@ -2,10 +2,10 @@
 % Please edit documentation in R/geom_gene.R
 \name{gene_track}
 \alias{gene_track}
-\title{Create a gene track from a GTF/GFF file}
+\title{Create a gene track from a GTF/GFF file or TxDb object}
 \usage{
 gene_track(
-  file,
+  source,
   region,
   exon_height = 0.75,
   intron_height = 0.4,
@@ -18,7 +18,7 @@ gene_track(
 )
 }
 \arguments{
-\item{file}{Path to the GTF/GFF file}
+\item{source}{Either a path to a GTF/GFF file (character) or a TxDb object}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
 
@@ -42,11 +42,17 @@ gene_track(
 A ggplot2 layer
 }
 \description{
-This function creates a gene track from a GTF/GFF file. It imports the data
-for a specific region and creates a ggplot2 layer for visualization.
+This function creates a gene track from either a GTF/GFF file or a TxDb object.
+It imports the data for a specific region and creates a ggplot2 layer for visualization.
 }
 \examples{
 \dontrun{
-p <- gene_track("genes.gtf", "chr1:1000000-2000000")
+# Using a GTF file
+p1 <- gene_track("genes.gtf", "chr1:1000000-2000000")
+
+# Using a TxDb object
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+p2 <- gene_track(txdb, "chr1:1000000-2000000")
 }
 }

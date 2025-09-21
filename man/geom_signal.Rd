@@ -11,9 +11,8 @@ geom_signal(
   position = "identity",
   ...,
   type = "area",
-  baseline = 0,
-  fill = "steelblue",
-  color = "steelblue",
+  fill = "purple2",
+  color = "purple2",
   alpha = 0.5,
   show.legend = NA,
   inherit.aes = TRUE
@@ -42,7 +41,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used to override the default coupling between geoms and
+argument can be used the override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -94,31 +93,29 @@ lists which parameters it can accept.
 \link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
 }}
 
-\item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area")}
+\item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area").
+"line" and "area" types expect \code{start}, \code{end}, and \code{score} columns in the data.
+"heatmap" expects \code{start}, \code{end}, and \code{score} columns in the data, with \code{score} mapped to \code{fill}.}
 
-\item{baseline}{Baseline value for area plots (default: 0)}
+\item{fill}{Fill color for area plots (default: "purple2").}
 
-\item{fill}{Fill color for area plots (default: "steelblue")}
+\item{color}{Line color (default: "purple2").}
 
-\item{color}{Line color (default: "steelblue")}
-
-\item{alpha}{Transparency (default: 0.5)}
+\item{alpha}{Transparency (default: 0.5).}
 
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display. To include legend keys for all levels, even
-when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
-but unobserved levels are omitted.}
+display.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \value{
-A ggplot2 layer
+A ggplot2 layer.
 }
 \description{
 This function creates a geom for continuous signal tracks, such as bigWig files,

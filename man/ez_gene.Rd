@@ -18,7 +18,7 @@ ez_gene(
 )
 }
 \arguments{
-\item{data}{A GTF/GFF file path or data frame with gene data}
+\item{data}{A GTF/GFF file path, TxDb object, or data frame with gene data}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
 
@@ -42,11 +42,17 @@ ez_gene(
 A ggplot2 object
 }
 \description{
-This function creates a gene track visualization from a GTF/GFF file or data frame.
+This function creates a gene track visualization from a GTF/GFF file, TxDb object, or data frame.
 It is a wrapper around geom_gene that provides a simpler interface.
 }
 \examples{
 \dontrun{
-track <- ez_gene("genes.gtf", "chr1:1000000-2000000")
+# Using a GTF file
+track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
+
+# Using a TxDb object
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+track2 <- ez_gene(txdb, "chr1:1000000-2000000")
 }
 }

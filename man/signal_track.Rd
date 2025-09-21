@@ -8,8 +8,8 @@ signal_track(
   file,
   region,
   type = "area",
-  color = "steelblue",
-  fill = "steelblue",
+  color = "purple2",
+  fill = "purple2",
   alpha = 0.5,
   binwidth = NULL,
   ...
@@ -22,9 +22,9 @@ signal_track(
 
 \item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area")}
 
-\item{color}{Line color (default: "steelblue")}
+\item{color}{Line color (default: "purple2")}
 
-\item{fill}{Fill color for area plots (default: "steelblue")}
+\item{fill}{Fill color for area plots (default: "purple2")}
 
 \item{alpha}{Transparency (default: 0.5)}
 

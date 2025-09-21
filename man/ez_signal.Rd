@@ -7,11 +7,12 @@
 ez_signal(
   data,
   region,
-  type = "area",
-  color = "steelblue",
+  type = c("area", "line", "heatmap"),
+  colour = "steelblue",
   fill = "steelblue",
+  y_range = NULL,
   alpha = 0.5,
-  binwidth = NULL,
+  bin_width = NULL,
   ...
 )
 }
@@ -22,15 +23,17 @@ ez_signal(
 
 \item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area")}
 
-\item{color}{Line color (default: "steelblue")}
-
 \item{fill}{Fill color for area plots (default: "steelblue")}
+
+\item{y_range}{Y-axis range limits (default: NULL)}
 
 \item{alpha}{Transparency (default: 0.5)}
 
-\item{binwidth}{Width of bins in base pairs (default: NULL)}
+\item{bin_width}{Width of bins in base pairs (default: NULL)}
 
 \item{...}{Additional arguments passed to geom_signal}
+
+\item{color}{Line color (default: "steelblue")}
 }
 \value{
 A ggplot2 object

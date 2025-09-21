@@ -8,7 +8,7 @@ add_vline(
   plot,
   position,
   color = "red",
-  size = 0.5,
+  linewidth = 0.5,
   linetype = "dashed",
   alpha = 0.7
 )
@@ -20,11 +20,11 @@ add_vline(
 
 \item{color}{Color of the line (default: "red")}
 
-\item{size}{Size of the line (default: 0.5)}
-
 \item{linetype}{Line type (default: "dashed")}
 
 \item{alpha}{Transparency (default: 0.7)}
+
+\item{size}{Size of the line (default: 0.5)}
 }
 \value{
 A ggplot2 object with the vertical line added

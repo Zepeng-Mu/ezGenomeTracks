@@ -22,7 +22,7 @@ the axis labels in a genomic coordinate style.
 \examples{
 \dontrun{
 library(ggplot2)
-p <- ggplot(data, aes(x = start)) + geom_point() + 
+p <- ggplot(data, aes(x = start)) + geom_point() +
      scale_x_genome_region("chr1:1000000-2000000")
 }
 }
