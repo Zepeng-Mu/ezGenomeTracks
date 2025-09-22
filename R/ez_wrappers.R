@@ -3,7 +3,7 @@
 #' This function creates a signal track visualization from a bigWig file or data frame.
 #' It is a wrapper around geom_signal that provides a simpler interface.
 #'
-#' @param data A bigWig file path or data frame with signal data
+#' @param input A bigWig file path or data frame with signal data
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
 #' @param color Line color (default: "steelblue")
@@ -19,7 +19,7 @@
 #' \dontrun{
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' }
-ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
+ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
                       color = "steelblue", fill = "steelblue",
                       y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
   # Validate inputs
@@ -31,23 +31,23 @@ ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
   )
 
   # Validate data type and existence
-  if (is.character(data)) {
-    if (length(data) != 1) stop("File path must be a single character string")
-    if (!file.exists(data)) stop("File does not exist: ", data)
+  if (is.character(input)) {
+    if (length(input) != 1) stop("File path must be a single character string")
+    if (!file.exists(input)) stop("File does not exist: ", input)
 
     # It's a valid file path, use signal_track
-    return(signal_track(data, region,
+    return(signal_track(input, region,
       type = type, color = color,
       fill = fill, alpha = alpha, binwidth = bin_width, ...
     ))
-  } else if (is.data.frame(data)) {
+  } else if (is.data.frame(input)) {
     # Validate required columns for data frame
-    if (!all(c("start", "score") %in% colnames(data))) {
+    if (!all(c("start", "score") %in% colnames(input))) {
       stop("Data frame must contain 'start' and 'score' columns")
     }
 
     # Create the plot directly
-    p <- ggplot2::ggplot(data, ggplot2::aes(x = start, y = score)) +
+    p <- ggplot2::ggplot(input, ggplot2::aes(x = start, y = score)) +
       geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...)
 
     # Apply binning if requested
@@ -71,7 +71,7 @@ ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
 #' This function creates a peak track visualization from a BED file or data frame.
 #' It is a wrapper around geom_feature that provides a simpler interface.
 #'
-#' @param data A BED file path or data frame with peak data
+#' @param input A BED file path or data frame with peak data
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param color Border color of the peaks (default: "black")
 #' @param fill Fill color of the peaks (default: "gray70")
@@ -86,25 +86,25 @@ ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
 #' \dontrun{
 #' track <- ez_feature("peaks.bed", "chr1:1000000-2000000", use_score = TRUE)
 #' }
-ez_feature <- function(data, region, color = "black", fill = "gray70",
+ez_feature <- function(input, region, color = "black", fill = "gray70",
                        alpha = 0.7, height = 0.8, use_score = FALSE, ...) {
   # Check if data is a file path or data frame
-  if (is.character(data) && length(data) == 1) {
+  if (is.character(input) && length(input) == 1) {
     # It's a file path, use peak_track
-    return(peak_track(data, region,
+    return(peak_track(input, region,
       color = color, fill = fill,
       alpha = alpha, height = height, use_score = use_score, ...
     ))
-  } else if (is.data.frame(data)) {
+  } else if (is.data.frame(input)) {
     # It's a data frame, create the plot directly
-    if (use_score && "score" %in% colnames(data)) {
-      p <- ggplot2::ggplot(data) +
+    if (use_score && "score" %in% colnames(input)) {
+      p <- ggplot2::ggplot(input) +
         geom_feature(ggplot2::aes(xmin = start, xmax = end, fill = score),
           color = color, alpha = alpha, height = height, ...
         ) +
         ggplot2::scale_fill_gradient(low = "white", high = fill)
     } else {
-      p <- ggplot2::ggplot(data) +
+      p <- ggplot2::ggplot(input) +
         geom_feature(ggplot2::aes(xmin = start, xmax = end),
           color = color, fill = fill, alpha = alpha, height = height, ...
         )
