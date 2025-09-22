@@ -20,7 +20,7 @@
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' }
 ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
-                      colour = "steelblue", fill = "steelblue",
+                      color = "steelblue", fill = "steelblue",
                       y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
   # Validate inputs
   type <- match.arg(type)
@@ -37,7 +37,7 @@ ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
 
     # It's a valid file path, use signal_track
     return(signal_track(data, region,
-      type = type, color = colour,
+      type = type, color = color,
       fill = fill, alpha = alpha, binwidth = bin_width, ...
     ))
   } else if (is.data.frame(data)) {
@@ -69,7 +69,7 @@ ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
 #' Easy peak track visualization
 #'
 #' This function creates a peak track visualization from a BED file or data frame.
-#' It is a wrapper around geom_peak that provides a simpler interface.
+#' It is a wrapper around geom_feature that provides a simpler interface.
 #'
 #' @param data A BED file path or data frame with peak data
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
@@ -78,7 +78,7 @@ ez_signal <- function(data, region, type = c("area", "line", "heatmap"),
 #' @param alpha Transparency (default: 0.7)
 #' @param height Height of the peaks (default: 0.8)
 #' @param use_score Use the score column for fill color (default: FALSE)
-#' @param ... Additional arguments passed to geom_peak
+#' @param ... Additional arguments passed to geom_feature
 #' @return A ggplot2 object
 #' @export
 #' @importFrom ggplot2 ggplot aes scale_fill_gradient
@@ -99,13 +99,13 @@ ez_feature <- function(data, region, color = "black", fill = "gray70",
     # It's a data frame, create the plot directly
     if (use_score && "score" %in% colnames(data)) {
       p <- ggplot2::ggplot(data) +
-        geom_peak(ggplot2::aes(xmin = start, xmax = end, fill = score),
+        geom_feature(ggplot2::aes(xmin = start, xmax = end, fill = score),
           color = color, alpha = alpha, height = height, ...
         ) +
         ggplot2::scale_fill_gradient(low = "white", high = fill)
     } else {
       p <- ggplot2::ggplot(data) +
-        geom_peak(ggplot2::aes(xmin = start, xmax = end),
+        geom_feature(ggplot2::aes(xmin = start, xmax = end),
           color = color, fill = fill, alpha = alpha, height = height, ...
         )
     }
@@ -341,54 +341,4 @@ ez_hic <- function(data, region, resolution = 10000, log_transform = TRUE,
   } else {
     stop("Data must be a file path or data frame")
   }
-}
-
-#' Create a feature track from a BED file
-#'
-#' This function creates a feature track from a BED file. It imports the data
-#' for a specific region and creates a ggplot2 layer for visualization.
-#'
-#' @param file Path to the BED file
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
-#' @param color Border color of the features (default: "#05b1d3")
-#' @param fill Fill color of the features (default: "#05b1d3")
-#' @param alpha Transparency (default: 0.7)
-#' @param height Height of the features (default: 0.8)
-#' @param use_score Use the score column for fill color (default: FALSE)
-#' @param ... Additional arguments passed to geom_feature
-#' @return A ggplot2 layer
-#' @export
-#' @importFrom ggplot2 ggplot aes scale_fill_gradient
-#' @examples
-#' \dontrun{
-#' p <- ez_track("features.bed", "chr1:1000000-2000000", use_score = TRUE)
-#' }
-ez_track <- function(file, region, color = "#05b1d3", fill = "#05b1d3",
-                     alpha = 0.7, height = 0.8, use_score = FALSE, ...) {
-  # Parse the region
-  region_gr <- parse_region(region)
-
-  # Import the data
-  feature_data <- import_genomic_data(file, which = region_gr)
-
-  # Create the plot
-  if (use_score && "score" %in% colnames(feature_data)) {
-    p <- ggplot2::ggplot(feature_data) +
-      geom_feature(ggplot2::aes(xmin = start, xmax = end, fill = score),
-        color = color, alpha = alpha, height = height, ...
-      ) +
-      ggplot2::scale_fill_gradient(low = "white", high = fill)
-  } else {
-    p <- ggplot2::ggplot(feature_data) +
-      geom_feature(ggplot2::aes(xmin = start, xmax = end),
-        color = color, fill = fill, alpha = alpha, height = height, ...
-      )
-  }
-
-  # Apply the appropriate theme and scale
-  p <- p + ez_feature_theme() +
-    scale_x_genome_region(region) +
-    ggplot2::ylim(0, 1) # Fixed y-axis for features
-
-  return(p)
 }
