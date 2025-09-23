@@ -8,6 +8,7 @@
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
 #' @param color Line color (default: "steelblue")
 #' @param fill Fill color for area plots (default: "steelblue")
+#' @param stack Whether to stack multiple tracks or combine into one (default: TRUE)
 #' @param y_range Y-axis range limits (default: NULL)
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
@@ -20,19 +21,19 @@
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' }
 ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
-                      color = "steelblue", fill = "steelblue",
+                      color = "steelblue", fill = "steelblue", stack = TRUE,
                       y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
   # Validate inputs
   type <- match.arg(type)
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
     "region must be provided" = !missing(region),
-    "bin_width must be positive" = is.null(bin_width) || bin_width > 0
+    "bin_width must be positive integer" = is.null(bin_width) || bin_width > 0 && is.integer(bin_width)
   )
 
   # Validate data type and existence
   if (is.character(input)) {
-    if (length(input) != 1) stop("File path must be a single character string")
+    if (length(input) != 1) stop("File path must be a single character string. If you have multiple files or data frames, please use a list.")
     if (!file.exists(input)) stop("File does not exist: ", input)
 
     # It's a valid file path, use signal_track
@@ -44,7 +45,17 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
     # Validate required columns for data frame
     if (!all(c("start", "score") %in% colnames(input))) {
       stop("Data frame must contain 'start' and 'score' columns")
+    } else if (is.list(input)) {
+      lapply(input, function(l) {
+        if (!file.exists(l)) stop("File does not exist: ", l)
+      })
     }
+
+
+    # TODO:
+    # if (is.list(input)) {
+    #   process list
+    # }
 
     # Create the plot directly
     p <- ggplot2::ggplot(input, ggplot2::aes(x = start, y = score)) +
