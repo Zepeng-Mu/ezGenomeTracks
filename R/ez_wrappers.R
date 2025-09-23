@@ -69,7 +69,8 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
     # Apply the appropriate theme and scale
     p <- p + ez_signal_theme() +
       scale_x_genome_region(region) +
-      scale_y_continuous(expand = c(0, 0), limits = y_range)
+      scale_y_continuous(expand = c(0, 0)) +
+      coord_cartesian(ylim = y_range)
 
     return(p)
   } else {
