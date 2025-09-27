@@ -65,6 +65,7 @@ ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
 #' This function creates a theme specifically for signal tracks.
 #' It removes the y-axis text and title, and makes the plot more compact.
 #'
+#' @param y_axis_style Style of the y-axis. Options are "none", "simple", and "full".
 #' @param ... Additional arguments passed to ez_theme
 #' @return A ggplot2 theme object
 #' @export
@@ -76,11 +77,34 @@ ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
 #'   geom_line() +
 #'   ez_signal_theme()
 #' }
-ez_signal_theme <- function(...) {
-  ez_theme(...) + ggplot2::theme(
-    axis.title.y = ggplot2::element_blank(),
-    plot.margin = ggplot2::margin(0, 5, 0, 5)
-  )
+ez_signal_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
+  y_axis_style <- match.arg(y_axis_style)
+
+  if (y_axis_style == "none") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_blank(),
+        axis.line.y = ggplot2::element_blank(),
+        axis.text.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(5, 5, 5, 5)
+      )
+  } else if (y_axis_style == "simple") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_blank(),
+        axis.line.y = ggplot2::element_blank(),
+        axis.text.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(5, 5, 5, 5)
+      )
+  } else if (y_axis_style == "full") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(5, 5, 5, 5)
+      )
+  }
 }
 
 #' A theme for gene tracks
@@ -124,10 +148,11 @@ ez_gene_theme <- function(...) {
 #'   ez_feature_theme()
 #' }
 ez_feature_theme <- function(...) {
-  ez_theme(...) + ggplot2::theme(
-    axis.text.y = ggplot2::element_blank(),
-    axis.title.y = ggplot2::element_blank(),
-    axis.line.y = ggplot2::element_blank(),
-    axis.ticks.y = ggplot2::element_blank()
-  )
+  ez_theme(...) +
+    ggplot2::theme(
+      axis.text.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      axis.line.y = ggplot2::element_blank(),
+      axis.ticks.y = ggplot2::element_blank()
+    )
 }

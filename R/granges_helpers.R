@@ -22,7 +22,7 @@ granges_to_df <- function(gr, keep.mcols = TRUE) {
   if (!methods::is(gr, "GRanges")) {
     stop("Input must be a GRanges object")
   }
-  
+
   # Create base data frame with coordinates
   df <- data.frame(
     seqnames = as.character(GenomicRanges::seqnames(gr)),
@@ -31,12 +31,12 @@ granges_to_df <- function(gr, keep.mcols = TRUE) {
     width = GenomicRanges::width(gr),
     strand = as.character(GenomicRanges::strand(gr))
   )
-  
+
   # Add metadata columns if requested
   if (keep.mcols && ncol(S4Vectors::mcols(gr)) > 0) {
     df <- cbind(df, as.data.frame(S4Vectors::mcols(gr)))
   }
-  
+
   return(df)
 }
 
@@ -68,7 +68,7 @@ df_to_granges <- function(df, seqnames = "seqnames", start = "start", end = "end
   if (!all(c(seqnames, start, end) %in% colnames(df))) {
     stop("Data frame must contain columns for seqnames, start, and end")
   }
-  
+
   # Extract metadata columns (all columns except coordinate columns)
   coord_cols <- c(seqnames, start, end)
   if (strand %in% colnames(df)) {
@@ -77,21 +77,21 @@ df_to_granges <- function(df, seqnames = "seqnames", start = "start", end = "end
   } else {
     strand_values <- "*"
   }
-  
+
   mcols_df <- df[, !colnames(df) %in% coord_cols, drop = FALSE]
-  
+
   # Create GRanges object
   gr <- GenomicRanges::GRanges(
     seqnames = df[[seqnames]],
     ranges = IRanges::IRanges(start = df[[start]], end = df[[end]]),
     strand = strand_values
   )
-  
+
   # Add metadata columns if any exist
   if (ncol(mcols_df) > 0) {
     S4Vectors::mcols(gr) <- mcols_df
   }
-  
+
   return(gr)
 }
 
@@ -110,7 +110,7 @@ df_to_granges <- function(df, seqnames = "seqnames", start = "start", end = "end
 #' \dontrun{
 #' # Import a BED file
 #' peaks_df <- import_genomic_data("peaks.bed")
-#' 
+#'
 #' # Import a specific region from a bigWig file
 #' library(GenomicRanges)
 #' region <- GRanges("chr1", IRanges(1000000, 2000000))
@@ -119,10 +119,10 @@ df_to_granges <- function(df, seqnames = "seqnames", start = "start", end = "end
 import_genomic_data <- function(file, format = NULL, which = NULL) {
   # Import data using rtracklayer
   gr <- rtracklayer::import(file, format = format, which = which)
-  
+
   # Convert to data frame
   df <- granges_to_df(gr)
-  
+
   return(df)
 }
 
@@ -143,31 +143,31 @@ parse_region <- function(region) {
   if (!is.character(region) || length(region) != 1) {
     stop("Region must be a single character string")
   }
-  
-  # Parse the region string
-  parts <- strsplit(region, ":")[[1]]
-  if (length(parts) != 2) {
-    stop("Region must be in the format 'chr:start-end'")
+
+  # Parse the region string using regular expression
+  # Match pattern: chromosome followed by any separator (: _ -) then start and end positions
+  matches <- regexpr("^(.+?)[:_-](\\d+)[:_-](\\d+)$", region, perl = TRUE)
+  if (matches == -1) {
+    stop("Region must be in the format 'chr*start*end' where * can be :, _, or -")
   }
-  
-  chr <- parts[1]
-  pos_parts <- strsplit(parts[2], "-")[[1]]
-  if (length(pos_parts) != 2) {
-    stop("Position must be in the format 'start-end'")
-  }
-  
-  start <- as.numeric(pos_parts[1])
-  end <- as.numeric(pos_parts[2])
-  
+
+  # Extract the matched groups
+  parsed <- regmatches(region, matches)
+  groups <- stringr::str_match(parsed, "^(.+?)[:_-](\\d+)[:_-](\\d+)$")
+
+  chr <- groups[, 2]
+  start <- as.numeric(groups[, 3])
+  end <- as.numeric(groups[, 4])
+
   if (is.na(start) || is.na(end)) {
     stop("Start and end positions must be numeric")
   }
-  
+
   # Create GRanges object
   gr <- GenomicRanges::GRanges(
     seqnames = chr,
     ranges = IRanges::IRanges(start = start, end = end)
   )
-  
+
   return(gr)
 }

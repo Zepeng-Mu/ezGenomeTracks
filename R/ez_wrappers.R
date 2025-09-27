@@ -15,32 +15,37 @@
 #' @param ... Additional arguments passed to geom_signal
 #' @return A ggplot2 object
 #' @export
-#' @importFrom ggplot2 ggplot aes
+#' @importFrom ggplot2 ggplot aes scale_y_continuous coord_cartesian labs
 #' @examples
 #' \dontrun{
 #' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
 #' }
 ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
                       color = "steelblue", fill = "steelblue", stack = TRUE,
+                      y_axis_style = c("none", "simple", "full"),
                       y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
   # Validate inputs
   type <- match.arg(type)
+  y_axis_style <- match.arg(y_axis_style)
+
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
     "region must be provided" = !missing(region),
     "bin_width must be positive integer" = is.null(bin_width) || bin_width > 0 && is.integer(bin_width)
   )
 
+  chr <- stringr::string_remove(stringr::str_split(region, ":")[[1]][1], "chr")
+
   # Validate data type and existence
   if (is.character(input)) {
     if (length(input) != 1) stop("File path must be a single character string. If you have multiple files or data frames, please use a list.")
     if (!file.exists(input)) stop("File does not exist: ", input)
 
-    # It's a valid file path, use signal_track
-    return(signal_track(input, region,
-      type = type, color = color,
-      fill = fill, alpha = alpha, binwidth = bin_width, ...
-    ))
+    # TODO implement using bw files as input
+    # return(signal_track(input, region,
+    #   type = type, color = color,
+    #   fill = fill, alpha = alpha, binwidth = bin_width, ...
+    # ))
   } else if (is.data.frame(input)) {
     # Validate required columns for data frame
     if (!all(c("start", "score") %in% colnames(input))) {
@@ -51,6 +56,7 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
       })
     }
 
+    plotDt <- input
 
     # TODO:
     # if (is.list(input)) {
@@ -58,7 +64,7 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
     # }
 
     # Create the plot directly
-    p <- ggplot2::ggplot(input, ggplot2::aes(x = start, y = score)) +
+    p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
       geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...)
 
     # Apply binning if requested
@@ -67,10 +73,12 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
     }
 
     # Apply the appropriate theme and scale
-    p <- p + ez_signal_theme() +
+    p <- p +
+      ez_signal_theme(y_axis_style = y_axis_style) +
       scale_x_genome_region(region) +
       scale_y_continuous(expand = c(0, 0)) +
-      coord_cartesian(ylim = y_range)
+      coord_cartesian(ylim = y_range) +
+      labs(xlab = paste0("Chr", chr))
 
     return(p)
   } else {
@@ -123,9 +131,10 @@ ez_feature <- function(input, region, color = "black", fill = "gray70",
     }
 
     # Apply the appropriate theme and scale
-    p <- p + ez_feature_theme() +
+    p <- p +
       scale_x_genome_region(region) +
-      ggplot2::ylim(0, 1) # Fixed y-axis for features
+      ggplot2::ylim(0, 1) + # Fixed y-axis for features
+      ggplot2::theme_void()
 
     return(p)
   } else {
