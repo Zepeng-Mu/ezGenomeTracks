@@ -58,7 +58,7 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
   }
 
   # Handle different input types
-  if (is.character(input)) {
+  if (is(input, "character")) {
     # Single file path or vector of file paths
     if (length(input) == 1) {
       if (!file.exists(input)) stop("File does not exist: ", input)
@@ -71,7 +71,7 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
     }
   }
   
-  if (is.list(input)) {
+  if (is(input, "list")) {
     # Handle list of data frames or file paths
     if (is.null(names(input))) {
       names(input) <- paste0("Track_", seq_along(input))
@@ -181,7 +181,7 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
       }
     }
     
-  } else if (is.data.frame(input)) {
+  } else if (is(input, "data.frame")) {
     # Single data frame
     # Validate required columns
     if (!all(c("start", "score") %in% colnames(input))) {
