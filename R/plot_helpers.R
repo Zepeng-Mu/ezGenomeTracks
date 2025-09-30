@@ -85,6 +85,7 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
   if (!is.null(track_by)) {
     p <- p + ggplot2::facet_wrap(
       ggplot2::vars(.data[[track_by]]),
+      ncol = 1,
       scales = facet_scales,
       strip.position = "left"
     )
