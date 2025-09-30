@@ -50,31 +50,46 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
 
   # Default color palette function
   get_default_colors <- function(n) {
-    if (n <= 8) {
-      return(c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f")[1:n])
+    if (n <= 9) {
+      return(c("#1f4e79", "#d35400", "#27ae60", "#8e44ad", "#f1c40f", "#16a085", "#e74c3c", "#8b4513", "#5d6d7e")[1:n])
     } else {
       return(rainbow(n))
     }
   }
 
-  # Handle different input types
+  # Handle single element input
+  if (length(input) == 1) {
+    if (is(input, "data.frame")) {
+      # Single data frame
+      if (!all(c("start", "score") %in% colnames(input))) {
+        stop("Data frame must contain 'start' and 'score' columns")
+      }
+      plotDt <- input
+    } else if (is(input, "character")) {
+      # Single file path
+      if (!file.exists(input)) stop("File does not exist: ", input)
+      # TODO read bigWig file
+    }
+  }
+
+  # Handle list input
+
   if (is(input, "character")) {
-    # Single file path or vector of file paths
     if (length(input) == 1) {
+      # Single file path
       if (!file.exists(input)) stop("File does not exist: ", input)
       # TODO: Implement bigWig file reading
       stop("BigWig file support not yet implemented. Please use data frames.")
     } else {
-      # Multiple file paths - treat as list
-      input <- as.list(input)
-      names(input) <- if (is.null(names(input))) paste0("Track_", seq_along(input)) else names(input)
+      # Multiple file paths
+      # TODO: Implement multiple bigWig file reading and plot as overlapping tracks
     }
   }
   
+  # Handle list of data frames or file paths
   if (is(input, "list")) {
-    # Handle list of data frames or file paths
     if (is.null(names(input))) {
-      names(input) <- paste0("Track_", seq_along(input))
+      names(input) <- paste0("Track ", seq_along(input))
     }
     
     # Process each element in the list
