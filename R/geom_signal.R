@@ -39,13 +39,21 @@
 #'
 #' @return A ggplot2 layer or list of layers
 geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
-                        position = "identity", type = "area",
-                        plot.params = list(), ...,
+                        position = "identity", type = "area", ...,
                         show.legend = NA, inherit.aes = TRUE) {
 
   # Validate that mapping is created by aes()
   if (!is.null(mapping) && !ggplot2::is.ggproto(mapping) && !inherits(mapping, "uneval")) {
     stop("`mapping` must be created by `aes()`.")
+  }
+
+  params <- list(...)
+  if (is.null(mapping$color)) {
+    params$color <- "purple2"
+  }
+
+  if (is.null(mapping$fill)) {
+    params$fill <- "purple2"
   }
 
   if (type == "line") {
@@ -67,7 +75,7 @@ geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
       position = position,
       show.legend = show.legend,
       inherit.aes = inherit.aes,
-      params = list(...)
+      params = params
     )
   } else if (type == "area") {
     # Base aesthetics for area type
@@ -88,7 +96,7 @@ geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
       position = position,
       show.legend = show.legend,
       inherit.aes = inherit.aes,
-      params = list(...)
+      params = params
     )
 
   } else {
