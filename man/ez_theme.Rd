@@ -42,6 +42,8 @@ It removes most of the background elements and grid lines to focus on the data.
 \examples{
 \dontrun{
 library(ggplot2)
-p <- ggplot(data, aes(x = start, y = score)) + geom_line() + ez_theme()
+p <- ggplot(data, aes(x = start, y = score)) +
+  geom_line() +
+  ez_theme()
 }
 }

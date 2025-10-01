@@ -1,35 +1,43 @@
-#' Geom for continuous signal tracks
+#' Coverage visualization geom
 #'
-#' This function creates a geom for continuous signal tracks, such as bigWig files,
-#' RNA-seq coverage, or ATAC-seq signal. It can display the signal as a line, area,
-#' or heatmap.
+#' Visualize quantitative genomic signal as line, area, or heatmap tiles.
+#' Input data must contain genomic coordinates (`start`, `end`) and a numeric
+#' signal value (`score`). The geom automatically maps these columns to the
+#' required aesthetics for the chosen `type`.
 #'
 #' @inheritParams ggplot2::layer
-#' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area").
-#'   "line" and "area" types expect `start`, `end`, and `score` columns in the data.
-#'   "heatmap" expects `start`, `end`, and `score` columns in the data, with `score` mapped to `fill`.
-#' @param na.rm If `TRUE`, silently removes `NA` values.
-#' @param ... Other arguments passed on to \code{\link[ggplot2]{layer}}. These are
-#'   often aesthetics, used to set an aesthetic to a fixed value, like
-#'   `color = "red"` or `linewidth = 3`.
-#' @return A ggplot2 layer.
+#' @param type Visualization style: `"area"` (default), `"line"`, or `"heatmap"`.
+#'   - `"area"`/`"line"`: `score` is mapped to `y` (height).
+#'   - `"heatmap"`: `score` is mapped to `fill`, producing colored tiles.
+#' @param na.rm If `TRUE`, silently drop `NA` values.
+#' @param ... Additional arguments passed to [ggplot2::layer()], e.g.
+#'   `color = "black"`, `linewidth = 0.8`, or `alpha = 0.6`.
+#'
+#' @return A ggplot2 layer that can be added to a plot.
 #' @export
 #' @importFrom ggplot2 GeomSegment GeomArea GeomTile layer aes ggproto Geom
+#'
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
-#' signal_data <- data.frame(
-#'   start = seq(1, 100, by = 10),
-#'   end = seq(1, 100, by = 10) + 9,
+#' df <- data.frame(
+#'   start = seq(1, 100, 10),
+#'   end   = seq(10, 100, 10),
 #'   score = rnorm(10)
 #' )
-#' ggplot(signal_data) + geom_signal(aes(x = start, y = score, xend = end))
-#' ggplot(signal_data) + geom_signal(aes(x = start, y = score), type = "area")
-#' ggplot(signal_data) +
-#'   geom_signal(aes(x = start, fill = score), type = "heatmap", y = 1, height = 1) +
+#'
+#' # Area plot (default)
+#' ggplot(df) + geom_coverage()
+#'
+#' # Line plot
+#' ggplot(df) + geom_coverage(type = "line")
+#'
+#' # Heatmap tiles
+#' ggplot(df) +
+#'   geom_coverage(type = "heatmap") +
 #'   scale_fill_viridis_c()
 #' }
-geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
+geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
                         position = "identity", type = "area", ...,
                         na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
 
@@ -65,7 +73,7 @@ geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
   )
 }
 
-#' @rdname geom_signal
+#' @rdname geom_coverage
 #' @format NULL
 #' @usage NULL
 GeomSignal <- ggproto("GeomSignal", Geom,

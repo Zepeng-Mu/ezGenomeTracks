@@ -5,11 +5,17 @@
 \title{Easy signal track visualization}
 \usage{
 ez_signal(
-  data,
+  input,
   region,
+  names = NULL,
   type = c("area", "line", "heatmap"),
-  colour = "steelblue",
+  color = "steelblue",
   fill = "steelblue",
+  stack = TRUE,
+  group_var = NULL,
+  track_var = NULL,
+  color_by = c("group", "track"),
+  y_axis_style = c("none", "simple", "full"),
   y_range = NULL,
   alpha = 0.5,
   bin_width = NULL,
@@ -17,13 +23,19 @@ ez_signal(
 )
 }
 \arguments{
-\item{data}{A bigWig file path or data frame with signal data}
+\item{input}{A bigWig file path, data frame with signal data, or list of data frames/bigWig files}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
 
 \item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area")}
 
-\item{fill}{Fill color for area plots (default: "steelblue")}
+\item{color}{Line color (default: "steelblue"). Can be a vector for multiple colors.}
+
+\item{fill}{Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.}
+
+\item{stack}{Whether to stack multiple tracks or combine into one (default: TRUE)}
+
+\item{y_axis_style}{Y-axis style: "none", "simple", or "full" (default: "none")}
 
 \item{y_range}{Y-axis range limits (default: NULL)}
 
@@ -33,17 +45,26 @@ ez_signal(
 
 \item{...}{Additional arguments passed to geom_signal}
 
-\item{color}{Line color (default: "steelblue")}
+\item{group}{Column name for grouping data within a single data frame (default: NULL)}
+
+\item{colors}{Color palette for groups/tracks. If NULL, uses default palette (default: NULL)}
 }
 \value{
 A ggplot2 object
 }
 \description{
-This function creates a signal track visualization from a bigWig file or data frame.
-It is a wrapper around geom_signal that provides a simpler interface.
+This function creates a signal track visualization from a bigWig file, data frame, or list of data sources.
+It is a wrapper around geom_signal that provides a simpler interface with support for grouping and multiple tracks.
 }
 \examples{
 \dontrun{
-track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+# Single track
+track1 <- ez_signal("signal.bw", "chr1:1000000-2000000")
+
+# Grouped data frame
+track2 <- ez_signal(df, "chr1:1000000-2000000", group = "sample", stack = FALSE)
+
+# Multiple data frames
+track3 <- ez_signal(list(sample1 = df1, sample2 = df2), "chr1:1000000-2000000")
 }
 }
