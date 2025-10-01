@@ -13,108 +13,86 @@
 #' @param alpha Transparency (default: 0.5).
 #' @return A ggplot2 layer.
 #' @export
-#' @importFrom ggplot2 geom_tile aes geom_segment geom_ribbon
+#' @importFrom ggplot2 GeomSegment geom_tile aes geom_segment geom_ribbon
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
 #' p <- ggplot(signal_data, aes(x = start, y = score)) + geom_signal()
 #' }
+#' Create a signal track for genomic data visualization
+#'
+#' This function creates a signal track visualization using different geom types.
+#' It supports three visualization types: 'line', 'area', and 'heatmap', each with
+#' customizable parameters.
+#'
+#' @param mapping Aesthetic mapping created with aes()
+#' @param data The data to be displayed
+#' @param stat The statistical transformation to use
+#' @param position Position adjustment
+#' @param ... Common parameters passed to all geom types
+#' @param type Type of visualization: "line", "area", or "heatmap"
+#' @param line.params List of parameters specific to line type visualization
+#' @param area.params List of parameters specific to area type visualization
+#' @param heatmap.params List of parameters specific to heatmap type visualization
+#' @param show.legend Logical. Should this layer be included in the legends?
+#' @param inherit.aes If FALSE, overrides the default aesthetics
+#'
+#' @return A ggplot2 layer or list of layers
 geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
-                        position = "identity", ..., type = "area",
-                        fill = "purple2", color = "purple2",
-                        alpha = 0.5, show.legend = NA, inherit.aes = TRUE) {
+                        position = "identity", type = "area",
+                        plot.params = list(), ...,
+                        show.legend = NA, inherit.aes = TRUE) {
 
   # Validate that mapping is created by aes()
   if (!is.null(mapping) && !ggplot2::is.ggproto(mapping) && !inherits(mapping, "uneval")) {
     stop("`mapping` must be created by `aes()`.")
   }
 
-  # Create the appropriate geom based on the type
   if (type == "line") {
-    # For line type, use geom_segment to draw vertical lines at each data point
-    # Create base aesthetics
+    # Base aesthetics for line type
     base_aes <- ggplot2::aes(x = .data$start, xend = .data$end, y = 0, yend = .data$score)
 
     # Combine with user-provided mapping if it exists
     if (!is.null(mapping)) {
-      # Use modifyList to properly combine aesthetics
-      combined_mapping <- modifyList(base_aes, mapping)
+      mapping <- modifyList(base_aes, mapping)
     } else {
-      combined_mapping <- base_aes
+      mapping <- base_aes
     }
 
-    # Check if color/colour is in the mapping before applying default
-    has_color_in_mapping <- !is.null(mapping) && (("colour" %in% names(mapping)) || ("color" %in% names(mapping)))
-
-    return(ggplot2::geom_segment(
-      mapping = combined_mapping,
+    ggplot2::layer(
       data = data,
+      mapping = mapping,
       stat = stat,
+      geom = GeomSegment,
       position = position,
-      color = if (!has_color_in_mapping) color else NULL,
-      ...,
       show.legend = show.legend,
-      inherit.aes = inherit.aes
-    ))
+      inherit.aes = inherit.aes,
+      params = list(...)
+    )
   } else if (type == "area") {
-    # For area type, use geom_ribbon to draw a filled area between 0 and the score.
-    # Create base aesthetics
-    base_aes <- ggplot2::aes(xmin = .data$start, xmax = .data$end, ymin = 0, ymax = .data$score)
+    # Base aesthetics for area type
+    base_aes <- ggplot2::aes(x = .data$start, y = .data$score)
 
     # Combine with user-provided mapping if it exists
     if (!is.null(mapping)) {
-      # Use modifyList to properly combine aesthetics
-      combined_mapping <- modifyList(base_aes, mapping)
+      mapping <- modifyList(base_aes, mapping)
     } else {
-      combined_mapping <- base_aes
+      mapping <- base_aes
     }
 
-    # Check if fill and color/colour are in the mapping before applying defaults
-    has_fill_in_mapping <- !is.null(mapping) && ("fill" %in% names(mapping))
-    has_color_in_mapping <- !is.null(mapping) && (("colour" %in% names(mapping)) || ("color" %in% names(mapping)))
-
-    return(ggplot2::geom_ribbon(
-      mapping = combined_mapping,
+    ggplot2::layer(
       data = data,
+      mapping = mapping,
       stat = stat,
+      geom = GeomArea,
       position = position,
-      fill = if (!has_fill_in_mapping) fill else NULL,
-      colour = if (!has_color_in_mapping) color else NULL,
-      alpha = alpha,
-      ...,
       show.legend = show.legend,
-      inherit.aes = inherit.aes
-    ))
-  } else if (type == "heatmap") {
-    # For heatmap, create base aesthetics
-    base_aes <- ggplot2::aes(x = .data$start, y = 0, width = .data$end - .data$start, height = 1)
+      inherit.aes = inherit.aes,
+      params = list(...)
+    )
 
-    # Add fill aesthetic only if not provided by user
-    has_fill_in_mapping <- !is.null(mapping) && ("fill" %in% names(mapping))
-    if (!has_fill_in_mapping) {
-      base_aes$fill <- rlang::quo(.data$score)
-    }
-
-    # Combine with user-provided mapping if it exists
-    if (!is.null(mapping)) {
-      # Use modifyList to properly combine aesthetics
-      combined_mapping <- modifyList(base_aes, mapping)
-    } else {
-      combined_mapping <- base_aes
-    }
-
-    return(ggplot2::geom_tile(
-      mapping = combined_mapping,
-      data = data,
-      stat = stat,
-      position = position,
-      alpha = alpha,
-      ...,
-      show.legend = show.legend,
-      inherit.aes = inherit.aes
-    ))
   } else {
-    stop("Type must be one of 'line', 'area', or 'heatmap'")
+    stop("Type must be one of 'line' or 'area'")
   }
 }
 
@@ -147,48 +125,4 @@ stat_bin_signal <- function(mapping = NULL, data = NULL, geom = "line",
     binwidth = binwidth, bins = bins,
     show.legend = show.legend, inherit.aes = inherit.aes
   )
-}
-
-#' Create a signal track from a bigWig file
-#'
-#' This function creates a signal track from a bigWig file. It imports the data
-#' for a specific region and creates a ggplot2 layer for visualization.
-#'
-#' @param file Path to the bigWig file
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
-#' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
-#' @param color Line color (default: "purple2")
-#' @param fill Fill color for area plots (default: "purple2")
-#' @param alpha Transparency (default: 0.5)
-#' @param binwidth Width of bins in base pairs (default: NULL)
-#' @param ... Additional arguments passed to geom_signal
-#' @return A ggplot2 layer
-#' @export
-#' @importFrom ggplot2 ggplot aes
-#' @examples
-#' \dontrun{
-#' p <- signal_track("signal.bw", "chr1:1000000-2000000")
-#' }
-signal_track <- function(file, region, type = "area", color = "purple2",
-                         fill = "purple2", alpha = 0.5, binwidth = NULL, ...) {
-  # Parse the region
-  region_gr <- parse_region(region)
-
-  # Import the data
-  signal_data <- import_genomic_data(file, which = region_gr)
-
-  # Create the plot
-  p <- ggplot2::ggplot(signal_data, ggplot2::aes(x = start, y = score)) +
-    geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...)
-
-  # Apply binning if requested
-  if (!is.null(binwidth)) {
-    p <- p + stat_bin_signal(binwidth = binwidth)
-  }
-
-  # Apply the appropriate theme and scale
-  p <- p + ez_signal_theme() +
-    scale_x_genome_region(region)
-
-  return(p)
 }
