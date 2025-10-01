@@ -24,25 +24,38 @@ geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
                         fill = "purple2", color = "purple2",
                         alpha = 0.5, show.legend = NA, inherit.aes = TRUE) {
 
+  # Check if color/fill are in the mapping
+  has_fill_mapping <- !is.null(mapping) && "fill" %in% names(mapping)
+  has_color_mapping <- !is.null(mapping) && "colour" %in% names(mapping)
+
   # Create the appropriate geom based on the type
   if (type == "line") {
-    # Ensure mapping is a list, even if NULL
     # For line type, use geom_segment to draw vertical lines at each data point
-    # For line type, assume input data has 'x' and 'xend' for intervals.
-    # 'score' should be expanded to 'y' and 'yend' for vertical lines.
     return(ggplot2::geom_segment(
-      ggplot2::aes(x = .data$start, xend = .data$end, y = 0, yend = .data$score, !!!mapping), data = data, stat = stat,
-      position = position, color = color, ...,
-      show.legend = show.legend, inherit.aes = inherit.aes
+      ggplot2::aes(x = .data$start, xend = .data$end, y = 0, yend = .data$score, !!!mapping),
+      data = data,
+      stat = stat,
+      position = position,
+      # Only use default color if not in mapping
+      color = if (!has_color_mapping) color else NULL,
+      ...,
+      show.legend = show.legend,
+      inherit.aes = inherit.aes
     ))
   } else if (type == "area") {
     # For area type, use geom_ribbon to draw a filled area between 0 and the score.
-    # For area type, assume input data has 'x' and 'xend' for intervals.
-    # 'score' should be expanded to 'ymin' (0) and 'ymax' (score).
     return(ggplot2::geom_ribbon(
-      ggplot2::aes(xmin = .data$start, xmax = .data$end, ymin = 0, ymax = .data$score, !!!mapping), data = data, stat = stat,
-      position = position, fill = fill, color = color, alpha = alpha, ...,
-      show.legend = show.legend, inherit.aes = inherit.aes,
+      ggplot2::aes(xmin = .data$start, xmax = .data$end, ymin = 0, ymax = .data$score, !!!mapping),
+      data = data,
+      stat = stat,
+      position = position,
+      # Only use defaults if not in mapping
+      fill = if (!has_fill_mapping) fill else NULL,
+      color = if (!has_color_mapping) color else NULL,
+      alpha = alpha,
+      ...,
+      show.legend = show.legend,
+      inherit.aes = inherit.aes
     ))
   } else if (type == "heatmap") {
     # For heatmap, we need to ensure we have the right mapping
@@ -54,9 +67,14 @@ geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
     }
 
     return(ggplot2::geom_tile(
-      mapping = mapping, data = data, stat = stat,
-      position = position, alpha = alpha, ...,
-      show.legend = show.legend, inherit.aes = inherit.aes
+      mapping = mapping,
+      data = data,
+      stat = stat,
+      position = position,
+      alpha = alpha,
+      ...,
+      show.legend = show.legend,
+      inherit.aes = inherit.aes
     ))
   } else {
     stop("Type must be one of 'line', 'area', or 'heatmap'")
