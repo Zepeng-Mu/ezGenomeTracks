@@ -4,105 +4,91 @@
 #' RNA-seq coverage, or ATAC-seq signal. It can display the signal as a line, area,
 #' or heatmap.
 #'
-#' @inheritParams ggplot2::geom_line
+#' @inheritParams ggplot2::layer
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area").
 #'   "line" and "area" types expect `start`, `end`, and `score` columns in the data.
 #'   "heatmap" expects `start`, `end`, and `score` columns in the data, with `score` mapped to `fill`.
-#' @param fill Fill color for area plots (default: "purple2").
-#' @param color Line color (default: "purple2").
-#' @param alpha Transparency (default: 0.5).
+#' @param na.rm If `TRUE`, silently removes `NA` values.
+#' @param ... Other arguments passed on to \code{\link[ggplot2]{layer}}. These are
+#'   often aesthetics, used to set an aesthetic to a fixed value, like
+#'   `color = "red"` or `linewidth = 3`.
 #' @return A ggplot2 layer.
 #' @export
-#' @importFrom ggplot2 GeomSegment geom_tile aes geom_segment geom_ribbon
+#' @importFrom ggplot2 GeomSegment GeomArea GeomTile layer aes ggproto Geom
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
-#' p <- ggplot(signal_data, aes(x = start, y = score)) + geom_signal()
+#' signal_data <- data.frame(
+#'   start = seq(1, 100, by = 10),
+#'   end = seq(1, 100, by = 10) + 9,
+#'   score = rnorm(10)
+#' )
+#' ggplot(signal_data) + geom_signal(aes(x = start, y = score, xend = end))
+#' ggplot(signal_data) + geom_signal(aes(x = start, y = score), type = "area")
+#' ggplot(signal_data) +
+#'   geom_signal(aes(x = start, fill = score), type = "heatmap", y = 1, height = 1) +
+#'   scale_fill_viridis_c()
 #' }
-#' Create a signal track for genomic data visualization
-#'
-#' This function creates a signal track visualization using different geom types.
-#' It supports three visualization types: 'line', 'area', and 'heatmap', each with
-#' customizable parameters.
-#'
-#' @param mapping Aesthetic mapping created with aes()
-#' @param data The data to be displayed
-#' @param stat The statistical transformation to use
-#' @param position Position adjustment
-#' @param ... Common parameters passed to all geom types
-#' @param type Type of visualization: "line", "area", or "heatmap"
-#' @param line.params List of parameters specific to line type visualization
-#' @param area.params List of parameters specific to area type visualization
-#' @param heatmap.params List of parameters specific to heatmap type visualization
-#' @param show.legend Logical. Should this layer be included in the legends?
-#' @param inherit.aes If FALSE, overrides the default aesthetics
-#'
-#' @return A ggplot2 layer or list of layers
 geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
                         position = "identity", type = "area", ...,
-                        show.legend = NA, inherit.aes = TRUE) {
+                        na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
 
-  # Validate that mapping is created by aes()
-  if (!is.null(mapping) && !ggplot2::is.ggproto(mapping) && !inherits(mapping, "uneval")) {
-    stop("`mapping` must be created by `aes()`.")
+  type <- match.arg(type, c("area", "line", "heatmap"))
+  if (type == "area") {
+     default_aes <- aes(x = .data$start, y = .data$score)
+  } else if (type == "line") {
+    default_aes <- aes(x = .data$start, y = 0, xend = .data$end, yend = .data$score)
+  } else if (type == "heatmap") {
+    default_aes <- aes(x = (.data$start + .data$end) / 2, fill = .data$score, y = 1, height = 1)
   }
 
-  params <- list(...)
-  if (is.null(mapping$color)) {
-    params$color <- "purple2"
-  }
-
-  if (is.null(mapping$fill)) {
-    params$fill <- "purple2"
-  }
-
-  if (type == "line") {
-    # Base aesthetics for line type
-    base_aes <- ggplot2::aes(x = .data$start, xend = .data$end, y = 0, yend = .data$score)
-
-    # Combine with user-provided mapping if it exists
-    if (!is.null(mapping)) {
-      mapping <- modifyList(base_aes, mapping)
-    } else {
-      mapping <- base_aes
-    }
-
-    ggplot2::layer(
-      data = data,
-      mapping = mapping,
-      stat = stat,
-      geom = GeomSegment,
-      position = position,
-      show.legend = show.legend,
-      inherit.aes = inherit.aes,
-      params = params
-    )
-  } else if (type == "area") {
-    # Base aesthetics for area type
-    base_aes <- ggplot2::aes(x = .data$start, y = .data$score)
-
-    # Combine with user-provided mapping if it exists
-    if (!is.null(mapping)) {
-      mapping <- modifyList(base_aes, mapping)
-    } else {
-      mapping <- base_aes
-    }
-
-    ggplot2::layer(
-      data = data,
-      mapping = mapping,
-      stat = stat,
-      geom = GeomArea,
-      position = position,
-      show.legend = show.legend,
-      inherit.aes = inherit.aes,
-      params = params
-    )
-
+  if (is.null(mapping)) {
+    mapping <- default_aes
   } else {
-    stop("Type must be one of 'line' or 'area'")
+    mapping <- utils::modifyList(default_aes, as.list(mapping))
+    mapping <- do.call(aes, mapping)
   }
+
+  layer(
+    data = data,
+    mapping = mapping,
+    stat = stat,
+    geom = GeomSignal,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      type = type,
+      na.rm = na.rm,
+      ...
+    )
+  )
 }
+
+#' @rdname geom_signal
+#' @format NULL
+#' @usage NULL
+GeomSignal <- ggproto("GeomSignal", Geom,
+  required_aes = c("x", "y"),
+  setup_params = function(data, params) {
+    params$type <- match.arg(params$type, c("area", "line", "heatmap"))
+    params
+  },
+
+  draw_panel = function(data, panel_params, coord, type = "area", na.rm = FALSE) {
+    Geom <- switch(type,
+      line = GeomSegment,
+      area = GeomArea,
+      heatmap = GeomTile
+    )
+    Geom$draw_panel(data, panel_params, coord)
+  },
+
+  default_aes = aes(
+    colour = "purple2", fill = "purple2", linewidth = 0.5, linetype = 1,
+    alpha = 0.7
+  )
+)
 
 #' Stat for binning genomic signal data
 #'
