@@ -12,8 +12,6 @@
 #' @param color_by Column name in data for coloring tracks (defaults to group_by if not specified)
 #' @param colors Vector of colors for different groups (default: NULL, uses default ggplot2 colors)
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
-#' @param fill Fill color for area plots (default: "purple2", ignored if group_by is specified)
-#' @param color Line color (default: "purple2", ignored if group_by is specified)
 #' @param alpha Transparency (default: 0.8)
 #' @param binwidth Width of bins in base pairs (default: NULL)
 #' @param facet_scales Scale parameter for facet_wrap (default: "free_y")
@@ -42,37 +40,53 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
   }
 
   # Create base plot
-  p <- ggplot2::ggplot(data, ggplot2::aes(x = start, y = score))
+  p <- ggplot2::ggplot(data)
 
-  # Add group aesthetics if group_by is specified
+  # Set default color_by to group_by if not specified
+  if (is.null(color_by) && !is.null(group_by)) {
+    color_by <- group_by
+  }
+
+  # Create the mapping
   if (!is.null(group_by)) {
-    # Create mapping with grouping
+    # Base mapping with grouping
+    mapping_list <- list(
+      x = rlang::expr(.data$start),
+      y = rlang::expr(.data$score),
+      group = rlang::expr(.data[[group_by]])
+    )
+
+    # Add color aesthetics if color_by is specified
     if (!is.null(color_by)) {
-      mapping <- ggplot2::aes(
-        fill = .data[[color_by]],
-        color = .data[[color_by]],
-        group = .data[[group_by]]
-      )
-    } else {
-      mapping <- ggplot2::aes(
-        group = .data[[group_by]]
-      )
+      mapping_list$fill <- rlang::expr(.data[[color_by]])
+      mapping_list$colour <- rlang::expr(.data[[color_by]])
     }
 
-    # Add geom_signal with group mapping
-    p <- p + geom_signal(mapping = mapping, type = type, alpha = alpha, ...)
+    # Convert list to an aes object
+    mapping <- do.call(ggplot2::aes, mapping_list)
+
+    # Add geom_signal with the mapping
+    p <- p + geom_signal(
+      mapping = mapping,
+      type = type,
+      alpha = alpha,
+      ...
+    )
 
     # Add color scales if colors are specified
     if (!is.null(colors)) {
+      legend_name <- color_by
       p <- p +
-        ggplot2::scale_fill_manual(values = colors) +
-        ggplot2::scale_color_manual(values = colors)
+        ggplot2::scale_fill_manual(values = colors, name = legend_name) +
+        ggplot2::scale_colour_manual(values = colors, name = legend_name)
     }
   } else {
-    # Add geom_signal without grouping
+    # Add geom_signal without grouping or color mapping
     p <- p + geom_signal(
+      mapping = ggplot2::aes(x = .data$start, y = .data$score),
       type = type,
-      alpha = alpha, ...
+      alpha = alpha,
+      ...
     )
   }
 

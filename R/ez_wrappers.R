@@ -23,21 +23,23 @@
 #' \dontrun{
 #' # Single track
 #' track1 <- ez_signal("signal.bw", "chr1:1000000-2000000")
-#' 
+#'
 #' # Grouped data frame
 #' track2 <- ez_signal(df, "chr1:1000000-2000000", group = "sample", stack = FALSE)
-#' 
+#'
 #' # Multiple data frames
 #' track3 <- ez_signal(list(sample1 = df1, sample2 = df2), "chr1:1000000-2000000")
 #' }
-ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
+ez_signal <- function(input, region, names = NULL,
+                      type = c("area", "line", "heatmap"),
                       color = "steelblue", fill = "steelblue", stack = TRUE,
-                      group = NULL, colors = NULL,
+                      group_var = NULL, track_var = NULL, color_by = c("group", "track"),
                       y_axis_style = c("none", "simple", "full"),
                       y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
   # Validate inputs
   type <- match.arg(type)
   y_axis_style <- match.arg(y_axis_style)
+  color_by <- match.arg(color_by)
 
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
@@ -57,107 +59,79 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
     }
   }
 
-  # Handle single element input
+  # Process single track element
   if (length(input) == 1) {
-    if (is(input, "data.frame")) {
-      # Single data frame
-      if (!all(c("start", "score") %in% colnames(input))) {
-        stop("Data frame must contain 'start' and 'score' columns")
-      }
-      plotDt <- input
-    } else if (is(input, "character")) {
-      # Single file path
-      if (!file.exists(input)) stop("File does not exist: ", input)
-      # TODO read bigWig file
-    }
-  }
-
-  # Handle list input
-
-  if (is(input, "character")) {
-    if (length(input) == 1) {
-      # Single file path
-      if (!file.exists(input)) stop("File does not exist: ", input)
-      # TODO: Implement bigWig file reading
-      stop("BigWig file support not yet implemented. Please use data frames.")
-    } else {
-      # Multiple file paths
-      # TODO: Implement multiple bigWig file reading and plot as overlapping tracks
-    }
-  }
-  
-  # Handle list of data frames or file paths
-  if (is(input, "list")) {
-    if (is.null(names(input))) {
-      names(input) <- paste0("Track ", seq_along(input))
-    }
-    
+    track_name <- ifelse(is.null(names), "Group 1", names)
+    plotDt <- get_single_signal(input, region, name = track_name)
+  } else if (!is(input, "list")) {
+    # Multiple element in a vector
+    plotDt <- lapply(seq_along(input), function(i) {
+      x <- input[i]
+      tmp_data <- get_single_signal(x, region, name = ifelse(is.null(names), paste0("Group ", i), names[i]))
+      return(tmp_data)
+    }) %>% Reduce(., rbind)
+  } else if (is(input, "list")) {
     # Process each element in the list
     plot_data_list <- list()
     for (i in seq_along(input)) {
       track_name <- names(input)[i]
       track_data <- input[[i]]
-      
-      if (is.character(track_data)) {
-        if (length(track_data) == 1) {
-          # Single file path
-          if (!file.exists(track_data)) stop("File does not exist: ", track_data)
-          # TODO: Implement bigWig file reading
-          stop("BigWig file support not yet implemented. Please use data frames.")
-        } else {
-          # Vector of file paths - create grouped data
-          # TODO: Implement multiple bigWig file reading
-          stop("Multiple bigWig file support not yet implemented. Please use data frames.")
-        }
-      } else if (is.data.frame(track_data)) {
-        # Validate required columns
-        if (!all(c("start", "score") %in% colnames(track_data))) {
-          stop("Data frame must contain 'start' and 'score' columns")
-        }
-        
-        # Add track identifier
-        track_data$track <- track_name
-        
-        # Handle grouping within this track
-        if (!is.null(group) && group %in% colnames(track_data)) {
-          track_data$group_var <- track_data[[group]]
-        } else {
-          track_data$group_var <- "default"
-        }
-        
-        plot_data_list[[i]] <- track_data
+
+      if (length(track_data) == 1) {
+        # Single track element
+        tmp_data <- get_single_signal(track_data, region, name = track_name)
+        tmp_data$track <- track_name
+        plot_data_list[[i]] <- tmp_data
       } else {
-        stop("List elements must be file paths or data frames")
+        # More than one element
+        new_track_data <- lapply(seq_along(track_data), function(i) {
+          x <- track_data[i]
+          tmpTmp_data <- get_single_signal(x, region, name = paste0(track_name, i))
+          return(tmpTmp_data)
+        }) %>% Reduce(., rbind)
+        plot_data_list[[i]] <- new_track_data
       }
     }
-    
+
+    # # Add track identifier
+    # track_data$name <- track_name
+
+    # # Handle grouping within this track
+    # if (!is.null(group) && group %in% colnames(track_data)) {
+    #   track_data$group_var <- track_data[[group]]
+    # } else {
+    #   track_data$group_var <- "default"
+    # }
+
+    # plot_data_list[[i]] <- track_data
+
     # Combine all data
     plotDt <- do.call(rbind, plot_data_list)
-    
+
     # Create the plot
     if (!is.null(group) && group %in% colnames(plotDt)) {
       # Multiple tracks with grouping
       unique_groups <- unique(plotDt$group_var)
       unique_tracks <- unique(plotDt$track)
       n_colors <- length(unique_groups)
-      
+
       if (is.null(colors)) {
         colors <- get_default_colors(n_colors)
         names(colors) <- unique_groups
       }
-      
+
       if (stack) {
         # Stacked tracks with grouped signals within each
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = group_var, fill = group_var)) +
           geom_signal(type = type, alpha = alpha, ...) +
-          ggplot2::facet_wrap(~ track, ncol = 1, scales = "free_y") +
+          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
           ggplot2::scale_color_manual(values = colors, name = group) +
           ggplot2::scale_fill_manual(values = colors, name = group)
       } else {
         # Overlapping tracks and groups
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = interaction(group_var, track), fill = interaction(group_var, track))) +
           geom_signal(type = type, alpha = alpha, ...)
-        
+
         # Create combined color palette
         combined_groups <- unique(interaction(plotDt$group_var, plotDt$track))
         n_combined <- length(combined_groups)
@@ -167,8 +141,8 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
           combined_colors <- rep(colors, length(unique_tracks))
         }
         names(combined_colors) <- combined_groups
-        
-        p <- p + 
+
+        p <- p +
           ggplot2::scale_color_manual(values = combined_colors, name = "Track.Group") +
           ggplot2::scale_fill_manual(values = combined_colors, name = "Track.Group")
       }
@@ -176,17 +150,17 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
       # Multiple tracks without grouping
       unique_tracks <- unique(plotDt$track)
       n_colors <- length(unique_tracks)
-      
+
       if (is.null(colors)) {
         colors <- get_default_colors(n_colors)
         names(colors) <- unique_tracks
       }
-      
+
       if (stack) {
         # Stacked tracks
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
           geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...) +
-          ggplot2::facet_wrap(~ track, ncol = 1, scales = "free_y")
+          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
       } else {
         # Overlapping tracks
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = track, fill = track)) +
@@ -195,26 +169,25 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
           ggplot2::scale_fill_manual(values = colors, name = "Track")
       }
     }
-    
   } else if (is(input, "data.frame")) {
     # Single data frame
     # Validate required columns
     if (!all(c("start", "score") %in% colnames(input))) {
       stop("Data frame must contain 'start' and 'score' columns")
     }
-    
+
     plotDt <- input
-    
+
     if (!is.null(group) && group %in% colnames(plotDt)) {
       # Grouped data frame
       unique_groups <- unique(plotDt[[group]])
       n_colors <- length(unique_groups)
-      
+
       if (is.null(colors)) {
         colors <- get_default_colors(n_colors)
         names(colors) <- unique_groups
       }
-      
+
       if (stack) {
         # Stacked groups using facet_wrap
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
@@ -225,7 +198,7 @@ ez_signal <- function(input, region, type = c("area", "line", "heatmap"),
         aes_mapping <- ggplot2::aes(x = start, y = score)
         aes_mapping$color <- as.symbol(group)
         aes_mapping$fill <- as.symbol(group)
-        
+
         p <- ggplot2::ggplot(plotDt, aes_mapping) +
           geom_signal(type = type, alpha = alpha, ...) +
           ggplot2::scale_color_manual(values = colors, name = group) +

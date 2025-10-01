@@ -24,50 +24,87 @@ geom_signal <- function(mapping = NULL, data = NULL, stat = "identity",
                         fill = "purple2", color = "purple2",
                         alpha = 0.5, show.legend = NA, inherit.aes = TRUE) {
 
-  # Check if color/fill are in the mapping
-  has_fill_mapping <- !is.null(mapping) && "fill" %in% names(mapping)
-  has_color_mapping <- !is.null(mapping) && "colour" %in% names(mapping)
+  # Validate that mapping is created by aes()
+  if (!is.null(mapping) && !ggplot2::is.ggproto(mapping) && !inherits(mapping, "uneval")) {
+    stop("`mapping` must be created by `aes()`.")
+  }
 
   # Create the appropriate geom based on the type
   if (type == "line") {
     # For line type, use geom_segment to draw vertical lines at each data point
+    # Create base aesthetics
+    base_aes <- ggplot2::aes(x = .data$start, xend = .data$end, y = 0, yend = .data$score)
+
+    # Combine with user-provided mapping if it exists
+    if (!is.null(mapping)) {
+      # Use modifyList to properly combine aesthetics
+      combined_mapping <- modifyList(base_aes, mapping)
+    } else {
+      combined_mapping <- base_aes
+    }
+
+    # Check if color/colour is in the mapping before applying default
+    has_color_in_mapping <- !is.null(mapping) && (("colour" %in% names(mapping)) || ("color" %in% names(mapping)))
+
     return(ggplot2::geom_segment(
-      ggplot2::aes(x = .data$start, xend = .data$end, y = 0, yend = .data$score, !!!mapping),
+      mapping = combined_mapping,
       data = data,
       stat = stat,
       position = position,
-      # Only use default color if not in mapping
-      color = if (!has_color_mapping) color else NULL,
+      color = if (!has_color_in_mapping) color else NULL,
       ...,
       show.legend = show.legend,
       inherit.aes = inherit.aes
     ))
   } else if (type == "area") {
     # For area type, use geom_ribbon to draw a filled area between 0 and the score.
+    # Create base aesthetics
+    base_aes <- ggplot2::aes(xmin = .data$start, xmax = .data$end, ymin = 0, ymax = .data$score)
+
+    # Combine with user-provided mapping if it exists
+    if (!is.null(mapping)) {
+      # Use modifyList to properly combine aesthetics
+      combined_mapping <- modifyList(base_aes, mapping)
+    } else {
+      combined_mapping <- base_aes
+    }
+
+    # Check if fill and color/colour are in the mapping before applying defaults
+    has_fill_in_mapping <- !is.null(mapping) && ("fill" %in% names(mapping))
+    has_color_in_mapping <- !is.null(mapping) && (("colour" %in% names(mapping)) || ("color" %in% names(mapping)))
+
     return(ggplot2::geom_ribbon(
-      ggplot2::aes(xmin = .data$start, xmax = .data$end, ymin = 0, ymax = .data$score, !!!mapping),
+      mapping = combined_mapping,
       data = data,
       stat = stat,
       position = position,
-      # Only use defaults if not in mapping
-      fill = if (!has_fill_mapping) fill else NULL,
-      color = if (!has_color_mapping) color else NULL,
+      fill = if (!has_fill_in_mapping) fill else NULL,
+      colour = if (!has_color_in_mapping) color else NULL,
       alpha = alpha,
       ...,
       show.legend = show.legend,
       inherit.aes = inherit.aes
     ))
   } else if (type == "heatmap") {
-    # For heatmap, we need to ensure we have the right mapping
-    if (is.null(mapping)) {
-      mapping <- ggplot2::aes()
+    # For heatmap, create base aesthetics
+    base_aes <- ggplot2::aes(x = .data$start, y = 0, width = .data$end - .data$start, height = 1)
+
+    # Add fill aesthetic only if not provided by user
+    has_fill_in_mapping <- !is.null(mapping) && ("fill" %in% names(mapping))
+    if (!has_fill_in_mapping) {
+      base_aes$fill <- rlang::quo(.data$score)
     }
-    if (!"fill" %in% names(mapping)) {
-      mapping$fill <- substitute(score)
+
+    # Combine with user-provided mapping if it exists
+    if (!is.null(mapping)) {
+      # Use modifyList to properly combine aesthetics
+      combined_mapping <- modifyList(base_aes, mapping)
+    } else {
+      combined_mapping <- base_aes
     }
 
     return(ggplot2::geom_tile(
-      mapping = mapping,
+      mapping = combined_mapping,
       data = data,
       stat = stat,
       position = position,
