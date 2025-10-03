@@ -27,10 +27,12 @@
 #' )
 #'
 #' # Area plot (default)
-#' ggplot(df) + geom_coverage()
+#' ggplot(df) +
+#'   geom_coverage()
 #'
 #' # Line plot
-#' ggplot(df) + geom_coverage(type = "line")
+#' ggplot(df) +
+#'   geom_coverage(type = "line")
 #'
 #' # Heatmap tiles
 #' ggplot(df) +
@@ -38,12 +40,11 @@
 #'   scale_fill_viridis_c()
 #' }
 geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
-                        position = "identity", type = "area", ...,
-                        na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
-
+                          position = "identity", type = "area", ...,
+                          na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
   type <- match.arg(type, c("area", "line", "heatmap"))
   if (type == "area") {
-     default_aes <- aes(x = .data$start, y = .data$score)
+    default_aes <- aes(x = .data$start, y = .data$score)
   } else if (type == "line") {
     default_aes <- aes(x = .data$start, y = 0, xend = .data$end, yend = .data$score)
   } else if (type == "heatmap") {
@@ -82,7 +83,6 @@ GeomSignal <- ggproto("GeomSignal", Geom,
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params
   },
-
   draw_panel = function(data, panel_params, coord, type = "area", na.rm = FALSE) {
     Geom <- switch(type,
       line = GeomSegment,
@@ -91,7 +91,6 @@ GeomSignal <- ggproto("GeomSignal", Geom,
     )
     Geom$draw_panel(data, panel_params, coord)
   },
-
   default_aes = aes(
     colour = "purple2", fill = "purple2", linewidth = 0.5, linetype = 1,
     alpha = 0.7
@@ -114,13 +113,12 @@ GeomSignal <- ggproto("GeomSignal", Geom,
 #' \dontrun{
 #' library(ggplot2)
 #' p <- ggplot(signal_data, aes(x = start, y = score)) +
-#'      stat_bin_signal(binwidth = 1000)
+#'   stat_bin_signal(binwidth = 1000)
 #' }
 stat_bin_signal <- function(mapping = NULL, data = NULL, geom = "line",
                             position = "identity", ..., binwidth = NULL,
                             bins = 30, summary_fun = mean,
                             show.legend = NA, inherit.aes = TRUE) {
-
   ggplot2::stat_summary_bin(
     mapping = mapping, data = data, geom = geom,
     position = position, fun = summary_fun, ...,

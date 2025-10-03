@@ -38,7 +38,7 @@ geom_feature <- function(mapping = NULL, data = NULL, stat = "identity",
     mapping <- do.call(aes, mapping)
   }
 
-  layer(
+  ggplot2::layer(
     data = data,
     mapping = mapping,
     stat = stat,
@@ -48,9 +48,6 @@ geom_feature <- function(mapping = NULL, data = NULL, stat = "identity",
     inherit.aes = inherit.aes,
     params = list(
       height = height,
-      color = color,
-      fill = fill,
-      alpha = alpha,
       na.rm = na.rm,
       ...
     )

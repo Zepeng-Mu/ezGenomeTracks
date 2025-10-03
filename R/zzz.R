@@ -23,3 +23,8 @@
   # This function runs before .onAttach
   invisible()
 }
+
+# Register global variables used in non-standard evaluation to appease R CMD check
+utils::globalVariables(c(
+  ".data", "exon_start", "exon_end", "xstart", "xend", "y", "strand", "start", "end"
+))
