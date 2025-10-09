@@ -109,6 +109,6 @@ reducing the size of large datasets for visualization.
 \dontrun{
 library(ggplot2)
 p <- ggplot(signal_data, aes(x = start, y = score)) +
-     stat_bin_signal(binwidth = 1000)
+  stat_bin_signal(binwidth = 1000)
 }
 }
