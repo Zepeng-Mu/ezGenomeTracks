@@ -4,9 +4,11 @@
 \alias{ez_signal_theme}
 \title{A theme for signal tracks}
 \usage{
-ez_signal_theme(...)
+ez_signal_theme(y_axis_style = c("none", "simple", "full"), ...)
 }
 \arguments{
+\item{y_axis_style}{Style of the y-axis. Options are "none", "simple", and "full".}
+
 \item{...}{Additional arguments passed to ez_theme}
 }
 \value{
@@ -19,6 +21,8 @@ It removes the y-axis text and title, and makes the plot more compact.
 \examples{
 \dontrun{
 library(ggplot2)
-p <- ggplot(data, aes(x = start, y = score)) + geom_line() + ez_signal_theme()
+p <- ggplot(data, aes(x = start, y = score)) +
+  geom_line() +
+  ez_signal_theme()
 }
 }

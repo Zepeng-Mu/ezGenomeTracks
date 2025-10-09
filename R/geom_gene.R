@@ -1,90 +1,168 @@
 #' Geom for gene model tracks
 #'
 #' This function creates a geom for gene model tracks, displaying genes with exons,
-#' introns, and directional arrows. It is designed to work with gene annotation data
-#' from GTF/GFF files.
+#' introns, and optional directional arrows. It is designed to work with gene
+#' annotation data from GTF/GFF files after lightweight preprocessing.
 #'
-#' @inheritParams ggplot2::geom_segment
+#' Expected columns in the data:
+#' - `xstart`, `xend`, `type` (required)
+#' - optional: `exon_start`, `exon_end` for long-format exon rows
+#' - optional: `strand` for arrow direction ("+" or "-")
+#'
+#' The `type` column should contain "gene" for gene body lines or "exon" for exon rectangles.
+#'
+#' Color mapping: The `color` aesthetic is used for both exons (as fill) and introns (as color).
+#'
+#' @inheritParams ggplot2::layer
 #' @param exon_height Height of exons (default: 0.75)
-#' @param intron_height Height of introns (default: 0.4)
-#' @param arrow_length Length of directional arrows (default: 0.1)
-#' @param arrow_type Type of arrow (default: "open")
-#' @param exon_color Color of exon borders (default: "black")
-#' @param exon_fill Fill color of exons (default: "gray50")
-#' @param intron_color Color of introns (default: "gray50")
-#' @param text_size Size of gene labels (default: 3)
-#' @return A ggplot2 layer
+#' @param intron_width Line width of gene body (default: 0.4)
+#' @param arrow_length Length of directional arrows in inches (default: 0)
+#' @param arrow_type Type of arrow head (default: "open")
+#' @param exon_color Color of exon borders (default: "black", overridden by color mapping)
+#' @param exon_fill Fill color of exons (default: "gray50", overridden by color mapping)
+#' @param intron_color Color of intron/gene body (default: "gray50", overridden by color mapping)
+#' @param na.rm If `TRUE`, silently drop `NA` values.
+#' @return A ggplot2 layer that can be added to a plot.
 #' @export
-#' @importFrom ggplot2 geom_rect geom_segment geom_text arrow unit aes
+#' @importFrom ggplot2 GeomSegment GeomRect layer aes ggproto Geom arrow unit
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
-#' p <- ggplot(gene_data) + geom_gene(aes(xstart = start, xend = end, y = gene_name, strand = strand))
+#' p <- ggplot(gene_data) +
+#'   geom_gene(aes(xstart = xstart, xend = xend, y = y, strand = strand, type = type, color = gene_name))
 #' }
 geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
-                       position = "identity", ..., exon_height = 0.75,
-                       intron_height = 0.4, arrow_length = 0.1,
-                       arrow_type = "open", exon_color = "black",
-                       exon_fill = "gray50", intron_color = "gray50",
-                       text_size = 3, show.legend = NA, inherit.aes = TRUE) {
+                      position = "identity", ..., exon_height = 0.75,
+                      intron_width = 0.4, arrow_length = 0,
+                      arrow_type = "open", exon_color = "black",
+                      exon_fill = "gray50", intron_color = "gray50",
+                      na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
+  # Provide defaults so users don't have to map y; draw at fixed vertical band
+  default_aes <- ggplot2::aes(xstart = rlang::.data$xstart, xend = rlang::.data$xend)
+  if (is.null(mapping)) {
+    mapping <- default_aes
+  } else {
+    mapping <- utils::modifyList(default_aes, as.list(mapping))
+    mapping <- do.call(ggplot2::aes, mapping)
+  }
 
-  # This is a composite geom that will return a list of layers
-  structure(
-    list(
-      # Function to create the layers when the plot is built
-      layer_function = function(self, plot) {
-        # Extract the data and mapping from the plot
-        data <- plot$data
-        mapping <- plot$mapping
-
-        # Check if we have the required aesthetics
-        required_aes <- c("xstart", "xend", "y", "strand")
-        missing_aes <- setdiff(required_aes, names(mapping))
-        if (length(missing_aes) > 0) {
-          stop("Missing required aesthetics: ", paste(missing_aes, collapse = ", "))
-        }
-
-        # Create layers for introns (gene body)
-        intron_layer <- ggplot2::geom_segment(
-          data = data,
-          mapping = ggplot2::aes(
-            x = .data[[as.character(mapping$xstart)]],
-            xend = .data[[as.character(mapping$xend)]],
-            y = .data[[as.character(mapping$y)]],
-            yend = .data[[as.character(mapping$y)]]
-          ),
-          size = intron_height,
-          color = intron_color,
-          arrow = ggplot2::arrow(
-            type = arrow_type,
-            length = ggplot2::unit(arrow_length, "inches")
-          )
-        )
-
-        # Create layers for exons if available
-        if ("exon_start" %in% colnames(data) && "exon_end" %in% colnames(data)) {
-          exon_layer <- ggplot2::geom_rect(
-            data = data,
-            mapping = ggplot2::aes(
-              xmin = exon_start,
-              xmax = exon_end,
-              ymin = .data[[as.character(mapping$y)]] - exon_height/2,
-              ymax = .data[[as.character(mapping$y)]] + exon_height/2
-            ),
-            fill = exon_fill,
-            color = exon_color
-          )
-
-          return(list(intron_layer, exon_layer))
-        } else {
-          # If no exon information, just return the intron layer
-          return(list(intron_layer))
-        }
-      }
-    ),
-    class = c("GeomGene", "Geom", "ggproto")
+  ggplot2::layer(
+    data = data,
+    mapping = mapping,
+    stat = stat,
+    geom = GeomGene,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      exon_height = exon_height,
+      intron_width = intron_width,
+      arrow_length = arrow_length,
+      arrow_type = arrow_type,
+      exon_color = exon_color,
+      exon_fill = exon_fill,
+      intron_color = intron_color,
+      na.rm = na.rm,
+      ...
+    )
   )
 }
+
+#' @rdname geom_gene
+#' @format NULL
+#' @usage NULL
+GeomGene <- ggplot2::ggproto("GeomGene", Geom,
+  required_aes = c("xstart", "xend", "type"),
+  setup_params = function(data, params) {
+    if (!is.null(params$arrow_length) && params$arrow_length > 0) {
+      params$arrow <- ggplot2::arrow(
+        type = params$arrow_type,
+        length = ggplot2::unit(params$arrow_length, "inches")
+      )
+    } else {
+      params$arrow <- NULL
+    }
+    params
+  },
+  draw_panel = function(data, panel_params, coord,
+                        exon_height = 0.75, intron_width = 0.4,
+                        arrow = NULL, exon_color = "black",
+                        exon_fill = "gray50", intron_color = "gray50",
+                        na.rm = FALSE) {
+    # Separate data by type
+    exon_data <- data[data$type == "exon", ]
+    gene_data <- data[data$type == "gene", ]
+
+    grobs <- list()
+
+    # Draw exons (rectangles) for exon type
+    if (nrow(exon_data) > 0) {
+      if (all(c("exon_start", "exon_end") %in% names(exon_data))) {
+        exons <- transform(exon_data,
+          xmin = exon_start,
+          xmax = exon_end,
+          ymin = 0,
+          ymax = exon_height
+        )
+        # Exons use fill from mapping (color aesthetic), no border color
+        exons$colour <- NA
+        # Use mapped color as fill, fallback to exon_fill parameter
+        if ("colour" %in% names(exon_data)) {
+          exons$fill <- exon_data$colour
+        } else if (!is.null(exon_fill)) {
+          exons$fill <- exon_fill
+        }
+        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(exons, panel_params, coord)
+      } else {
+        # If no exon_start/exon_end, use xstart/xend for exon boundaries
+        exons <- transform(exon_data,
+          xmin = xstart,
+          xmax = xend,
+          ymin = 0,
+          ymax = exon_height
+        )
+        # Exons use fill from mapping (color aesthetic), no border color
+        exons$colour <- NA
+        # Use mapped color as fill, fallback to exon_fill parameter
+        if ("colour" %in% names(exon_data)) {
+          exons$fill <- exon_data$colour
+        } else if (!is.null(exon_fill)) {
+          exons$fill <- exon_fill
+        }
+        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(exons, panel_params, coord)
+      }
+    }
+
+    # Draw gene body (line) for gene type
+    if (nrow(gene_data) > 0) {
+      y_center <- exon_height / 2
+      body_data <- transform(gene_data,
+        x = xstart,
+        xend = xend,
+        y = y_center,
+        yend = y_center
+      )
+      # Introns use color from mapping, fallback to intron_color parameter
+      if ("colour" %in% names(gene_data)) {
+        body_data$colour <- gene_data$colour
+      } else if (!is.null(intron_color)) {
+        body_data$colour <- intron_color
+      }
+      if (!"linewidth" %in% names(body_data)) body_data$linewidth <- intron_width
+
+      grobs[[length(grobs) + 1]] <- ggplot2::GeomSegment$draw_panel(
+        body_data, panel_params, coord,
+        arrow = arrow
+      )
+    }
+
+    do.call(grid::grobTree, grobs)
+  },
+  default_aes = aes(
+    colour = "gray50", linewidth = 0.4, linetype = 1,
+    alpha = 1
+  )
+)
 
 #' Process gene annotation data for visualization
 #'
@@ -109,72 +187,90 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
 #' }
 process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
                               transcript_id = "transcript_id", type = "type") {
-  # Convert GRanges to data frame
-  gr_df <- granges_to_df(gr)
+  # Accept either GRanges or a data.frame already in long format
+  if (methods::is(gr, "GRanges")) {
+    gr_df <- granges_to_df(gr)
+    if (!"strand" %in% names(gr_df)) {
+      gr_df$strand <- as.character(GenomicRanges::strand(gr))
+    }
+  } else if (is.data.frame(gr)) {
+    gr_df <- gr
+  } else {
+    stop("Input must be a GRanges or a data.frame")
+  }
 
-  # Check if required columns exist
+  # Normalize strand
+  if (!"strand" %in% names(gr_df)) gr_df$strand <- NA_character_
+  gr_df$strand[is.na(gr_df$strand)] <- "*"
+
+  # Ensure required id/type columns are present
   if (!all(c(gene_id, type) %in% colnames(gr_df))) {
     stop("Required columns not found in the data")
   }
-
-  # Use gene_id as gene_name if gene_name is not available
   if (!gene_name %in% colnames(gr_df)) {
     gr_df[[gene_name]] <- gr_df[[gene_id]]
   }
 
-  # Extract gene-level information
-  genes <- gr_df[gr_df[[type]] == "gene", ]
+  # Prefer explicit gene features; otherwise aggregate from transcript/exon
+  prefer_genes <- any(gr_df[[type]] == "gene")
 
-  # If no genes found, try to infer gene boundaries from transcripts or exons
-  if (nrow(genes) == 0) {
-    if ("transcript" %in% gr_df[[type]]) {
-      # Group by gene and get min start and max end
-      transcripts <- gr_df[gr_df[[type]] == "transcript", ]
-      genes <- aggregate(
-        cbind(start, end) ~ get(gene_id) + get(gene_name) + strand,
-        data = transcripts,
-        FUN = function(x) c(min(x), max(x))
+  if (prefer_genes) {
+    genes <- gr_df[gr_df[[type]] == "gene", c(gene_id, gene_name, "strand", "start", "end")]
+  } else {
+    aggregate_gene_ranges <- function(df) {
+      by_keys <- list(
+        gene = df[[gene_id]],
+        name = df[[gene_name]],
+        strand = df[["strand"]]
       )
-      colnames(genes)[1:2] <- c(gene_id, gene_name)
-      genes$start <- genes$start[, 1]
-      genes$end <- genes$end[, 2]
-    } else if ("exon" %in% gr_df[[type]]) {
-      # Group by gene and get min start and max end
-      exons <- gr_df[gr_df[[type]] == "exon", ]
-      genes <- aggregate(
-        cbind(start, end) ~ get(gene_id) + get(gene_name) + strand,
-        data = exons,
-        FUN = function(x) c(min(x), max(x))
+      start_min <- tapply(df$start, by_keys, min, na.rm = TRUE)
+      end_max <- tapply(df$end, by_keys, max, na.rm = TRUE)
+      idx <- which(!is.na(start_min) & !is.na(end_max), arr.ind = TRUE)
+      if (length(idx) == 0) {
+        return(data.frame())
+      }
+      dims <- dimnames(start_min)
+      out <- data.frame(
+        gene = dims[[1]][idx[, 1]],
+        name = dims[[2]][idx[, 2]],
+        strand = dims[[3]][idx[, 3]],
+        start = as.numeric(start_min[idx]),
+        end = as.numeric(end_max[idx]),
+        stringsAsFactors = FALSE
       )
-      colnames(genes)[1:2] <- c(gene_id, gene_name)
-      genes$start <- genes$start[, 1]
-      genes$end <- genes$end[, 2]
+      names(out)[1:2] <- c(gene_id, gene_name)
+      out
+    }
+    if (any(gr_df[[type]] == "transcript")) {
+      genes <- aggregate_gene_ranges(gr_df[gr_df[[type]] == "transcript", ])
+    } else if (any(gr_df[[type]] == "exon")) {
+      genes <- aggregate_gene_ranges(gr_df[gr_df[[type]] == "exon", ])
     } else {
       stop("No gene, transcript, or exon features found in the data")
     }
   }
 
-  # Extract exon information if available
-  if ("exon" %in% gr_df[[type]]) {
-    exons <- gr_df[gr_df[[type]] == "exon", ]
+  if (nrow(genes) == 0) stop("No gene features could be constructed from the input")
 
-    # Merge exons with genes
-    result <- merge(genes, exons, by = c(gene_id, gene_name), suffixes = c("", "_exon"))
+  # Add type column to genes
+  genes$type <- "gene"
 
-    # Rename columns for use with geom_gene
+  # Long-format exons if present
+  has_exon <- any(gr_df[[type]] == "exon") && all(c("start", "end") %in% names(gr_df))
+  if (has_exon) {
+    exons <- gr_df[gr_df[[type]] == "exon", c(gene_id, gene_name, "strand", "start", "end")]
+    names(exons)[names(exons) == "start"] <- "exon_start"
+    names(exons)[names(exons) == "end"] <- "exon_end"
+    exons$type <- "exon"
+    result <- merge(genes, exons, by = c(gene_id, gene_name, "strand"), all.x = TRUE)
     result$xstart <- result$start
     result$xend <- result$end
-    result$exon_start <- result$start_exon
-    result$exon_end <- result$end_exon
     result$y <- result[[gene_name]]
-
     return(result)
   } else {
-    # If no exons, just return gene information
     genes$xstart <- genes$start
     genes$xend <- genes$end
     genes$y <- genes[[gene_name]]
-
     return(genes)
   }
 }
@@ -200,7 +296,7 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
 extract_txdb_data <- function(txdb, region_gr) {
   # Extract genes in the region
   all_genes <- GenomicFeatures::genes(txdb)
-  region_genes <- GenomicRanges::subsetByOverlaps(all_genes, region_gr)
+  region_genes <- subsetByOverlaps(all_genes, region_gr)
 
   # Extract exons by gene
   all_exons <- GenomicFeatures::exonsBy(txdb, by = "gene")
@@ -220,7 +316,7 @@ extract_txdb_data <- function(txdb, region_gr) {
     # Add gene information
     gene_gr$type <- "gene"
     gene_gr$gene_id <- gene_id
-    gene_gr$gene_name <- gene_id  # Use gene_id as gene_name for TxDb
+    gene_gr$gene_name <- gene_id # Use gene_id as gene_name for TxDb
     gene_list[[i]] <- gene_gr
 
     # Add exon information if available
@@ -253,7 +349,7 @@ extract_txdb_data <- function(txdb, region_gr) {
 #' @param source Either a path to a GTF/GFF file (character) or a TxDb object
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param exon_height Height of exons (default: 0.75)
-#' @param intron_height Height of introns (default: 0.4)
+#' @param intron_width Width of introns (default: 0.4)
 #' @param exon_color Color of exon borders (default: "black")
 #' @param exon_fill Fill color of exons (default: "gray50")
 #' @param intron_color Color of introns (default: "gray50")
@@ -274,7 +370,7 @@ extract_txdb_data <- function(txdb, region_gr) {
 #' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 #' p2 <- gene_track(txdb, "chr1:1000000-2000000")
 #' }
-gene_track <- function(source, region, exon_height = 0.75, intron_height = 0.4,
+gene_track <- function(source, region, exon_height = 0.75, intron_width = 0.4,
                        exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
                        gene_id = "gene_id", gene_name = "gene_name", ...) {
   # Parse the region
@@ -296,10 +392,11 @@ gene_track <- function(source, region, exon_height = 0.75, intron_height = 0.4,
 
   # Create the plot
   p <- ggplot2::ggplot(gene_data) +
-    geom_gene(ggplot2::aes(xstart = xstart, xend = xend, y = y, strand = strand),
-              exon_height = exon_height, intron_height = intron_height,
-              exon_color = exon_color, exon_fill = exon_fill,
-              intron_color = intron_color, ...)
+    geom_gene(ggplot2::aes(xstart = rlang::.data$xstart, xend = rlang::.data$xend, strand = rlang::.data$strand),
+      exon_height = exon_height, intron_width = intron_width,
+      exon_color = exon_color, exon_fill = exon_fill,
+      intron_color = intron_color, ...
+    )
 
   # Apply the appropriate theme and scale
   p <- p + ez_gene_theme() +
@@ -307,3 +404,6 @@ gene_track <- function(source, region, exon_height = 0.75, intron_height = 0.4,
 
   return(p)
 }
+
+# globals used in examples/aes mappings within this file
+utils::globalVariables(c(".data", "xstart", "xend", "y", "strand"))

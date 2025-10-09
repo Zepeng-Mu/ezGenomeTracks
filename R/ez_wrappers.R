@@ -123,14 +123,14 @@ ez_signal <- function(input, region, names = NULL,
       if (stack) {
         # Stacked tracks with grouped signals within each
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = group_var, fill = group_var)) +
-          geom_signal(type = type, alpha = alpha, ...) +
+          geom_coverage(type = type, alpha = alpha, ...) +
           ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
           ggplot2::scale_color_manual(values = colors, name = group) +
           ggplot2::scale_fill_manual(values = colors, name = group)
       } else {
         # Overlapping tracks and groups
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = interaction(group_var, track), fill = interaction(group_var, track))) +
-          geom_signal(type = type, alpha = alpha, ...)
+          geom_coverage(type = type, alpha = alpha, ...)
 
         # Create combined color palette
         combined_groups <- unique(interaction(plotDt$group_var, plotDt$track))
@@ -159,12 +159,12 @@ ez_signal <- function(input, region, names = NULL,
       if (stack) {
         # Stacked tracks
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
-          geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...) +
+          geom_coverage(type = type, color = color, fill = fill, alpha = alpha, ...) +
           ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
       } else {
         # Overlapping tracks
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = track, fill = track)) +
-          geom_signal(type = type, alpha = alpha, ...) +
+          geom_coverage(type = type, alpha = alpha, ...) +
           ggplot2::scale_color_manual(values = colors, name = "Track") +
           ggplot2::scale_fill_manual(values = colors, name = "Track")
       }
@@ -191,7 +191,7 @@ ez_signal <- function(input, region, names = NULL,
       if (stack) {
         # Stacked groups using facet_wrap
         p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
-          geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...) +
+          geom_coverage(type = type, color = color, fill = fill, alpha = alpha, ...) +
           ggplot2::facet_wrap(as.formula(paste("~", group)), ncol = 1, scales = "free_y")
       } else {
         # Overlapping groups
@@ -200,14 +200,14 @@ ez_signal <- function(input, region, names = NULL,
         aes_mapping$fill <- as.symbol(group)
 
         p <- ggplot2::ggplot(plotDt, aes_mapping) +
-          geom_signal(type = type, alpha = alpha, ...) +
+          geom_coverage(type = type, alpha = alpha, ...) +
           ggplot2::scale_color_manual(values = colors, name = group) +
           ggplot2::scale_fill_manual(values = colors, name = group)
       }
     } else {
       # Single track without grouping
       p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
-        geom_signal(type = type, color = color, fill = fill, alpha = alpha, ...)
+        geom_coverage(type = type, color = color, fill = fill, alpha = alpha, ...)
     }
   } else {
     stop("Input must be a file path, data frame, or list of data frames/file paths")

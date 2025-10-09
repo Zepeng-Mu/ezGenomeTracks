@@ -66,7 +66,7 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
     mapping <- do.call(ggplot2::aes, mapping_list)
 
     # Add geom_signal with the mapping
-    p <- p + geom_signal(
+    p <- p + geom_coverage(
       mapping = mapping,
       type = type,
       alpha = alpha,
@@ -82,7 +82,7 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
     }
   } else {
     # Add geom_signal without grouping or color mapping
-    p <- p + geom_signal(
+    p <- p + geom_coverage(
       mapping = ggplot2::aes(x = .data$start, y = .data$score),
       type = type,
       alpha = alpha,

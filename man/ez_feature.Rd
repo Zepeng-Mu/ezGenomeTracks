@@ -5,7 +5,7 @@
 \title{Easy peak track visualization}
 \usage{
 ez_feature(
-  data,
+  input,
   region,
   color = "black",
   fill = "gray70",
@@ -16,7 +16,7 @@ ez_feature(
 )
 }
 \arguments{
-\item{data}{A BED file path or data frame with peak data}
+\item{input}{A BED file path or data frame with peak data}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
 
@@ -30,14 +30,14 @@ ez_feature(
 
 \item{use_score}{Use the score column for fill color (default: FALSE)}
 
-\item{...}{Additional arguments passed to geom_peak}
+\item{...}{Additional arguments passed to geom_feature}
 }
 \value{
 A ggplot2 object
 }
 \description{
 This function creates a peak track visualization from a BED file or data frame.
-It is a wrapper around geom_peak that provides a simpler interface.
+It is a wrapper around geom_feature that provides a simpler interface.
 }
 \examples{
 \dontrun{

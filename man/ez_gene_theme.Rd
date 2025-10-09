@@ -19,6 +19,8 @@ It removes the y-axis text and title, and makes the plot more compact.
 \examples{
 \dontrun{
 library(ggplot2)
-p <- ggplot(data, aes(x = start, y = gene_name)) + geom_gene() + ez_gene_theme()
+p <- ggplot(data, aes(x = start, y = gene_name)) +
+  geom_gene() +
+  ez_gene_theme()
 }
 }
