@@ -284,8 +284,7 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
 #' @param region_gr A GRanges object specifying the genomic region
 #' @return A GRanges object with gene and exon information
 #' @importFrom GenomicFeatures genes exonsBy
-#' @importFrom GenomicRanges findOverlaps subsetByOverlaps
-#' @importFrom IRanges subsetByOverlaps
+#' @importFrom IRanges subsetByOverlaps findOverlaps
 #' @examples
 #' \dontrun{
 #' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
