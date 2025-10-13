@@ -164,7 +164,7 @@ get_single_signal <- function(input, region, name = NULL) {
       dplyr::mutate(name = name)
   } else if (is(input, "character")) {
     # Single track, file name
-    track_data <- import_genomic_data(input, region_gr) %>%
+    track_data <- import_genomic_data(input, which = region_gr) %>%
       dplyr::mutate(name = name)
   }
 
