@@ -116,9 +116,9 @@ df_to_granges <- function(df, seqnames = "seqnames", start = "start", end = "end
 #' region <- GRanges("chr1", IRanges(1000000, 2000000))
 #' signal_df <- import_genomic_data("signal.bw", which = region)
 #' }
-import_genomic_data <- function(file, format = NULL, which = NULL) {
+import_genomic_data <- function(file, which = NULL) {
   # Import data using rtracklayer
-  gr <- rtracklayer::import(file, format = format, which = which)
+  gr <- rtracklayer::import(file, which = which)
 
   # Convert to data frame
   df <- granges_to_df(gr)
