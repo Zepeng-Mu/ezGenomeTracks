@@ -235,8 +235,10 @@ process_signal_input <- function(input, region, track_labels = NULL) {
 
   } else if (is.list(input)) {
     # Case 3: Named list input
-    if (is.null(names(input))) {
+    if (is.null(names(input)) & is.null(track_labels)) {
       names(input) <- paste0("Track ", seq_along(input))
+    } else if (is.null(names(input)) & !is.null(track_labels)) {
+      names(input) <- track_labels
     }
 
     track_data_list <- list()
