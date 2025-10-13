@@ -70,7 +70,11 @@ ez_signal <- function(input, region, track_labels = NULL,
   }
 
   # Process input using helper function
-  plotDt <- process_signal_input(input, region, track_labels)
+  if (is.data.frame(input)) {
+    plotDt <- input
+  } else {
+    plotDt <- process_signal_input(input, region, track_labels)
+  }
 
   # Determine plotting strategy
   has_track <- "track" %in% colnames(plotDt)
