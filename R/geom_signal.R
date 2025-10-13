@@ -44,7 +44,7 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
                           na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
   type <- match.arg(type, c("area", "line", "heatmap"))
   if (type == "area") {
-    default_aes <- aes(x = .data$start, y = .data$score)
+    default_aes <- aes(x = .data$start, ymin = 0, ymax = .data$score)
   } else if (type == "line") {
     default_aes <- aes(x = .data$start, y = 0, xend = .data$end, yend = .data$score)
   } else if (type == "heatmap") {
