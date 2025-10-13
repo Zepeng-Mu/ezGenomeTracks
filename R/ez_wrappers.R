@@ -1,40 +1,51 @@
 #' Easy signal track visualization
 #'
-#' This function creates a signal track visualization from a bigWig file, data frame, or list of data sources.
-#' It is a wrapper around geom_signal that provides a simpler interface with support for grouping and multiple tracks.
+#' This function creates a signal track visualization from various input types.
+#' It provides a flexible interface with support for grouping and multiple tracks.
 #'
-#' @param input A bigWig file path, data frame with signal data, or list of data frames/bigWig files
+#' @param input A data frame, character vector of file paths, or named list of data sources
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param track_labels Optional vector of track labels (used for character vector input)
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
 #' @param color Line color (default: "steelblue"). Can be a vector for multiple colors.
 #' @param fill Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.
-#' @param stack Whether to stack multiple tracks or combine into one (default: TRUE)
-#' @param group Column name for grouping data within a single data frame (default: NULL)
+#' @param group_var Column name for grouping data within a single data frame (default: NULL)
+#' @param color_by Whether colors distinguish "group" or "track" (default: "group")
 #' @param colors Color palette for groups/tracks. If NULL, uses default palette (default: NULL)
 #' @param y_axis_style Y-axis style: "none", "simple", or "full" (default: "none")
 #' @param y_range Y-axis range limits (default: NULL)
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
-#' @param ... Additional arguments passed to geom_signal
+#' @param ... Additional arguments passed to geom_coverage
 #' @return A ggplot2 object
 #' @export
 #' @importFrom ggplot2 ggplot aes scale_y_continuous coord_cartesian labs facet_wrap scale_color_manual scale_fill_manual
+#' @importFrom dplyr filter
 #' @examples
 #' \dontrun{
-#' # Single track
-#' track1 <- ez_signal("signal.bw", "chr1:1000000-2000000")
+#' # Single data frame with grouping
+#' df <- data.frame(seqnames = "chr1", start = 1:100, end = 1:100,
+#'                  score = rnorm(100), sample = rep(c("A", "B"), 50))
+#' ez_signal(df, "chr1:1-100", group_var = "sample")
 #'
-#' # Grouped data frame
-#' track2 <- ez_signal(df, "chr1:1000000-2000000", group = "sample", stack = FALSE)
+#' # Character vector of files
+#' ez_signal(c("sample1.bw", "sample2.bw"), "chr1:1-100")
 #'
-#' # Multiple data frames
-#' track3 <- ez_signal(list(sample1 = df1, sample2 = df2), "chr1:1000000-2000000")
+#' # Named list with stacking
+#' ez_signal(
+#'   list(
+#'     "ATAC-seq" = "atac.bw",
+#'     "H3K27ac" = "h3k27ac.bw",
+#'     "H3K4me3" = c("rep1.bw", "rep2.bw")
+#'   ),
+#'   "chr1:1-100"
+#' )
 #' }
-ez_signal <- function(input, region, names = NULL,
+ez_signal <- function(input, region, track_labels = NULL,
                       type = c("area", "line", "heatmap"),
-                      color = "steelblue", fill = "steelblue", stack = TRUE,
-                      group_var = NULL, track_var = NULL, color_by = c("group", "track"),
-                      y_axis_style = c("none", "simple", "full"),
+                      color = "steelblue", fill = "steelblue",
+                      group_var = NULL, color_by = c("group", "track"),
+                      colors = NULL, y_axis_style = c("none", "simple", "full"),
                       y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
   # Validate inputs
   type <- match.arg(type)
@@ -44,8 +55,7 @@ ez_signal <- function(input, region, names = NULL,
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
     "region must be provided" = !missing(region),
-    "bin_width must be positive integer" = is.null(bin_width) || bin_width > 0 && is.integer(bin_width),
-    "stack must be logical" = is.logical(stack)
+    "bin_width must be positive integer" = is.null(bin_width) || (bin_width > 0 && is.integer(bin_width))
   )
 
   chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
@@ -59,158 +69,84 @@ ez_signal <- function(input, region, names = NULL,
     }
   }
 
-  # Process single track element
-  if (length(input) == 1) {
-    track_name <- ifelse(is.null(names), "Group 1", names)
-    plotDt <- get_single_signal(input, region, name = track_name)
-  } else if (!is(input, "list")) {
-    # Multiple element in a vector
-    plotDt <- lapply(seq_along(input), function(i) {
-      x <- input[i]
-      tmp_data <- get_single_signal(x, region, name = ifelse(is.null(names), paste0("Group ", i), names[i]))
-      return(tmp_data)
-    }) %>% Reduce(., rbind)
-  } else if (is(input, "list")) {
-    # Process each element in the list
-    plot_data_list <- list()
-    for (i in seq_along(input)) {
-      track_name <- names(input)[i]
-      track_data <- input[[i]]
+  # Process input using helper function
+  plotDt <- process_signal_input(input, region, track_labels)
 
-      if (length(track_data) == 1) {
-        # Single track element
-        tmp_data <- get_single_signal(track_data, region, name = track_name)
-        tmp_data$track <- track_name
-        plot_data_list[[i]] <- tmp_data
-      } else {
-        # More than one element
-        new_track_data <- lapply(seq_along(track_data), function(i) {
-          x <- track_data[i]
-          tmpTmp_data <- get_single_signal(x, region, name = paste0(track_name, i))
-          return(tmpTmp_data)
-        }) %>% Reduce(., rbind)
-        plot_data_list[[i]] <- new_track_data
-      }
-    }
+  # Determine plotting strategy
+  has_track <- "track" %in% colnames(plotDt)
+  has_group <- !is.null(group_var) && group_var %in% colnames(plotDt)
 
-    # # Add track identifier
-    # track_data$name <- track_name
-
-    # # Handle grouping within this track
-    # if (!is.null(group) && group %in% colnames(track_data)) {
-    #   track_data$group_var <- track_data[[group]]
-    # } else {
-    #   track_data$group_var <- "default"
-    # }
-
-    # plot_data_list[[i]] <- track_data
-
-    # Combine all data
-    plotDt <- do.call(rbind, plot_data_list)
-
-    # Create the plot
-    if (!is.null(group) && group %in% colnames(plotDt)) {
+  # Create base plot
+  if (has_group) {
+    # Data has grouping - use color/fill mapping
+    if (has_track) {
       # Multiple tracks with grouping
-      unique_groups <- unique(plotDt$group_var)
-      unique_tracks <- unique(plotDt$track)
-      n_colors <- length(unique_groups)
-
-      if (is.null(colors)) {
-        colors <- get_default_colors(n_colors)
-        names(colors) <- unique_groups
-      }
-
-      if (stack) {
-        # Stacked tracks with grouped signals within each
-        p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = group_var, fill = group_var)) +
-          geom_coverage(type = type, alpha = alpha, ...) +
-          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
-          ggplot2::scale_color_manual(values = colors, name = group) +
-          ggplot2::scale_fill_manual(values = colors, name = group)
+      if (color_by == "group") {
+        aes_mapping <- ggplot2::aes(x = start, y = score, color = .data[[group_var]], fill = .data[[group_var]])
+        color_values <- unique(plotDt[[group_var]])
+        legend_name <- group_var
       } else {
-        # Overlapping tracks and groups
-        p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = interaction(group_var, track), fill = interaction(group_var, track))) +
-          geom_coverage(type = type, alpha = alpha, ...)
-
-        # Create combined color palette
-        combined_groups <- unique(interaction(plotDt$group_var, plotDt$track))
-        n_combined <- length(combined_groups)
-        if (is.null(colors)) {
-          combined_colors <- get_default_colors(n_combined)
-        } else {
-          combined_colors <- rep(colors, length(unique_tracks))
-        }
-        names(combined_colors) <- combined_groups
-
-        p <- p +
-          ggplot2::scale_color_manual(values = combined_colors, name = "Track.Group") +
-          ggplot2::scale_fill_manual(values = combined_colors, name = "Track.Group")
+        aes_mapping <- ggplot2::aes(x = start, y = score, color = track, fill = track)
+        color_values <- unique(plotDt$track)
+        legend_name <- "Track"
       }
     } else {
+      # Single track with grouping
+      aes_mapping <- ggplot2::aes(x = start, y = score, color = .data[[group_var]], fill = .data[[group_var]])
+      color_values <- unique(plotDt[[group_var]])
+      legend_name <- group_var
+    }
+
+    p <- ggplot2::ggplot(plotDt, aes_mapping) +
+      geom_coverage(type = type, alpha = alpha, ...)
+
+    # Apply color scales
+    n_colors <- length(color_values)
+    if (is.null(colors)) {
+      plot_colors <- get_default_colors(n_colors)
+    } else {
+      plot_colors <- colors[1:n_colors]
+    }
+    names(plot_colors) <- color_values
+
+    p <- p +
+      ggplot2::scale_color_manual(values = plot_colors, name = legend_name) +
+      ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
+
+  } else {
+    # No grouping - use single color or track-based colors
+    if (has_track) {
       # Multiple tracks without grouping
-      unique_tracks <- unique(plotDt$track)
-      n_colors <- length(unique_tracks)
+      aes_mapping <- ggplot2::aes(x = start, y = score, color = track, fill = track)
+      color_values <- unique(plotDt$track)
+      legend_name <- "Track"
 
+      p <- ggplot2::ggplot(plotDt, aes_mapping) +
+        geom_coverage(type = type, alpha = alpha, ...)
+
+      # Apply color scales
+      n_colors <- length(color_values)
       if (is.null(colors)) {
-        colors <- get_default_colors(n_colors)
-        names(colors) <- unique_tracks
-      }
-
-      if (stack) {
-        # Stacked tracks
-        p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
-          geom_coverage(type = type, color = color, fill = fill, alpha = alpha, ...) +
-          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
+        plot_colors <- get_default_colors(n_colors)
       } else {
-        # Overlapping tracks
-        p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score, color = track, fill = track)) +
-          geom_coverage(type = type, alpha = alpha, ...) +
-          ggplot2::scale_color_manual(values = colors, name = "Track") +
-          ggplot2::scale_fill_manual(values = colors, name = "Track")
+        plot_colors <- colors[1:n_colors]
       }
-    }
-  } else if (is(input, "data.frame")) {
-    # Single data frame
-    # Validate required columns
-    if (!all(c("start", "score") %in% colnames(input))) {
-      stop("Data frame must contain 'start' and 'score' columns")
-    }
+      names(plot_colors) <- color_values
 
-    plotDt <- input
+      p <- p +
+        ggplot2::scale_color_manual(values = plot_colors, name = legend_name) +
+        ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
 
-    if (!is.null(group) && group %in% colnames(plotDt)) {
-      # Grouped data frame
-      unique_groups <- unique(plotDt[[group]])
-      n_colors <- length(unique_groups)
-
-      if (is.null(colors)) {
-        colors <- get_default_colors(n_colors)
-        names(colors) <- unique_groups
-      }
-
-      if (stack) {
-        # Stacked groups using facet_wrap
-        p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
-          geom_coverage(type = type, color = color, fill = fill, alpha = alpha, ...) +
-          ggplot2::facet_wrap(as.formula(paste("~", group)), ncol = 1, scales = "free_y")
-      } else {
-        # Overlapping groups
-        aes_mapping <- ggplot2::aes(x = start, y = score)
-        aes_mapping$color <- as.symbol(group)
-        aes_mapping$fill <- as.symbol(group)
-
-        p <- ggplot2::ggplot(plotDt, aes_mapping) +
-          geom_coverage(type = type, alpha = alpha, ...) +
-          ggplot2::scale_color_manual(values = colors, name = group) +
-          ggplot2::scale_fill_manual(values = colors, name = group)
-      }
     } else {
       # Single track without grouping
       p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
         geom_coverage(type = type, color = color, fill = fill, alpha = alpha, ...)
     }
-  } else {
-    stop("Input must be a file path, data frame, or list of data frames/file paths")
+  }
+
+  # Add faceting if multiple tracks
+  if (has_track) {
+    p <- p + ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
   }
 
   # Apply binning if requested

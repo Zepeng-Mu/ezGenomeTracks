@@ -19,6 +19,7 @@ geom_gene(
   exon_color = "black",
   exon_fill = "gray50",
   intron_color = "gray50",
+  strand_spacing = 0.2,
   na.rm = TRUE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -85,6 +86,8 @@ to use \code{position_jitter()}, give the position as \code{"jitter"}.
 
 \item{intron_color}{Color of intron/gene body (default: "gray50", overridden by color mapping)}
 
+\item{strand_spacing}{Vertical spacing between positive and negative strand tracks (default: 0.2)}
+
 \item{na.rm}{If \code{TRUE}, silently drop \code{NA} values.}
 
 \item{show.legend}{logical. Should this layer be included in the legends?
@@ -119,6 +122,10 @@ Expected columns in the data:
 The \code{type} column should contain "gene" for gene body lines or "exon" for exon rectangles.
 
 Color mapping: The \code{color} aesthetic is used for both exons (as fill) and introns (as color).
+
+Strand separation: When \code{strand} is specified in aesthetics, genes are displayed in two stacked tracks:
+positive strand genes on top, negative strand genes on bottom. The \code{strand_spacing} parameter controls
+the vertical gap between tracks.
 }
 \examples{
 \dontrun{

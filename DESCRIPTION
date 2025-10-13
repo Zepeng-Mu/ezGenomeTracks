@@ -21,7 +21,6 @@ Imports:
     S4Vectors,
     methods,
     dplyr,
-    tidyr,
     rlang,
     scales
 Suggests:
@@ -30,10 +29,11 @@ Suggests:
     rmarkdown,
     BiocStyle,
     roxygen2,
-    pkgdown
+    pkgdown,
+    GenomicFeatures
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BiocViews: Visualization, Sequencing, HiC
-Depends: 
+Depends:
     R (>= 2.10)
 LazyData: true

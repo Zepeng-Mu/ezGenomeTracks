@@ -13,6 +13,10 @@
 #'
 #' Color mapping: The `color` aesthetic is used for both exons (as fill) and introns (as color).
 #'
+#' Strand separation: When `strand` is specified in aesthetics, genes are displayed in two stacked tracks:
+#' positive strand genes on top, negative strand genes on bottom. The `strand_spacing` parameter controls
+#' the vertical gap between tracks.
+#'
 #' @inheritParams ggplot2::layer
 #' @param exon_height Height of exons (default: 0.75)
 #' @param intron_width Line width of gene body (default: 0.4)
@@ -21,6 +25,7 @@
 #' @param exon_color Color of exon borders (default: "black", overridden by color mapping)
 #' @param exon_fill Fill color of exons (default: "gray50", overridden by color mapping)
 #' @param intron_color Color of intron/gene body (default: "gray50", overridden by color mapping)
+#' @param strand_spacing Vertical spacing between positive and negative strand tracks (default: 0.2)
 #' @param na.rm If `TRUE`, silently drop `NA` values.
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
@@ -36,7 +41,7 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
                       intron_width = 0.4, arrow_length = 0,
                       arrow_type = "open", exon_color = "black",
                       exon_fill = "gray50", intron_color = "gray50",
-                      na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
+                      strand_spacing = 0.2, na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
   # Provide defaults so users don't have to map y; draw at fixed vertical band
   default_aes <- ggplot2::aes(xstart = rlang::.data$xstart, xend = rlang::.data$xend)
   if (is.null(mapping)) {
@@ -62,6 +67,7 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
       exon_color = exon_color,
       exon_fill = exon_fill,
       intron_color = intron_color,
+      strand_spacing = strand_spacing,
       na.rm = na.rm,
       ...
     )
@@ -73,6 +79,7 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
 #' @usage NULL
 GeomGene <- ggplot2::ggproto("GeomGene", Geom,
   required_aes = c("xstart", "xend", "type"),
+  optional_aes = c("strand"),
   setup_params = function(data, params) {
     if (!is.null(params$arrow_length) && params$arrow_length > 0) {
       params$arrow <- ggplot2::arrow(
@@ -88,10 +95,24 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
                         exon_height = 0.75, intron_width = 0.4,
                         arrow = NULL, exon_color = "black",
                         exon_fill = "gray50", intron_color = "gray50",
-                        na.rm = FALSE) {
+                        strand_spacing = 0.2, na.rm = FALSE) {
     # Separate data by type
     exon_data <- data[data$type == "exon", ]
     gene_data <- data[data$type == "gene", ]
+
+    # Calculate y-offset based on strand for track separation
+    if ("strand" %in% names(data)) {
+      # Positive strand on top, negative strand on bottom
+      exon_data$y_offset <- ifelse(exon_data$strand == "+",
+                                   exon_height + strand_spacing,
+                                   0)
+      gene_data$y_offset <- ifelse(gene_data$strand == "+",
+                                   exon_height + strand_spacing,
+                                   0)
+    } else {
+      exon_data$y_offset <- 0
+      gene_data$y_offset <- 0
+    }
 
     grobs <- list()
 
@@ -101,8 +122,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
         exons <- transform(exon_data,
           xmin = exon_start,
           xmax = exon_end,
-          ymin = 0,
-          ymax = exon_height
+          ymin = 0 + y_offset,
+          ymax = exon_height + y_offset
         )
         # Exons use fill from mapping (color aesthetic), no border color
         exons$colour <- NA
@@ -118,8 +139,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
         exons <- transform(exon_data,
           xmin = xstart,
           xmax = xend,
-          ymin = 0,
-          ymax = exon_height
+          ymin = 0 + y_offset,
+          ymax = exon_height + y_offset
         )
         # Exons use fill from mapping (color aesthetic), no border color
         exons$colour <- NA
@@ -139,8 +160,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
       body_data <- transform(gene_data,
         x = xstart,
         xend = xend,
-        y = y_center,
-        yend = y_center
+        y = y_center + y_offset,
+        yend = y_center + y_offset
       )
       # Introns use color from mapping, fallback to intron_color parameter
       if ("colour" %in% names(gene_data)) {
@@ -283,7 +304,6 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
 #' @param txdb A TxDb object (e.g., TxDb.Hsapiens.UCSC.hg19.knownGene)
 #' @param region_gr A GRanges object specifying the genomic region
 #' @return A GRanges object with gene and exon information
-#' @importFrom GenomicFeatures genes exonsBy
 #' @importFrom IRanges subsetByOverlaps findOverlaps
 #' @examples
 #' \dontrun{
@@ -293,6 +313,11 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
 #' gene_data <- extract_txdb_data(txdb, region_gr)
 #' }
 extract_txdb_data <- function(txdb, region_gr) {
+  # Check if GenomicFeatures is available
+  if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
+    stop("Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')")
+  }
+
   # Extract genes in the region
   all_genes <- GenomicFeatures::genes(txdb)
   region_genes <- subsetByOverlaps(all_genes, region_gr)
@@ -352,6 +377,7 @@ extract_txdb_data <- function(txdb, region_gr) {
 #' @param exon_color Color of exon borders (default: "black")
 #' @param exon_fill Fill color of exons (default: "gray50")
 #' @param intron_color Color of introns (default: "gray50")
+#' @param strand_spacing Vertical spacing between positive and negative strand tracks (default: 0.2)
 #' @param gene_id Column name for gene ID (default: "gene_id")
 #' @param gene_name Column name for gene name (default: "gene_name")
 #' @param ... Additional arguments passed to geom_gene
@@ -371,7 +397,7 @@ extract_txdb_data <- function(txdb, region_gr) {
 #' }
 gene_track <- function(source, region, exon_height = 0.75, intron_width = 0.4,
                        exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
-                       gene_id = "gene_id", gene_name = "gene_name", ...) {
+                       strand_spacing = 0.2, gene_id = "gene_id", gene_name = "gene_name", ...) {
   # Parse the region
   region_gr <- parse_region(region)
 
@@ -380,6 +406,10 @@ gene_track <- function(source, region, exon_height = 0.75, intron_width = 0.4,
     # Import from file
     gene_gr <- rtracklayer::import(source, which = region_gr)
   } else if (methods::is(source, "TxDb")) {
+    # Check if GenomicFeatures is available for TxDb support
+    if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
+      stop("Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')")
+    }
     # Extract from TxDb object
     gene_gr <- extract_txdb_data(source, region_gr)
   } else {
@@ -394,7 +424,7 @@ gene_track <- function(source, region, exon_height = 0.75, intron_width = 0.4,
     geom_gene(ggplot2::aes(xstart = rlang::.data$xstart, xend = rlang::.data$xend, strand = rlang::.data$strand),
       exon_height = exon_height, intron_width = intron_width,
       exon_color = exon_color, exon_fill = exon_fill,
-      intron_color = intron_color, ...
+      intron_color = intron_color, strand_spacing = strand_spacing, ...
     )
 
   # Apply the appropriate theme and scale

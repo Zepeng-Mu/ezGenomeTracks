@@ -7,14 +7,13 @@
 ez_signal(
   input,
   region,
-  names = NULL,
+  track_labels = NULL,
   type = c("area", "line", "heatmap"),
   color = "steelblue",
   fill = "steelblue",
-  stack = TRUE,
   group_var = NULL,
-  track_var = NULL,
   color_by = c("group", "track"),
+  colors = NULL,
   y_axis_style = c("none", "simple", "full"),
   y_range = NULL,
   alpha = 0.5,
@@ -23,9 +22,11 @@ ez_signal(
 )
 }
 \arguments{
-\item{input}{A bigWig file path, data frame with signal data, or list of data frames/bigWig files}
+\item{input}{A data frame, character vector of file paths, or named list of data sources}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+
+\item{track_labels}{Optional vector of track labels (used for character vector input)}
 
 \item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area")}
 
@@ -33,7 +34,11 @@ ez_signal(
 
 \item{fill}{Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.}
 
-\item{stack}{Whether to stack multiple tracks or combine into one (default: TRUE)}
+\item{group_var}{Column name for grouping data within a single data frame (default: NULL)}
+
+\item{color_by}{Whether colors distinguish "group" or "track" (default: "group")}
+
+\item{colors}{Color palette for groups/tracks. If NULL, uses default palette (default: NULL)}
 
 \item{y_axis_style}{Y-axis style: "none", "simple", or "full" (default: "none")}
 
@@ -43,28 +48,33 @@ ez_signal(
 
 \item{bin_width}{Width of bins in base pairs (default: NULL)}
 
-\item{...}{Additional arguments passed to geom_signal}
-
-\item{group}{Column name for grouping data within a single data frame (default: NULL)}
-
-\item{colors}{Color palette for groups/tracks. If NULL, uses default palette (default: NULL)}
+\item{...}{Additional arguments passed to geom_coverage}
 }
 \value{
 A ggplot2 object
 }
 \description{
-This function creates a signal track visualization from a bigWig file, data frame, or list of data sources.
-It is a wrapper around geom_signal that provides a simpler interface with support for grouping and multiple tracks.
+This function creates a signal track visualization from various input types.
+It provides a flexible interface with support for grouping and multiple tracks.
 }
 \examples{
 \dontrun{
-# Single track
-track1 <- ez_signal("signal.bw", "chr1:1000000-2000000")
+# Single data frame with grouping
+df <- data.frame(seqnames = "chr1", start = 1:100, end = 1:100,
+                 score = rnorm(100), sample = rep(c("A", "B"), 50))
+ez_signal(df, "chr1:1-100", group_var = "sample")
 
-# Grouped data frame
-track2 <- ez_signal(df, "chr1:1000000-2000000", group = "sample", stack = FALSE)
+# Character vector of files
+ez_signal(c("sample1.bw", "sample2.bw"), "chr1:1-100")
 
-# Multiple data frames
-track3 <- ez_signal(list(sample1 = df1, sample2 = df2), "chr1:1000000-2000000")
+# Named list with stacking
+ez_signal(
+  list(
+    "ATAC-seq" = "atac.bw",
+    "H3K27ac" = "h3k27ac.bw",
+    "H3K4me3" = c("rep1.bw", "rep2.bw")
+  ),
+  "chr1:1-100"
+)
 }
 }
