@@ -227,7 +227,7 @@ process_signal_input <- function(input, region, track_labels = NULL) {
       for (i in seq_along(input)) {
         track_name <- ifelse(is.null(track_labels), paste0("Track ", i), track_labels[i])
         track_data <- get_single_signal(input[i], region, name = track_name)
-        track_data$track <- track_name
+        track_data$group <- track_name
         track_data_list[[i]] <- track_data
       }
       return(dplyr::bind_rows(track_data_list))
