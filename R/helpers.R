@@ -275,7 +275,7 @@ process_signal_input <- function(input, region, track_labels = NULL) {
     }
 
     names(track_data_list) <- names(input)
-    return(track_data_list)
+    return(dplyr::bind_rows(track_data_list))
 
   } else {
     stop("Input must be a data frame, character vector, or named list")
