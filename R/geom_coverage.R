@@ -85,7 +85,7 @@ GeomSignal <- ggproto("GeomSignal", Geom,
   },
   draw_panel = function(data, panel_params, coord, type = "area", na.rm = FALSE) {
     Geom <- switch(type,
-      line = GeomSegment,
+      line = GeomLine,
       area = GeomArea,
       heatmap = GeomTile
     )
