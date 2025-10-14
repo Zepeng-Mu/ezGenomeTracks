@@ -303,8 +303,10 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
 #'
 #' @param txdb A TxDb object (e.g., TxDb.Hsapiens.UCSC.hg19.knownGene)
 #' @param region_gr A GRanges object specifying the genomic region
-#' @return A GRanges object with gene and exon information
+#' @return A data frame with gene and exon information formatted for geom_gene
+#' @importFrom GenomicFeatures genes exonsBy
 #' @importFrom IRanges subsetByOverlaps findOverlaps
+#' @importFrom AnnotationDbi select
 #' @examples
 #' \dontrun{
 #' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -313,56 +315,80 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
 #' gene_data <- extract_txdb_data(txdb, region_gr)
 #' }
 extract_txdb_data <- function(txdb, region_gr) {
-  # Check if GenomicFeatures is available
+  # Check dependencies
   if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
     stop("Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')")
   }
+  if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
+    stop("Package 'AnnotationDbi' is required for TxDb support. Install it with: BiocManager::install('AnnotationDbi')")
+  }
 
-  # Extract genes in the region
+  # 1. Extract genes in region
   all_genes <- GenomicFeatures::genes(txdb)
   region_genes <- subsetByOverlaps(all_genes, region_gr)
 
-  # Extract exons by gene
-  all_exons <- GenomicFeatures::exonsBy(txdb, by = "gene")
+  if (length(region_genes) == 0) {
+    return(data.frame()) # empty data frame
+  }
 
-  # Filter exons for genes in the region
+  # 2. Get gene symbols
   gene_ids <- names(region_genes)
+  gene_symbols <- tryCatch({
+    gene_info <- AnnotationDbi::select(txdb, keys = gene_ids,
+                                       columns = c("GENEID", "SYMBOL"),
+                                       keytype = "GENEID")
+    # Create lookup: gene_id -> gene_symbol
+    setNames(gene_info$SYMBOL, gene_info$GENEID)
+  }, error = function(e) {
+    # Fallback: use gene_id if symbols not available
+    setNames(gene_ids, gene_ids)
+  })
+
+  # 3. Extract exons
+  all_exons <- GenomicFeatures::exonsBy(txdb, by = "gene")
   region_exons <- all_exons[gene_ids]
 
-  # Convert to a format similar to GTF data
-  gene_list <- list()
-  exon_list <- list()
+  # 4. Build gene data frame
+  gene_df <- data.frame(
+    gene_id = gene_ids,
+    gene_name = gene_symbols[gene_ids],
+    strand = as.character(strand(region_genes)),
+    start = start(region_genes),
+    end = end(region_genes),
+    type = "gene",
+    stringsAsFactors = FALSE
+  )
 
-  for (i in seq_along(region_genes)) {
-    gene_id <- names(region_genes)[i]
-    gene_gr <- region_genes[i]
-
-    # Add gene information
-    gene_gr$type <- "gene"
-    gene_gr$gene_id <- gene_id
-    gene_gr$gene_name <- gene_id # Use gene_id as gene_name for TxDb
-    gene_list[[i]] <- gene_gr
-
-    # Add exon information if available
-    if (gene_id %in% names(region_exons)) {
-      exons_gr <- region_exons[[gene_id]]
-      exons_gr$type <- "exon"
-      exons_gr$gene_id <- gene_id
-      exons_gr$gene_name <- gene_id
-      exon_list[[length(exon_list) + 1]] <- exons_gr
+  # 5. Build exon data frame
+  exon_list <- lapply(gene_ids, function(gid) {
+    if (gid %in% names(region_exons)) {
+      exons_gr <- region_exons[[gid]]
+      data.frame(
+        gene_id = gid,
+        gene_name = gene_symbols[gid],
+        strand = as.character(strand(exons_gr)),
+        start = start(exons_gr),
+        end = end(exons_gr),
+        type = "exon",
+        stringsAsFactors = FALSE
+      )
     }
-  }
+  })
+  exon_df <- do.call(rbind, exon_list[!sapply(exon_list, is.null)])
 
-  # Combine genes and exons
-  result_list <- c(gene_list, exon_list)
-  if (length(result_list) > 0) {
-    result_gr <- do.call(c, result_list)
+  # 6. Combine and add required columns for geom_gene
+  if (nrow(exon_df) > 0) {
+    result <- rbind(gene_df, exon_df)
   } else {
-    # Return empty GRanges if no genes found
-    result_gr <- GenomicRanges::GRanges()
+    result <- gene_df
   }
 
-  return(result_gr)
+  # Add required columns for geom_gene
+  result$xstart <- result$start
+  result$xend <- result$end
+  result$y <- result$gene_name
+
+  return(result)
 }
 
 #' Create a gene track from a GTF/GFF file or TxDb object
@@ -405,19 +431,18 @@ gene_track <- function(source, region, exon_height = 0.75, intron_width = 0.4,
   if (is.character(source)) {
     # Import from file
     gene_gr <- rtracklayer::import(source, which = region_gr)
+    # Process the gene data from GRanges
+    gene_data <- process_gene_data(gene_gr, gene_id = gene_id, gene_name = gene_name)
   } else if (methods::is(source, "TxDb")) {
     # Check if GenomicFeatures is available for TxDb support
     if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
       stop("Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')")
     }
-    # Extract from TxDb object
-    gene_gr <- extract_txdb_data(source, region_gr)
+    # Extract from TxDb object - now returns data frame directly
+    gene_data <- extract_txdb_data(source, region_gr)
   } else {
     stop("Source must be either a file path (character) or a TxDb object")
   }
-
-  # Process the gene data
-  gene_data <- process_gene_data(gene_gr, gene_id = gene_id, gene_name = gene_name)
 
   # Create the plot
   p <- ggplot2::ggplot(gene_data) +
