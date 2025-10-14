@@ -43,7 +43,7 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
                       exon_fill = "gray50", intron_color = "gray50",
                       strand_spacing = 0.2, na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
   # Provide defaults so users don't have to map y; draw at fixed vertical band
-  default_aes <- ggplot2::aes(xstart = rlang::.data$xstart, xend = rlang::.data$xend)
+  default_aes <- ggplot2::aes(xstart = .data$xstart, xend = .data$xend)
   if (is.null(mapping)) {
     mapping <- default_aes
   } else {
@@ -421,7 +421,7 @@ gene_track <- function(source, region, exon_height = 0.75, intron_width = 0.4,
 
   # Create the plot
   p <- ggplot2::ggplot(gene_data) +
-    geom_gene(ggplot2::aes(xstart = rlang::.data$xstart, xend = rlang::.data$xend, strand = rlang::.data$strand),
+    geom_gene(ggplot2::aes(xstart = .data$xstart, xend = .data$xend, strand = .data$strand),
       exon_height = exon_height, intron_width = intron_width,
       exon_color = exon_color, exon_fill = exon_fill,
       intron_color = intron_color, strand_spacing = strand_spacing, ...
