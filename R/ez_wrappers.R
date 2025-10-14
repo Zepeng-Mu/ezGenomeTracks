@@ -296,10 +296,11 @@ ez_manhattan <- function(
 #' @param data A GTF/GFF file path, TxDb object, or data frame with gene data
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param exon_height Height of exons (default: 0.75)
-#' @param intron_height Height of introns (default: 0.4)
+#' @param intron_width Width of introns (default: 0.4)
 #' @param exon_color Color of exon borders (default: "black")
 #' @param exon_fill Fill color of exons (default: "gray50")
 #' @param intron_color Color of introns (default: "gray50")
+#' @param strand_spacing Vertical spacing between positive and negative strand tracks (default: 0.2)
 #' @param gene_id Column name for gene ID (default: "gene_id")
 #' @param gene_name Column name for gene name (default: "gene_name")
 #' @param ... Additional arguments passed to geom_gene
@@ -317,34 +318,46 @@ ez_manhattan <- function(
 #' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 #' track2 <- ez_gene(txdb, "chr1:1000000-2000000")
 #' }
-ez_gene <- function(data, region, exon_height = 0.75, intron_height = 0.4,
+ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
                     exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
-                    gene_id = "gene_id", gene_name = "gene_name", ...) {
-  # Check if data is a file path, TxDb object, or data frame
-  if ((is.character(data) && length(data) == 1) || methods::is(data, "TxDb")) {
-    # It's a file path or TxDb object, use gene_track
-    return(gene_track(data, region,
-      exon_height = exon_height, intron_height = intron_height,
-      exon_color = exon_color, exon_fill = exon_fill, intron_color = intron_color,
-      gene_id = gene_id, gene_name = gene_name, ...
-    ))
+                    strand_spacing = 0.2, gene_id = "gene_id", gene_name = "gene_name", ...) {
+
+  # Parse the region
+  region_gr <- parse_region(region)
+
+  # Process data based on input type
+  if (is.character(data) && length(data) == 1) {
+    # GTF/GFF file path
+    gene_gr <- rtracklayer::import(data, which = region_gr)
+    gene_data <- process_gene_data(gene_gr, gene_id = gene_id, gene_name = gene_name)
+
+  } else if (methods::is(data, "TxDb")) {
+    # TxDb object
+    if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
+      stop("Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')")
+    }
+    gene_data <- extract_txdb_data(data, region_gr)
+
   } else if (is.data.frame(data)) {
-    # It's a data frame, create the plot directly
-    p <- ggplot2::ggplot(data) +
-      geom_gene(ggplot2::aes(xstart = xstart, xend = xend, y = y, strand = strand),
-        exon_height = exon_height, intron_height = intron_height,
-        exon_color = exon_color, exon_fill = exon_fill,
-        intron_color = intron_color, ...
-      )
+    # Data frame - use as-is
+    gene_data <- data
 
-    # Apply the appropriate theme and scale
-    p <- p + ez_gene_theme() +
-      scale_x_genome_region(region)
-
-    return(p)
   } else {
     stop("Data must be a file path, TxDb object, or data frame")
   }
+
+  # Create the plot
+  p <- ggplot2::ggplot(gene_data) +
+    geom_gene(ggplot2::aes(xstart = xstart, xend = xend, y = y, strand = strand, type = type),
+      exon_height = exon_height, intron_width = intron_width,
+      exon_color = exon_color, exon_fill = exon_fill,
+      intron_color = intron_color, strand_spacing = strand_spacing, ...
+    )
+
+  # Apply theme and scale
+  p <- p + ez_gene_theme() + scale_x_genome_region(region)
+
+  return(p)
 }
 
 #' Easy interaction track visualization
