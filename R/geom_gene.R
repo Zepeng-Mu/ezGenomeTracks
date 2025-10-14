@@ -43,7 +43,7 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
                       exon_fill = "gray50", intron_color = "gray50",
                       strand_spacing = 0.2, na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
   # Provide defaults so users don't have to map y; draw at fixed vertical band
-  default_aes <- ggplot2::aes(xstart = .data$xstart, xend = .data$xend)
+  default_aes <- ggplot2::aes(xstart = .data$xstart, xend = .data$xend, type = .data$type)
   if (is.null(mapping)) {
     mapping <- default_aes
   } else {
