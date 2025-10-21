@@ -9,7 +9,7 @@
 #' @param labels Labels for the axis (default: waiver())
 #' @return A ggplot2 scale object
 #' @export
-#' @importFrom ggplot2 scale_x_continuous
+#' @importFrom ggplot2 scale_x_continuous waiver
 #' @importFrom scales label_number
 #' @examples
 #' \dontrun{

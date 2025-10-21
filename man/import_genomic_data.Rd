@@ -4,14 +4,14 @@
 \alias{import_genomic_data}
 \title{Import genomic data from a file into a tidy data frame}
 \usage{
-import_genomic_data(file, format = NULL, which = NULL)
+import_genomic_data(file, which = NULL)
 }
 \arguments{
 \item{file}{Path to the genomic data file}
 
-\item{format}{File format (default: NULL, auto-detected from file extension)}
-
 \item{which}{GRanges object specifying the genomic region to import (default: NULL, import all)}
+
+\item{format}{File format (default: NULL, auto-detected from file extension)}
 }
 \value{
 A tidy data frame

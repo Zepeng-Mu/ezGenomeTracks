@@ -20,7 +20,7 @@
 #' @return A ggplot2 object
 #' @export
 #' @importFrom ggplot2 ggplot aes scale_y_continuous coord_cartesian labs facet_wrap scale_color_manual scale_fill_manual
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter mutate bind_rows
 #' @examples
 #' \dontrun{
 #' # Single data frame with grouping
@@ -224,8 +224,6 @@ ez_feature <- function(input, region, color = "black", fill = "gray70",
     stop("Data must be a file path or data frame")
   }
 }
-
-#' @importFrom ezGenomeTracks geom_manhattan ez_manhattan
 
 #' Easy Manhattan plot visualization
 #'
@@ -445,6 +443,16 @@ ez_hic <- function(data, region, resolution = 10000, log_transform = TRUE,
     ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
+    # Handle different column names for Hi-C data
+    if ("bin1" %in% colnames(data) && "bin2" %in% colnames(data)) {
+      # Convert bin coordinates to genomic positions
+      region_gr <- parse_region(region)
+      start_pos <- GenomicRanges::start(region_gr)
+      bin_size <- resolution
+      data$pos1 <- start_pos + (data$bin1 - 1) * bin_size
+      data$pos2 <- start_pos + (data$bin2 - 1) * bin_size
+    }
+
     p <- ggplot2::ggplot(data, ggplot2::aes(x = pos1, y = pos2, fill = count)) +
       geom_hic(low = low, high = high, ...) +
       ggplot2::coord_fixed() # Ensure the plot is square

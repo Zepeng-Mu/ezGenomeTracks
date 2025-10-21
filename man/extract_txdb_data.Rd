@@ -12,7 +12,7 @@ extract_txdb_data(txdb, region_gr)
 \item{region_gr}{A GRanges object specifying the genomic region}
 }
 \value{
-A GRanges object with gene and exon information
+A data frame with gene and exon information formatted for geom_gene
 }
 \description{
 This function extracts gene and exon information from a TxDb object

@@ -8,10 +8,11 @@ ez_gene(
   data,
   region,
   exon_height = 0.75,
-  intron_height = 0.4,
+  intron_width = 0.4,
   exon_color = "black",
   exon_fill = "gray50",
   intron_color = "gray50",
+  strand_spacing = 0.2,
   gene_id = "gene_id",
   gene_name = "gene_name",
   ...
@@ -24,13 +25,15 @@ ez_gene(
 
 \item{exon_height}{Height of exons (default: 0.75)}
 
-\item{intron_height}{Height of introns (default: 0.4)}
+\item{intron_width}{Width of introns (default: 0.4)}
 
 \item{exon_color}{Color of exon borders (default: "black")}
 
 \item{exon_fill}{Fill color of exons (default: "gray50")}
 
 \item{intron_color}{Color of introns (default: "gray50")}
+
+\item{strand_spacing}{Vertical spacing between positive and negative strand tracks (default: 0.2)}
 
 \item{gene_id}{Column name for gene ID (default: "gene_id")}
 

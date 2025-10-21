@@ -21,12 +21,12 @@ test_that("ez_signal handles various input types correctly", {
   expect_error(ez_signal(bad_data, region = "chr1:1000000-2000000"))
 })
 
-test_that("ez_peak creates a peak track", {
+test_that("ez_feature creates a feature track", {
   # Load example data
   data(example_peaks)
 
-  # Create a peak track
-  p <- ez_peak(data = example_peaks)
+  # Create a feature track
+  p <- ez_feature(data = example_peaks, region = "chr1:1000000-2000000")
 
   # Check that it returns a ggplot object
   expect_s3_class(p, "ggplot")
@@ -77,7 +77,7 @@ test_that("ez_arc creates an interaction track", {
   data(example_interactions)
 
   # Create an interaction track
-  p <- ez_arc(data = example_interactions)
+  p <- ez_arc(data = example_interactions, region = "chr1:1000000-1100000")
 
   # Check that it returns a ggplot object
   expect_s3_class(p, "ggplot")
@@ -91,7 +91,7 @@ test_that("ez_hic creates a Hi-C track", {
   data(example_hic)
 
   # Create a Hi-C track
-  p <- ez_hic(data = example_hic)
+  p <- ez_hic(data = example_hic, region = "chr1:1000000-1100000")
 
   # Check that it returns a ggplot object
   expect_s3_class(p, "ggplot")

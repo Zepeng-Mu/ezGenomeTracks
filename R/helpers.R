@@ -138,7 +138,7 @@ import_genomic_data <- function(file, which = NULL) {
 #' @param name Optional name to assign to the track (default: NULL)
 #' @return A data frame containing the filtered genomic data with an optional name column
 #' @export
-#' @importFrom dplyr filter mutate
+#' @importFrom dplyr filter mutate bind_rows
 #' @examples
 #' \dontrun{
 #' # Extract data from a data frame
