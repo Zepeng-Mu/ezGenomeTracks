@@ -13,9 +13,8 @@
 #'
 #' Color mapping: The `color` aesthetic is used for both exons (as fill) and introns (as color).
 #'
-#' Strand separation: When `strand` is specified in aesthetics, genes are displayed in two stacked tracks:
-#' positive strand genes on top, negative strand genes on bottom. The `strand_spacing` parameter controls
-#' the vertical gap between tracks.
+#' Strand separation: When `strand` is specified in aesthetics, genes are displayed on discrete tracks:
+#' positive strand genes on one track, negative strand genes on another track.
 #'
 #' @inheritParams ggplot2::layer
 #' @param exon_height Height of exons (default: 0.75)
@@ -25,7 +24,6 @@
 #' @param exon_color Color of exon borders (default: "black", overridden by color mapping)
 #' @param exon_fill Fill color of exons (default: "gray50", overridden by color mapping)
 #' @param intron_color Color of intron/gene body (default: "gray50", overridden by color mapping)
-#' @param strand_spacing Vertical spacing between positive and negative strand tracks (default: 0.2)
 #' @param na.rm If `TRUE`, silently drop `NA` values.
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
@@ -34,14 +32,14 @@
 #' \dontrun{
 #' library(ggplot2)
 #' p <- ggplot(gene_data) +
-#'   geom_gene(aes(xstart = xstart, xend = xend, y = y, strand = strand, type = type, color = gene_name))
+#'   geom_gene(aes(xstart = xstart, xend = xend, strand = strand, type = type, color = gene_name))
 #' }
 geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
                       position = "identity", ..., exon_height = 0.75,
                       intron_width = 0.4, arrow_length = 0,
                       arrow_type = "open", exon_color = "black",
                       exon_fill = "gray50", intron_color = "gray50",
-                      strand_spacing = 0.2, na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
+                      na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
   # Provide defaults so users don't have to map y; draw at fixed vertical band
   default_aes <- ggplot2::aes(xstart = .data$xstart, xend = .data$xend, type = .data$type)
   if (is.null(mapping)) {
@@ -67,7 +65,6 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
       exon_color = exon_color,
       exon_fill = exon_fill,
       intron_color = intron_color,
-      strand_spacing = strand_spacing,
       na.rm = na.rm,
       ...
     )
@@ -80,6 +77,17 @@ geom_gene <- function(mapping = NULL, data = NULL, stat = "identity",
 GeomGene <- ggplot2::ggproto("GeomGene", Geom,
   required_aes = c("xstart", "xend", "type"),
   optional_aes = c("strand"),
+  setup_data = function(data, params) {
+    # Set y aesthetic based on strand for discrete positioning
+    if ("strand" %in% names(data)) {
+      # Use strand values directly as discrete y levels
+      data$y <- ifelse(is.na(data$strand) | data$strand == "*", ".", as.character(data$strand))
+    } else {
+      # No strand provided, use single level
+      data$y <- "."
+    }
+    data
+  },
   setup_params = function(data, params) {
     if (!is.null(params$arrow_length) && params$arrow_length > 0) {
       params$arrow <- ggplot2::arrow(
@@ -95,24 +103,10 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
                         exon_height = 0.75, intron_width = 0.4,
                         arrow = NULL, exon_color = "black",
                         exon_fill = "gray50", intron_color = "gray50",
-                        strand_spacing = 0.2, na.rm = FALSE) {
+                        na.rm = FALSE) {
     # Separate data by type
     exon_data <- data[data$type == "exon", ]
     gene_data <- data[data$type == "gene", ]
-
-    # Calculate y-offset based on strand for track separation
-    if ("strand" %in% names(data)) {
-      # Positive strand on top, negative strand on bottom
-      exon_data$y_offset <- ifelse(exon_data$strand == "+",
-                                   exon_height + strand_spacing,
-                                   0)
-      gene_data$y_offset <- ifelse(gene_data$strand == "+",
-                                   exon_height + strand_spacing,
-                                   0)
-    } else {
-      exon_data$y_offset <- 0
-      gene_data$y_offset <- 0
-    }
 
     grobs <- list()
 
@@ -122,8 +116,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
         exons <- transform(exon_data,
           xmin = exon_start,
           xmax = exon_end,
-          ymin = 0 + y_offset,
-          ymax = exon_height + y_offset
+          ymin = as.numeric(factor(y, levels = c(".", "-", "+"))) - exon_height/2,
+          ymax = as.numeric(factor(y, levels = c(".", "-", "+"))) + exon_height/2
         )
         # Exons use fill from mapping (color aesthetic), no border color
         exons$colour <- NA
@@ -139,8 +133,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
         exons <- transform(exon_data,
           xmin = xstart,
           xmax = xend,
-          ymin = 0 + y_offset,
-          ymax = exon_height + y_offset
+          ymin = as.numeric(factor(y, levels = c(".", "-", "+"))) - exon_height/2,
+          ymax = as.numeric(factor(y, levels = c(".", "-", "+"))) + exon_height/2
         )
         # Exons use fill from mapping (color aesthetic), no border color
         exons$colour <- NA
@@ -156,12 +150,11 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
 
     # Draw gene body (line) for gene type
     if (nrow(gene_data) > 0) {
-      y_center <- exon_height / 2
       body_data <- transform(gene_data,
         x = xstart,
         xend = xend,
-        y = y_center + y_offset,
-        yend = y_center + y_offset
+        y = as.numeric(factor(y, levels = c(".", "-", "+"))),
+        yend = as.numeric(factor(y, levels = c(".", "-", "+")))
       )
       # Introns use color from mapping, fallback to intron_color parameter
       if ("colour" %in% names(gene_data)) {
@@ -286,12 +279,10 @@ process_gene_data <- function(gr, gene_id = "gene_id", gene_name = "gene_name",
     result <- merge(genes, exons, by = c(gene_id, gene_name, "strand"), all.x = TRUE)
     result$xstart <- result$start
     result$xend <- result$end
-    result$y <- result[[gene_name]]
     return(result)
   } else {
     genes$xstart <- genes$start
     genes$xend <- genes$end
-    genes$y <- genes[[gene_name]]
     return(genes)
   }
 }
@@ -386,11 +377,10 @@ extract_txdb_data <- function(txdb, region_gr) {
   # Add required columns for geom_gene
   result$xstart <- result$start
   result$xend <- result$end
-  result$y <- result$gene_name
 
   return(result)
 }
 
 
 # globals used in examples/aes mappings within this file
-utils::globalVariables(c(".data", "xstart", "xend", "y", "strand"))
+utils::globalVariables(c(".data", "xstart", "xend", "strand"))

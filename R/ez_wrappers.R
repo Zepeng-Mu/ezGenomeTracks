@@ -298,7 +298,6 @@ ez_manhattan <- function(
 #' @param exon_color Color of exon borders (default: "black")
 #' @param exon_fill Fill color of exons (default: "gray50")
 #' @param intron_color Color of introns (default: "gray50")
-#' @param strand_spacing Vertical spacing between positive and negative strand tracks (default: 0.2)
 #' @param gene_id Column name for gene ID (default: "gene_id")
 #' @param gene_name Column name for gene name (default: "gene_name")
 #' @param ... Additional arguments passed to geom_gene
@@ -318,7 +317,7 @@ ez_manhattan <- function(
 #' }
 ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
                     exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
-                    strand_spacing = 0.2, gene_id = "gene_id", gene_name = "gene_name", ...) {
+                    gene_id = "gene_id", gene_name = "gene_name", ...) {
 
   # Parse the region
   region_gr <- parse_region(region)
@@ -346,10 +345,10 @@ ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
 
   # Create the plot
   p <- ggplot2::ggplot(gene_data) +
-    geom_gene(ggplot2::aes(xstart = xstart, xend = xend, y = y, strand = strand, type = type),
+    geom_gene(ggplot2::aes(xstart = xstart, xend = xend, strand = strand, type = type),
       exon_height = exon_height, intron_width = intron_width,
       exon_color = exon_color, exon_fill = exon_fill,
-      intron_color = intron_color, strand_spacing = strand_spacing, ...
+      intron_color = intron_color, ...
     )
 
   # Apply theme and scale
