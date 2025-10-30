@@ -354,6 +354,13 @@ ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
   # Apply theme and scale
   p <- p + ez_gene_theme() + scale_x_genome_region(region)
 
+  # Add strand y-axis labels when strand data is present
+  if ("strand" %in% names(gene_data) && any(!is.na(gene_data$strand) & gene_data$strand %in% c("+", "-"))) {
+    p <- p + scale_y_strand()
+  } else {
+    p <- p + ggplot2::scale_y_continuous(breaks = 1, labels = ".")
+  }
+
   return(p)
 }
 

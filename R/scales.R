@@ -33,6 +33,26 @@ scale_x_genome <- function(..., unit_suffix = "b", breaks = waiver(), labels = w
   ggplot2::scale_x_continuous(..., breaks = breaks, labels = label_fun, expand = c(0, 0))
 }
 
+#' Y-axis scale for strand tracks
+#'
+#' Provides y-axis labels for strand tracks produced by geom_gene.
+#' It maps numeric y positions 1 and 2 to labels '-' and '+'.
+#'
+#' @param breaks Numeric positions to label. Defaults to c(1, 2).
+#' @param labels Character labels matching breaks. Defaults to c("-", "+").
+#' @param ... Additional arguments passed to ggplot2::scale_y_continuous.
+#' @return A ggplot2 scale object for the y-axis.
+#' @export
+#' @importFrom ggplot2 scale_y_continuous
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' p <- ggplot(df) + geom_gene(...) + scale_y_strand()
+#' }
+scale_y_strand <- function(breaks = c(1, 2), labels = c("-", "+"), ...) {
+  ggplot2::scale_y_continuous(breaks = breaks, labels = labels, ...)
+}
+
 #' Format genomic coordinates
 #'
 #' This function formats genomic coordinates in a human-readable way (e.g., 1Mb, 500kb).

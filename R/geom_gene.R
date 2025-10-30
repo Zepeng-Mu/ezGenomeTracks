@@ -78,13 +78,13 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
   required_aes = c("xstart", "xend", "type"),
   optional_aes = c("strand"),
   setup_data = function(data, params) {
-    # Set y aesthetic based on strand for discrete positioning
+    # Set numeric y positions based on strand for two stacked tracks
     if ("strand" %in% names(data)) {
-      # Use strand values directly as discrete y levels
-      data$y <- ifelse(is.na(data$strand) | data$strand == "*", ".", as.character(data$strand))
+      y_num <- ifelse(is.na(data$strand) | data$strand == "*", 1, ifelse(data$strand == "+", 2, 1))
+      data$y <- y_num
     } else {
       # No strand provided, use single level
-      data$y <- "."
+      data$y <- 1
     }
     data
   },
@@ -116,8 +116,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
         exons <- transform(exon_data,
           xmin = exon_start,
           xmax = exon_end,
-          ymin = as.numeric(factor(y, levels = c(".", "-", "+"))) - exon_height/2,
-          ymax = as.numeric(factor(y, levels = c(".", "-", "+"))) + exon_height/2
+          ymin = y - exon_height/2,
+          ymax = y + exon_height/2
         )
         # Exons use fill from mapping (color aesthetic), no border color
         exons$colour <- NA
@@ -133,8 +133,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
         exons <- transform(exon_data,
           xmin = xstart,
           xmax = xend,
-          ymin = as.numeric(factor(y, levels = c(".", "-", "+"))) - exon_height/2,
-          ymax = as.numeric(factor(y, levels = c(".", "-", "+"))) + exon_height/2
+          ymin = y - exon_height/2,
+          ymax = y + exon_height/2
         )
         # Exons use fill from mapping (color aesthetic), no border color
         exons$colour <- NA
@@ -153,8 +153,8 @@ GeomGene <- ggplot2::ggproto("GeomGene", Geom,
       body_data <- transform(gene_data,
         x = xstart,
         xend = xend,
-        y = as.numeric(factor(y, levels = c(".", "-", "+"))),
-        yend = as.numeric(factor(y, levels = c(".", "-", "+")))
+        y = y,
+        yend = y
       )
       # Introns use color from mapping, fallback to intron_color parameter
       if ("colour" %in% names(gene_data)) {
