@@ -24,8 +24,10 @@
 #' @examples
 #' \dontrun{
 #' # Single data frame with grouping
-#' df <- data.frame(seqnames = "chr1", start = 1:100, end = 1:100,
-#'                  score = rnorm(100), sample = rep(c("A", "B"), 50))
+#' df <- data.frame(
+#'   seqnames = "chr1", start = 1:100, end = 1:100,
+#'   score = rnorm(100), sample = rep(c("A", "B"), 50)
+#' )
 #' ez_signal(df, "chr1:1-100", group_var = "sample")
 #'
 #' # Character vector of files
@@ -116,7 +118,6 @@ ez_signal <- function(input, region, track_labels = NULL,
     p <- p +
       ggplot2::scale_color_manual(values = plot_colors, name = legend_name) +
       ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
-
   } else {
     # No grouping - use single color or track-based colors
     if (has_track) {
@@ -140,7 +141,6 @@ ez_signal <- function(input, region, track_labels = NULL,
       p <- p +
         ggplot2::scale_color_manual(values = plot_colors, name = legend_name) +
         ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
-
     } else {
       # Single track without grouping
       p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
@@ -318,7 +318,6 @@ ez_manhattan <- function(
 ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
                     exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
                     gene_id = "gene_id", gene_name = "gene_name", ...) {
-
   # Parse the region
   region_gr <- parse_region(region)
 
@@ -327,39 +326,36 @@ ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
     # GTF/GFF file path
     gene_gr <- rtracklayer::import(data, which = region_gr)
     gene_data <- process_gene_data(gene_gr, gene_id = gene_id, gene_name = gene_name)
-
   } else if (methods::is(data, "TxDb")) {
     # TxDb object
     if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
       stop("Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')")
     }
     gene_data <- extract_txdb_data(data, region_gr)
-
   } else if (is.data.frame(data)) {
     # Data frame - use as-is
     gene_data <- data
-
   } else {
     stop("Data must be a file path, TxDb object, or data frame")
   }
 
   # Create the plot
   p <- ggplot2::ggplot(gene_data) +
-    geom_gene(ggplot2::aes(xstart = xstart, xend = xend, strand = strand, type = type),
+    geom_gene(
+      ggplot2::aes(xstart = xstart, xend = xend, y = strand, type = type),
       exon_height = exon_height, intron_width = intron_width,
       exon_color = exon_color, exon_fill = exon_fill,
       intron_color = intron_color, ...
     )
 
   # Apply theme and scale
-  p <- p + ez_gene_theme() + scale_x_genome_region(region)
-
-  # Add strand y-axis labels when strand data is present
-  if ("strand" %in% names(gene_data) && any(!is.na(gene_data$strand) & gene_data$strand %in% c("+", "-"))) {
-    p <- p + scale_y_strand()
-  } else {
-    p <- p + ggplot2::scale_y_continuous(breaks = 1, labels = ".")
-  }
+  p <- p +
+    ggplot2::scale_y_discrete(
+      expand = c(0.1, 0.1),
+      drop = FALSE # Keep all levels even if not present
+    ) +
+    scale_x_genome_region(region) +
+    ez_gene_theme()
 
   return(p)
 }

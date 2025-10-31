@@ -125,11 +125,11 @@ ez_signal_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
 #' }
 ez_gene_theme <- function(...) {
   ez_theme(...) + ggplot2::theme(
-    axis.text.y = ggplot2::element_text(size = ggplot2::rel(2)),
+    axis.text.y = ggplot2::element_text(size = ggplot2::rel(1)),
     axis.line.y = ggplot2::element_blank(),
     axis.ticks.y = ggplot2::element_blank(),
     axis.title.y = ggplot2::element_blank(),
-    plot.margin = ggplot2::margin(0, 5, 0, 5)
+    plot.margin = ggplot2::margin(5, 5, 5, 5)
   )
 }
 
