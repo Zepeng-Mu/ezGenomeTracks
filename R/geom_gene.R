@@ -19,7 +19,8 @@
 #' by explicitly mapping a `y` aesthetic to use a different grouping variable.
 #'
 #' @inheritParams ggplot2::layer
-#' @param exon_height Height of exons (default: 0.75)
+#' @param height Height of gene tracks for discrete y-axis (default: 1)
+#' @param exon_height Height of exons relative to track height (default: 0.75)
 #' @param intron_width Line width of gene body (default: 0.4)
 #' @param arrow_length Length of directional arrows in inches (default: 0)
 #' @param arrow_type Type of arrow head (default: "open")
@@ -47,6 +48,7 @@ geom_gene <- function(
   stat = "identity",
   position = "identity",
   ...,
+  height = NULL,
   exon_height = 0.75,
   intron_width = 0.4,
   arrow_length = 0,
@@ -81,6 +83,7 @@ geom_gene <- function(
     show.legend = show.legend,
     inherit.aes = inherit.aes,
     params = list(
+      height = height,
       exon_height = exon_height,
       intron_width = intron_width,
       arrow_length = arrow_length,
@@ -103,6 +106,15 @@ GeomGene <- ggplot2::ggproto(
   required_aes = c("xstart", "xend", "type"),
   optional_aes = c("strand", "y"),
   setup_data = function(data, params) {
+    # Convert custom xstart/xend to standard aesthetics for proper coord transformation
+    # This must happen BEFORE coord transformation
+    data$x <- data$xstart
+    data$xend <- data$xend
+    if ("exon_start" %in% names(data)) {
+      data$xmin <- data$exon_start
+      data$xmax <- data$exon_end
+    }
+    
     # Create discrete y levels based on strand if y is not provided
     if (!"y" %in% names(data)) {
       # Automatically set y based on strand
@@ -121,6 +133,27 @@ GeomGene <- ggplot2::ggproto(
         data$y <- factor("Genes", levels = "Genes")
       }
     }
+
+    # Ensure y is a factor for discrete y-axis handling
+    if (!is.factor(data$y)) {
+      data$y <- factor(data$y)
+    }
+    
+    # Convert factor to numeric for plotting (this is what ggplot2 does internally)
+    # Each factor level gets an integer position: 1, 2, 3, etc.
+    data$y <- as.numeric(data$y)
+    
+    # Set height from params or use default
+    if (is.null(params$height)) {
+      data$height <- 1
+    } else {
+      data$height <- params$height
+    }
+
+    # Compute ymin and ymax from y and height
+    data$ymin <- data$y - data$height / 2
+    data$ymax <- data$y + data$height / 2
+
     data
   },
   setup_params = function(data, params) {
@@ -138,6 +171,7 @@ GeomGene <- ggplot2::ggproto(
     data,
     panel_params,
     coord,
+    height = 1,
     exon_height = 0.75,
     intron_width = 0.4,
     arrow = NULL,
@@ -146,12 +180,6 @@ GeomGene <- ggplot2::ggproto(
     intron_color = "gray50",
     na.rm = FALSE
   ) {
-    # Convert factor y to numeric for drawing
-    # ggplot2 internally converts discrete y to numeric 1, 2, 3, etc.
-    if (is.factor(data$y)) {
-      data$y <- as.numeric(data$y)
-    }
-
     # Separate data by type
     exon_data <- data[data$type == "exon", ]
     gene_data <- data[data$type == "gene", ]
@@ -160,59 +188,44 @@ GeomGene <- ggplot2::ggproto(
 
     # Draw exons (rectangles) for exon type
     if (nrow(exon_data) > 0) {
-      if (all(c("exon_start", "exon_end") %in% names(exon_data))) {
+      # Use transformed coordinates (xmin/xmax were set in setup_data from exon_start/exon_end or xstart/xend)
+      if (all(c("xmin", "xmax") %in% names(exon_data))) {
+        # xmin/xmax already set from exon-specific coordinates
         exons <- transform(
           exon_data,
-          xmin = exon_start,
-          xmax = exon_end,
-          ymin = y - exon_height / 2,
-          ymax = y + exon_height / 2
-        )
-        # Exons use fill from mapping (color aesthetic), no border color
-        exons$colour <- NA
-        # Use mapped color as fill, fallback to exon_fill parameter
-        if ("colour" %in% names(exon_data)) {
-          exons$fill <- exon_data$colour
-        } else if (!is.null(exon_fill)) {
-          exons$fill <- exon_fill
-        }
-        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
-          exons,
-          panel_params,
-          coord
+          ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
+          ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
         )
       } else {
-        # If no exon_start/exon_end, use xstart/xend for exon boundaries
+        # Use x/xend (transformed from xstart/xend) for exon boundaries
         exons <- transform(
           exon_data,
-          xmin = xstart,
+          xmin = x,
           xmax = xend,
-          ymin = y - exon_height / 2,
-          ymax = y + exon_height / 2
-        )
-        # Exons use fill from mapping (color aesthetic), no border color
-        exons$colour <- NA
-        # Use mapped color as fill, fallback to exon_fill parameter
-        if ("colour" %in% names(exon_data)) {
-          exons$fill <- exon_data$colour
-        } else if (!is.null(exon_fill)) {
-          exons$fill <- exon_fill
-        }
-        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
-          exons,
-          panel_params,
-          coord
+          ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
+          ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
         )
       }
+      # Exons use fill from mapping (color aesthetic), no border color
+      exons$colour <- NA
+      # Use mapped color as fill, fallback to exon_fill parameter
+      if ("colour" %in% names(exon_data)) {
+        exons$fill <- exon_data$colour
+      } else if (!is.null(exon_fill)) {
+        exons$fill <- exon_fill
+      }
+      grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
+        exons,
+        panel_params,
+        coord
+      )
     }
 
     # Draw gene body (line) for gene type
     if (nrow(gene_data) > 0) {
+      # Use transformed x and xend (already converted in setup_data)
       body_data <- transform(
         gene_data,
-        x = xstart,
-        xend = xend,
-        y = y,
         yend = y
       )
       # Introns use color from mapping, fallback to intron_color parameter
@@ -239,8 +252,13 @@ GeomGene <- ggplot2::ggproto(
     colour = "gray50",
     linewidth = 0.4,
     linetype = 1,
-    alpha = 1
-  )
+    alpha = 1,
+    height = 1
+  ),
+
+  # These aes columns are created by setup_data(). They need to be listed here so
+  # that NA handling properly works
+  non_missing_aes = c("ymin", "ymax")
 )
 
 #' Process gene annotation data for visualization
