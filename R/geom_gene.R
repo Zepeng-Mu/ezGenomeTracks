@@ -105,16 +105,7 @@ GeomGene <- ggplot2::ggproto(
   Geom,
   required_aes = c("xstart", "xend", "type"),
   optional_aes = c("strand", "y"),
-  setup_data = function(data, params) {
-    # Convert custom xstart/xend to standard aesthetics for proper coord transformation
-    # This must happen BEFORE coord transformation
-    data$x <- data$xstart
-    data$xend <- data$xend
-    if ("exon_start" %in% names(data)) {
-      data$xmin <- data$exon_start
-      data$xmax <- data$exon_end
-    }
-    
+  setup_data = function(self, data, params) {
     # Create discrete y levels based on strand if y is not provided
     if (!"y" %in% names(data)) {
       # Automatically set y based on strand
@@ -134,21 +125,14 @@ GeomGene <- ggplot2::ggproto(
       }
     }
 
-    # Ensure y is a factor for discrete y-axis handling
-    if (!is.factor(data$y)) {
-      data$y <- factor(data$y)
-    }
-    
-    # Convert factor to numeric for plotting (this is what ggplot2 does internally)
-    # Each factor level gets an integer position: 1, 2, 3, etc.
-    data$y <- as.numeric(data$y)
-    
-    # Set height from params or use default
-    if (is.null(params$height)) {
-      data$height <- 1
-    } else {
-      data$height <- params$height
-    }
+    # Use compute_data_size to properly handle discrete y-axis
+    # This is the same approach as GeomTile
+    data <- ggplot2:::compute_data_size(
+      data, params$height,
+      default = self$default_aes$height,
+      panels = "by", target = "height",
+      zero = FALSE, discrete = TRUE
+    )
 
     # Compute ymin and ymax from y and height
     data$ymin <- data$y - data$height / 2
@@ -188,44 +172,59 @@ GeomGene <- ggplot2::ggproto(
 
     # Draw exons (rectangles) for exon type
     if (nrow(exon_data) > 0) {
-      # Use transformed coordinates (xmin/xmax were set in setup_data from exon_start/exon_end or xstart/xend)
-      if (all(c("xmin", "xmax") %in% names(exon_data))) {
-        # xmin/xmax already set from exon-specific coordinates
+      if (all(c("exon_start", "exon_end") %in% names(exon_data))) {
         exons <- transform(
           exon_data,
+          xmin = exon_start,
+          xmax = exon_end,
           ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
           ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
         )
+        # Exons use fill from mapping (color aesthetic), no border color
+        exons$colour <- NA
+        # Use mapped color as fill, fallback to exon_fill parameter
+        if ("colour" %in% names(exon_data)) {
+          exons$fill <- exon_data$colour
+        } else if (!is.null(exon_fill)) {
+          exons$fill <- exon_fill
+        }
+        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
+          exons,
+          panel_params,
+          coord
+        )
       } else {
-        # Use x/xend (transformed from xstart/xend) for exon boundaries
+        # If no exon_start/exon_end, use xstart/xend for exon boundaries
         exons <- transform(
           exon_data,
-          xmin = x,
+          xmin = xstart,
           xmax = xend,
           ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
           ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
         )
+        # Exons use fill from mapping (color aesthetic), no border color
+        exons$colour <- NA
+        # Use mapped color as fill, fallback to exon_fill parameter
+        if ("colour" %in% names(exon_data)) {
+          exons$fill <- exon_data$colour
+        } else if (!is.null(exon_fill)) {
+          exons$fill <- exon_fill
+        }
+        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
+          exons,
+          panel_params,
+          coord
+        )
       }
-      # Exons use fill from mapping (color aesthetic), no border color
-      exons$colour <- NA
-      # Use mapped color as fill, fallback to exon_fill parameter
-      if ("colour" %in% names(exon_data)) {
-        exons$fill <- exon_data$colour
-      } else if (!is.null(exon_fill)) {
-        exons$fill <- exon_fill
-      }
-      grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
-        exons,
-        panel_params,
-        coord
-      )
     }
 
     # Draw gene body (line) for gene type
     if (nrow(gene_data) > 0) {
-      # Use transformed x and xend (already converted in setup_data)
       body_data <- transform(
         gene_data,
+        x = xstart,
+        xend = xend,
+        y = y,
         yend = y
       )
       # Introns use color from mapping, fallback to intron_color parameter
