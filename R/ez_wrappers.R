@@ -176,18 +176,72 @@ ez_signal <- function(input, region, track_labels = NULL,
 #'
 #' @param input A BED file path or data frame with peak data
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
-#' @param color Border color of the peaks (default: "black")
-#' @param fill Fill color of the peaks (default: "gray70")
-#' @param alpha Transparency (default: 0.7)
-#' @param height Height of the peaks (default: 0.8)
-#' @param use_score Use the score column for fill color (default: FALSE)
-#' @param ... Additional arguments passed to geom_feature
-#' @return A ggplot2 object
+#' Create a feature track from genomic regions
+#'
+#' @description
+#' This function creates a feature track visualization from genomic regions,
+#' such as peaks or other genomic annotations. It can read directly from BED files
+#' or work with data frames containing genomic coordinates.
+#'
+#' @param input Either a file path to a BED file or a data frame containing
+#'   genomic coordinates with columns for chromosome, start, and end positions.
+#' @param region Genomic region to display in the format "chr:start-end".
+#'   Example: "chr1:1000000-2000000"
+#' @param color Border color of the features. Default: "black"
+#' @param fill Fill color of the features. When `use_score = TRUE`, this will be
+#'   used as the high value in the color gradient. Default: "gray70"
+#' @param alpha Transparency level of the features (0 = transparent, 1 = opaque).
+#'   Default: 0.7
+#' @param height Height of the feature rectangles (0 to 1). Default: 0.8
+#' @param use_score Logical indicating whether to use the 'score' column for
+#'   fill color. If TRUE, a gradient from white to the specified fill color will
+#'   be used. Default: FALSE
+#' @param ... Additional arguments passed to `geom_feature()`
+#'
+#' @return A ggplot2 object representing the feature track.
+#'
+#' @details
+#' The function automatically handles both file paths and data frames as input.
+#' When a file path is provided, it reads the BED file and creates the track.
+#' When a data frame is provided, it should contain at least 'chrom', 'start',
+#' and 'end' columns. If 'score' column is present and `use_score = TRUE`,
+#' features will be colored by their score values.
+#'
 #' @export
-#' @importFrom ggplot2 ggplot aes scale_fill_gradient
+#' @importFrom ggplot2 ggplot aes scale_fill_gradient scale_fill_identity
+#'   theme_void ylim
+#' @importFrom methods is
+#'
 #' @examples
 #' \dontrun{
-#' track <- ez_feature("peaks.bed", "chr1:1000000-2000000", use_score = TRUE)
+#' # From a BED file with score-based coloring
+#' track1 <- ez_feature(
+#'   "peaks.bed",
+#'   "chr1:1000000-2000000",
+#'   fill = "blue",
+#'   use_score = TRUE
+#' )
+#'
+#' # From a data frame with uniform coloring
+#' features <- data.frame(
+#'   chrom = c("chr1", "chr1", "chr1"),
+#'   start = c(1000, 3000, 5000),
+#'   end = c(2000, 4000, 6000),
+#'   name = c("peak1", "peak2", "peak3"),
+#'   score = c(10, 30, 50)
+#' )
+#' track2 <- ez_feature(
+#'   features,
+#'   "chr1:1-10000",
+#'   fill = "darkgreen",
+#'   alpha = 0.8
+#' )
+#'
+#' # Combine with other tracks using aplot
+#' ez_plot(list(
+#'   "Features" = track1,
+#'   "Genes" = track2
+#' ), "chr1:1-10000")
 #' }
 ez_feature <- function(input, region, color = "black", fill = "gray70",
                        alpha = 0.7, height = 0.8, use_score = FALSE, ...) {
@@ -230,27 +284,85 @@ ez_feature <- function(input, region, color = "black", fill = "gray70",
 #' This function creates a Manhattan plot for GWAS results.
 #' It is a wrapper around geom_manhattan that provides a simpler interface.
 #'
-#' @param data A data frame with GWAS results. Must include columns for chromosome, base pair position, and p-value. Optional column for SNP identifier and R-squared values.
-#' @param chr Name of the chromosome column in `data` (default: "CHR").
-#' @param bp Name of the base pair position column in `data` (default: "BP").
-#' @param p Name of the p-value column in `data` (default: "P").
-#' @param snp Name of the SNP identifier column in `data` (default: "SNP").
-#' @param logp Logical. If `TRUE` (default), -log10(p-value) is used for the y-axis. If `FALSE`, raw p-value is used.
-#' @param size Point size (default: 0.5).
-#' @param lead.snp Vector of leading SNP identifiers to highlight.
-#' @param r2 Vector of R-squared values for linkage disequilibrium (LD) coloring.
-#' @param colors Vector of colors to use for alternating chromosome colors (default: c("grey", "skyblue")).
-#' @param highlight_snps Data frame of SNPs to highlight, with columns `CHR`, `BP`, and `P`.
-#' @param highlight_color Color for highlighted SNPs (default: "purple").
-#' @param threshold_p A numeric value for the p-value threshold to draw a horizontal line (e.g., 5e-8).
-#' @param threshold_color Color for the threshold line (default: "red").
-#' @param threshold_linetype Linetype for the threshold line (default: 2).
-#' @param colorBy Character string indicating how points should be colored.
-#' Options are "chr" (default, alternating chromosome colors in colors) or "r2" (based on R-squared values).
-#' @param y_axis_label Label for the y-axis (default: `expression(paste("-log"[10], "(P)"))`).
+#' @description
+#' This function creates a Manhattan plot from GWAS (Genome-Wide Association Study) 
+#' data, which is a standard way to visualize p-values across the genome.
+#'
+#' @param data A data frame containing GWAS results with columns for chromosome, 
+#'   position, p-values, and optionally SNP names.
+#' @param chr Character string specifying the column name for chromosome numbers.
+#'   Default: "CHR".
+#' @param bp Character string specifying the column name for base pair positions.
+#'   Default: "BP".
+#' @param p Character string specifying the column name for p-values.
+#'   Default: "P".
+#' @param snp Character string specifying the column name for SNP identifiers.
+#'   Default: "SNP".
+#' @param logp Logical indicating whether to plot -log10(p-values).
+#'   Default: TRUE.
+#' @param size Numeric value for point size in the plot.
+#'   Default: 0.5.
+#' @param lead.snp Character string of SNP ID to highlight as the lead variant.
+#'   Default: NULL.
+#' @param r2 Numeric vector of r² values for coloring points by linkage 
+#'   disequilibrium (LD) with lead variant. Must be same length as number of 
+#'   rows in data. Default: NULL.
+#' @param colors Character vector of length 2 specifying colors for 
+#'   alternating chromosomes. Default: c("grey", "skyblue").
+#' @param highlight_snps Character vector of SNP IDs to highlight.
+#'   Default: NULL.
+#' @param highlight_color Color for highlighting significant or lead SNPs.
+#'   Default: "purple".
+#' @param threshold_p Numeric p-value threshold for drawing a significance line.
+#'   If NULL, no line is drawn. Default: NULL.
+#' @param threshold_color Color for the significance threshold line.
+#'   Default: "red".
+#' @param threshold_linetype Linetype for the significance threshold line.
+#'   Default: 2 (dashed).
+#' @param colorBy Character string specifying the variable to use for coloring points.
+#'   Must be a column name in the data. Default: "chr".
+#' @param y_axis_label Label for the y-axis. Default: `expression(paste("-log"[10], "(P)"))`.
 #' @param ... Additional arguments passed to `geom_manhattan()`.
-#' @return A `ggplot2` object.
+#'
+#' @return A ggplot2 object containing the Manhattan plot.
+#'
+#' @details
+#' The function creates a Manhattan plot with chromosomes on the x-axis and 
+#' -log10(p-values) on the y-axis. Points are colored by chromosome and can be 
+#' highlighted based on significance or LD with lead variants.
+#'
 #' @export
+#' @importFrom ggplot2 ggplot aes geom_point scale_color_manual scale_x_continuous
+#'   scale_y_continuous geom_hline labs theme_minimal theme element_blank
+#' @importFrom dplyr mutate arrange group_by ungroup
+#' @importFrom rlang .data
+#'
+#' @examples
+#' \dontrun{
+#' # Basic Manhattan plot
+#' data(gwas_data)  # Example GWAS data
+#' ez_manhattan(
+#'   gwas_data,
+#'   chr = "CHR",
+#'   bp = "BP",
+#'   p = "P",
+#'   snp = "SNP",
+#'   colors = c("dodgerblue", "darkblue")
+#' )
+#'
+#' # With highlighted lead SNP and threshold line
+#' ez_manhattan(
+#'   gwas_data,
+#'   chr = "CHR",
+#'   bp = "BP",
+#'   p = "P",
+#'   snp = "SNP",
+#'   lead.snp = "rs123456",
+#'   highlight_color = "red",
+#'   threshold_p = 5e-8,
+#'   threshold_color = "red"
+#' )
+#' }
 ez_manhattan <- function(
   data,
   chr = "CHR", bp = "BP", p = "P", snp = "SNP", logp = TRUE, size = 0.5,
@@ -315,9 +427,68 @@ ez_manhattan <- function(
 #' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 #' track2 <- ez_gene(txdb, "chr1:1000000-2000000")
 #' }
-ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
-                    exon_color = "black", exon_fill = "gray50", intron_color = "gray50",
-                    gene_id = "gene_id", gene_name = "gene_name", ...) {
+#' Create a gene track from genomic annotations
+#'
+#' @description
+#' This function creates a gene track visualization from genomic annotations,
+#' supporting various input formats including GTF/GFF files, TxDb objects, and
+#' data frames. It automatically handles gene structure visualization with
+#' exons, introns, and strand information.
+#'
+#' @param data Input data source, which can be:
+#'   - A file path to a GTF/GFF file
+#'   - A TxDb object from the GenomicFeatures package
+#'   - A data frame with gene annotation data
+#' @param region Genomic region to display in the format "chr:start-end".
+#'   Example: "chr1:1000000-2000000"
+#' @param exon_height Relative height of exons (0 to 1). Default: 0.75
+#' @param intron_width Line width for introns. Default: 0.4
+#' @param exon_color Border color of exons. Default: "black"
+#' @param exon_fill Fill color of exons. Default: "gray50"
+#' @param intron_color Color of intron lines. Default: "gray50"
+#' @param gene_id Column name for gene identifiers. Default: "gene_id"
+#' @param gene_name Column name for gene symbols/names. Default: "gene_name"
+#' @param ... Additional arguments passed to `geom_gene()`
+#'
+#' @return A ggplot2 object representing the gene track.
+#'
+#' @details
+#' The function automatically processes different input types:
+#' - For GTF/GFF files: Uses rtracklayer to import and process the data
+#' - For TxDb objects: Extracts gene models using GenomicFeatures
+#' - For data frames: Expects columns for chromosome, start, end, strand, and type
+#'
+#' The visualization includes:
+#' - Exons as filled rectangles
+#' - Introns as connecting lines
+#' - Strand information with arrowheads
+#' - Automatic y-axis separation by strand
+#'
+#' @export
+#' @importFrom GenomicFeatures exonsBy transcriptsBy
+#' @importFrom IRanges IRanges
+#' @importFrom GenomicRanges GRanges
+#' @importFrom rtracklayer import
+#' @importFrom methods is
+#'
+#' @examples
+#' \dontrun{
+#' # From a GTF file
+#' track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
+#'
+#' # From a TxDb object
+#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+#' track2 <- ez_gene(txdb, "chr1:1000000-2000000")
+#'
+#' # With custom styling
+#' track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
+#'   exon_fill = "steelblue",
+#'   exon_color = "navy",
+#'   intron_color = "darkblue",
+#'   intron_width = 0.6
+#' )
+#' }
   # Parse the region
   region_gr <- parse_region(region)
 
@@ -366,19 +537,76 @@ ez_gene <- function(data, region, exon_height = 0.75, intron_width = 0.4,
 #' It is a wrapper around geom_arc that provides a simpler interface.
 #'
 #' @param data A BEDPE file path or data frame with interaction data
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
-#' @param curvature Amount of curvature (default: 0.5)
-#' @param color Color of the arcs (default: "gray50")
-#' @param size Size of the arcs (default: 0.5)
-#' @param alpha Transparency (default: 0.7)
-#' @param use_score Use the score column for color (default: FALSE)
-#' @param ... Additional arguments passed to geom_arc
-#' @return A ggplot2 object
+#' Create an arc track for genomic interactions
+#'
+#' @description
+#' This function creates an arc track visualization for genomic interactions,
+#' such as those from Hi-C, ChIA-PET, or other interaction assays. It can
+#' read directly from BEDPE files or work with data frames containing
+#' interaction data.
+#'
+#' @param data Either:
+#'   - A file path to a BEDPE file containing interaction data
+#'   - A data frame with columns for interaction coordinates and scores
+#' @param region Genomic region to display in the format "chr:start-end".
+#'   Example: "chr1:1000000-2000000"
+#' @param curvature Numeric value controlling the arc curvature (0-1).
+#'   Higher values create more pronounced curves. Default: 0.5
+#' @param color Color of the arcs. This is used when `use_score = FALSE`.
+#'   Default: "gray50"
+#' @param size Line width of the arcs. Default: 0.5
+#' @param alpha Transparency level of the arcs (0 = transparent, 1 = opaque).
+#'   Default: 0.7
+#' @param use_score Logical indicating whether to use the 'score' column for
+#'   arc coloring. If TRUE, a color gradient will be applied based on the
+#'   interaction scores. Default: FALSE
+#' @param ... Additional arguments passed to `geom_arc()`
+#'
+#' @return A ggplot2 object representing the arc track.
+#'
+#' @details
+#' The function automatically handles different input types:
+#' - For BEDPE files: Uses `interaction_track` to read and process the data
+#' - For data frames: Expects columns for interaction coordinates (chr1, start1, end1, chr2, start2, end2)
+#'   and optionally a 'score' column if `use_score = TRUE`
+#'
+#' The visualization includes:
+#' - Arcs connecting interaction anchors
+#' - Optional score-based coloring
+#' - Automatic scaling to fit the specified genomic region
+#'
 #' @export
 #' @importFrom ggplot2 ggplot aes scale_color_gradient
+#' @importFrom methods is
+#'
 #' @examples
 #' \dontrun{
-#' track <- ez_arc("interactions.bedpe", "chr1:1000000-2000000", use_score = TRUE)
+#' # From a BEDPE file with score-based coloring
+#' track1 <- ez_arc(
+#'   "interactions.bedpe",
+#'   "chr1:1000000-2000000",
+#'   use_score = TRUE,
+#'   high = "red",
+#'   low = "blue"
+#' )
+#'
+#' # From a data frame with uniform coloring
+#' interactions <- data.frame(
+#'   chr1 = c("chr1", "chr1", "chr1"),
+#'   start1 = c(1000, 3000, 5000),
+#'   end1 = c(2000, 4000, 6000),
+#'   chr2 = c("chr1", "chr1", "chr1"),
+#'   start2 = c(8000, 7000, 9000),
+#'   end2 = c(9000, 8000, 10000),
+#'   score = c(5, 10, 15)
+#' )
+#' track2 <- ez_arc(
+#'   interactions,
+#'   "chr1:1-15000",
+#'   color = "darkblue",
+#'   size = 1,
+#'   alpha = 0.8
+#' )
 #' }
 ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
                    size = 0.5, alpha = 0.7, use_score = FALSE, ...) {
@@ -410,35 +638,6 @@ ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
       ggplot2::ylim(-0.5, 0.5) # Fixed y-axis for arcs
 
     return(p)
-  } else {
-    stop("Data must be a file path or data frame")
-  }
-}
-
-#' Easy Hi-C track visualization
-#'
-#' This function creates a Hi-C track visualization from a contact matrix file or data frame.
-#' It is a wrapper around geom_hic that provides a simpler interface.
-#'
-#' @param data A contact matrix file path or data frame with Hi-C data
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
-#' @param resolution Resolution of the Hi-C data in base pairs (default: 10000)
-#' @param log_transform Apply log transformation to the values (default: TRUE)
-#' @param low Color for low values (default: "white")
-#' @param high Color for high values (default: "red")
-#' @param ... Additional arguments passed to geom_hic
-#' @return A ggplot2 object
-#' @export
-#' @importFrom ggplot2 ggplot aes coord_fixed
-#' @examples
-#' \dontrun{
-#' track <- ez_hic("contacts.matrix", "chr1:1000000-2000000", resolution = 10000)
-#' }
-ez_hic <- function(data, region, resolution = 10000, log_transform = TRUE,
-                   low = "white", high = "red", ...) {
-  # Check if data is a file path or data frame
-  if (is.character(data) && length(data) == 1) {
-    # It's a file path, use hic_track
     return(hic_track(data, region,
       resolution = resolution, log_transform = log_transform,
       low = low, high = high, ...
