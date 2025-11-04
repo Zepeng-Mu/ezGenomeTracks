@@ -44,7 +44,7 @@ It is useful for labeling specific genomic features.
 }
 \examples{
 \dontrun{
-track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 track <- add_text(track, 1500000, 20, "Peak")
 }
 }

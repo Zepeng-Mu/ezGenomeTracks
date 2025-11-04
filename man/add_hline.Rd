@@ -35,7 +35,7 @@ It is useful for highlighting specific signal thresholds.
 }
 \examples{
 \dontrun{
-track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 track <- add_hline(track, 10)
 }
 }

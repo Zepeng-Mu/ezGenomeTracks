@@ -12,6 +12,7 @@ geom_gene(
   stat = "identity",
   position = "identity",
   ...,
+  height = NULL,
   exon_height = 0.75,
   intron_width = 0.4,
   arrow_length = 0,
@@ -19,119 +20,181 @@ geom_gene(
   exon_color = "black",
   exon_fill = "gray50",
   intron_color = "gray50",
-  strand_spacing = 0.2,
   na.rm = TRUE,
   show.legend = NA,
   inherit.aes = TRUE
 )
 }
 \arguments{
-\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{aes()}}. If specified and
-\code{inherit.aes = TRUE} (the default), it is combined with the default mapping
-at the top level of the plot. You must supply \code{mapping} if there is no plot
-mapping.}
+\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}.}
 
-\item{data}{The data to be displayed in this layer. There are three
-options:
+\item{data}{The data to be displayed in this layer.}
 
-If \code{NULL}, the default, the data is inherited from the plot
-data as specified in the call to \code{\link[ggplot2:ggplot]{ggplot()}}.
+\item{stat}{The statistical transformation to use on the data.}
 
-A \code{data.frame}, or other object, will override the plot
-data. All objects will be fortified to produce a data frame. See
-\code{\link[ggplot2:fortify]{fortify()}} for which variables will be created.
+\item{position}{Position adjustment, either as a string, or the result of
+a call to a position adjustment function.}
 
-A \code{function} will be called with a single argument,
-the plot data. The return value must be a \code{data.frame}, and
-will be used as the layer data. A \code{function} can be created
-from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
+\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}. These are often
+aesthetics, used to set an aesthetic to a fixed value, like
+\code{color = "red"} or \code{size = 3}.}
 
-\item{stat}{The statistical transformation to use on the data for this layer.
-When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used to override the default coupling between geoms and
-stats. The \code{stat} argument accepts the following:
-\itemize{
-\item A \code{Stat} ggproto subclass, for example \code{StatCount}.
-\item A string naming the stat. To give the stat as a string, strip the
-function name of the \code{stat_} prefix. For example, to use \code{stat_count()},
-give the stat as \code{"count"}.
-\item For more information and other ways to specify the stat, see the
-\link[ggplot2:layer_stats]{layer stat} documentation.
-}}
+\item{height}{Height of gene tracks for discrete y-axis. If \code{NULL} (default),
+uses the \code{exon_height} parameter to determine track height.}
 
-\item{position}{A position adjustment to use on the data for this layer. This
-can be used in various ways, including to prevent overplotting and
-improving the display. The \code{position} argument accepts the following:
-\itemize{
-\item The result of calling a position function, such as \code{position_jitter()}.
-This method allows for passing extra arguments to the position.
-\item A string naming the position adjustment. To give the position as a
-string, strip the function name of the \code{position_} prefix. For example,
-to use \code{position_jitter()}, give the position as \code{"jitter"}.
-\item For more information and other ways to specify the position, see the
-\link[ggplot2:layer_positions]{layer position} documentation.
-}}
+\item{exon_height}{Height of exons relative to track height. A numeric value
+between 0 and 1. Default: 0.75}
 
-\item{exon_height}{Height of exons (default: 0.75)}
+\item{intron_width}{Line width for intron segments. Default: 0.4}
 
-\item{intron_width}{Line width of gene body (default: 0.4)}
+\item{arrow_length}{Length of directional arrows in inches. Set to 0 to
+disable arrows. Default: 0}
 
-\item{arrow_length}{Length of directional arrows in inches (default: 0)}
+\item{arrow_type}{Type of arrow head. See \code{\link[grid:arrow]{grid::arrow()}} for options.
+Default: "open"}
 
-\item{arrow_type}{Type of arrow head (default: "open")}
+\item{exon_color}{Default border color for exons. Can be overridden by
+\code{color} or \code{colour} aesthetics. Default: "black"}
 
-\item{exon_color}{Color of exon borders (default: "black", overridden by color mapping)}
+\item{exon_fill}{Default fill color for exons. Can be overridden by \code{fill}
+aesthetic. Default: "gray50"}
 
-\item{exon_fill}{Fill color of exons (default: "gray50", overridden by color mapping)}
+\item{intron_color}{Default color for intron lines. Can be overridden by
+\code{color} or \code{colour} aesthetics. Default: "gray50"}
 
-\item{intron_color}{Color of intron/gene body (default: "gray50", overridden by color mapping)}
+\item{na.rm}{If \code{FALSE}, the default, missing values are removed with
+a warning. If \code{TRUE}, missing values are silently removed.}
 
-\item{strand_spacing}{Vertical spacing between positive and negative strand tracks (default: 0.2)}
+\item{show.legend}{Logical. Should this layer be included in the legends?
+\code{NA} (the default) includes the layer in the legends if any aesthetics
+are mapped.}
 
-\item{na.rm}{If \code{TRUE}, silently drop \code{NA} values.}
-
-\item{show.legend}{logical. Should this layer be included in the legends?
-\code{NA}, the default, includes if any aesthetics are mapped.
-\code{FALSE} never includes, and \code{TRUE} always includes.
-It can also be a named logical vector to finely select the aesthetics to
-display. To include legend keys for all levels, even
-when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
-but unobserved levels are omitted.}
-
-\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
-rather than combining with them. This is most useful for helper functions
-that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
+\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics, rather
+than combining with them.}
 }
 \value{
 A ggplot2 layer that can be added to a plot.
 }
 \description{
-This function creates a geom for gene model tracks, displaying genes with exons,
-introns, and optional directional arrows. It is designed to work with gene
-annotation data from GTF/GFF files after lightweight preprocessing.
+\code{geom_gene} provides a flexible way to visualize gene models in genomic coordinates.
+It can display exons, introns, and strand information, with automatic handling
+of gene structure and strand separation.
 }
 \details{
-Expected columns in the data:
+The \code{GeomGene} ggproto object implements the core functionality for rendering gene models.
+It handles both the data processing and the actual drawing of gene features.
+
+Key features:
 \itemize{
-\item \code{xstart}, \code{xend}, \code{type} (required)
-\item optional: \code{exon_start}, \code{exon_end} for long-format exon rows
-\item optional: \code{strand} for arrow direction ("+" or "-")
+\item Automatically processes input data to handle different input formats
+\item Manages the coordinate transformation for proper genomic scaling
+\item Handles the rendering of both exons and introns with appropriate styling
+\item Supports strand-specific visualization with optional directional arrows
+\item Implements proper handling of missing values and edge cases
+}
+}
+\section{Aesthetics}{
+
+The following aesthetics are required:
+\itemize{
+\item \code{xstart}: Start position of the feature (genomic coordinate)
+\item \code{xend}: End position of the feature (genomic coordinate)
+\item \code{type}: Type of feature ("gene" or "exon")
 }
 
-The \code{type} column should contain "gene" for gene body lines or "exon" for exon rectangles.
-
-Color mapping: The \code{color} aesthetic is used for both exons (as fill) and introns (as color).
-
-Strand separation: When \code{strand} is specified in aesthetics, genes are displayed in two stacked tracks:
-positive strand genes on top, negative strand genes on bottom. The \code{strand_spacing} parameter controls
-the vertical gap between tracks.
+Optional aesthetics:
+\itemize{
+\item \code{color}: Color for both exons (fill) and introns (color)
+\item \code{fill}: Fill color for exons (overrides \code{color} for fill if specified)
+\item \code{strand}: Strand information ("+" or "-")
+\item \code{y}: Optional grouping variable (overrides automatic strand-based grouping)
 }
+
+
+The following aesthetics are used by the geom:
+\itemize{
+\item \code{xstart}, \code{xend}: Start and end genomic coordinates
+\item \code{type}: Feature type ("gene" or "exon")
+\item \code{strand}: Strand information ("+" or "-")
+\item \code{y}: Optional y-axis grouping
+\item \code{colour}: Color for both exons (fill) and introns (line)
+\item \code{fill}: Fill color for exons (overrides \code{colour} for fill)
+\item \code{linewidth}: Width of intron lines
+\item \code{alpha}: Transparency (0-1)
+\item \code{linetype}: Line type for introns
+\item \code{size}: Size of points (unused, for compatibility)
+}
+}
+
+\section{Data Format}{
+
+The function expects a data frame with the following columns:
+\itemize{
+\item Required:
+\itemize{
+\item \code{xstart}, \code{xend}: Genomic coordinates of features
+\item \code{type}: Either "gene" (for introns) or "exon"
+}
+\item Optional:
+\itemize{
+\item \code{strand}: "+" or "-" for forward/reverse strand
+\item \code{exon_start}, \code{exon_end}: For long-format exon data
+\item Any additional columns for aesthetics (e.g., gene names, biotypes)
+}
+}
+}
+
+\section{Features}{
+
+\itemize{
+\item Automatic strand separation with customizable track heights
+\item Support for both wide and long data formats
+\item Customizable appearance of exons and introns
+\item Optional directional arrows for strand indication
+\item Integration with ggplot2's theming system
+}
+}
+
+\section{Methods}{
+
+The ggproto object implements the following methods:
+\itemize{
+\item \code{setup_data()}: Processes input data and sets up y-axis positions
+\item \code{setup_params()}: Configures drawing parameters including arrow settings
+\item \code{draw_panel()}: Main drawing method that renders the gene models
+\item \code{draw_key()}: Defines how to draw the legend key
+}
+}
+
 \examples{
 \dontrun{
 library(ggplot2)
-p <- ggplot(gene_data) +
-  geom_gene(aes(xstart = xstart, xend = xend, y = y, strand = strand, type = type, color = gene_name))
+
+# Example 1: Basic usage with automatic strand separation
+ggplot(gene_data) +
+  geom_gene(aes(
+    xstart = start, xend = end,
+    type = feature, color = gene_name
+  ))
+
+# Example 2: Custom y-axis grouping by biotype
+ggplot(gene_data) +
+  geom_gene(aes(
+    xstart = start, xend = end,
+    type = feature, y = biotype,
+    fill = gene_name
+  ))
+
+# Example 3: Styling options
+ggplot(gene_data) +
+  geom_gene(
+    aes(xstart = start, xend = end, type = feature),
+    exon_fill = "steelblue",
+    intron_color = "darkblue",
+    intron_width = 0.6,
+    exon_height = 0.8,
+    arrow_length = unit(0.05, "inches")
+  )
 }
 }
 \keyword{datasets}

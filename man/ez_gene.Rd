@@ -12,41 +12,67 @@ ez_gene(
   exon_color = "black",
   exon_fill = "gray50",
   intron_color = "gray50",
-  strand_spacing = 0.2,
   gene_id = "gene_id",
   gene_name = "gene_name",
   ...
 )
 }
 \arguments{
-\item{data}{A GTF/GFF file path, TxDb object, or data frame with gene data}
+\item{data}{Input data source, which can be:
+\itemize{
+\item A file path to a GTF/GFF file
+\item A TxDb object from the GenomicFeatures package
+\item A data frame with gene annotation data
+}}
 
-\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+\item{region}{Genomic region to display in the format "chr:start-end".
+Example: "chr1:1000000-2000000"}
 
-\item{exon_height}{Height of exons (default: 0.75)}
+\item{exon_height}{Relative height of exons (0 to 1). Default: 0.75}
 
-\item{intron_width}{Width of introns (default: 0.4)}
+\item{intron_width}{Line width for introns. Default: 0.4}
 
-\item{exon_color}{Color of exon borders (default: "black")}
+\item{exon_color}{Border color of exons. Default: "black"}
 
-\item{exon_fill}{Fill color of exons (default: "gray50")}
+\item{exon_fill}{Fill color of exons. Default: "gray50"}
 
-\item{intron_color}{Color of introns (default: "gray50")}
+\item{intron_color}{Color of intron lines. Default: "gray50"}
 
-\item{strand_spacing}{Vertical spacing between positive and negative strand tracks (default: 0.2)}
+\item{gene_id}{Column name for gene identifiers. Default: "gene_id"}
 
-\item{gene_id}{Column name for gene ID (default: "gene_id")}
+\item{gene_name}{Column name for gene symbols/names. Default: "gene_name"}
 
-\item{gene_name}{Column name for gene name (default: "gene_name")}
-
-\item{...}{Additional arguments passed to geom_gene}
+\item{...}{Additional arguments passed to \code{geom_gene()}}
 }
 \value{
 A ggplot2 object
+
+A ggplot2 object representing the gene track.
 }
 \description{
+This function creates a gene track visualization from genomic annotations,
+supporting various input formats including GTF/GFF files, TxDb objects, and
+data frames. It automatically handles gene structure visualization with
+exons, introns, and strand information.
+}
+\details{
 This function creates a gene track visualization from a GTF/GFF file, TxDb object, or data frame.
 It is a wrapper around geom_gene that provides a simpler interface.
+
+The function automatically processes different input types:
+\itemize{
+\item For GTF/GFF files: Uses rtracklayer to import and process the data
+\item For TxDb objects: Extracts gene models using GenomicFeatures
+\item For data frames: Expects columns for chromosome, start, end, strand, and type
+}
+
+The visualization includes:
+\itemize{
+\item Exons as filled rectangles
+\item Introns as connecting lines
+\item Strand information with arrowheads
+\item Automatic y-axis separation by strand
+}
 }
 \examples{
 \dontrun{
@@ -57,5 +83,24 @@ track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 track2 <- ez_gene(txdb, "chr1:1000000-2000000")
+}
+Create a gene track from genomic annotations
+
+\dontrun{
+# From a GTF file
+track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
+
+# From a TxDb object
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+track2 <- ez_gene(txdb, "chr1:1000000-2000000")
+
+# With custom styling
+track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
+  exon_fill = "steelblue",
+  exon_color = "navy",
+  intron_color = "darkblue",
+  intron_width = 0.6
+)
 }
 }

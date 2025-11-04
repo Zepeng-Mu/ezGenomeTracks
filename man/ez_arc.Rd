@@ -16,31 +16,86 @@ ez_arc(
 )
 }
 \arguments{
-\item{data}{A BEDPE file path or data frame with interaction data}
+\item{data}{Either:
+\itemize{
+\item A file path to a BEDPE file containing interaction data
+\item A data frame with columns for interaction coordinates and scores
+}}
 
-\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+\item{region}{Genomic region to display in the format "chr:start-end".
+Example: "chr1:1000000-2000000"}
 
-\item{curvature}{Amount of curvature (default: 0.5)}
+\item{curvature}{Numeric value controlling the arc curvature (0-1).
+Higher values create more pronounced curves. Default: 0.5}
 
-\item{color}{Color of the arcs (default: "gray50")}
+\item{color}{Color of the arcs. This is used when \code{use_score = FALSE}.
+Default: "gray50"}
 
-\item{size}{Size of the arcs (default: 0.5)}
+\item{size}{Line width of the arcs. Default: 0.5}
 
-\item{alpha}{Transparency (default: 0.7)}
+\item{alpha}{Transparency level of the arcs (0 = transparent, 1 = opaque).
+Default: 0.7}
 
-\item{use_score}{Use the score column for color (default: FALSE)}
+\item{use_score}{Logical indicating whether to use the 'score' column for
+arc coloring. If TRUE, a color gradient will be applied based on the
+interaction scores. Default: FALSE}
 
-\item{...}{Additional arguments passed to geom_arc}
+\item{...}{Additional arguments passed to \code{geom_arc()}}
 }
 \value{
-A ggplot2 object
+A ggplot2 object representing the arc track.
 }
 \description{
+This function creates an arc track visualization for genomic interactions,
+such as those from Hi-C, ChIA-PET, or other interaction assays. It can
+read directly from BEDPE files or work with data frames containing
+interaction data.
+}
+\details{
 This function creates an interaction track visualization from a BEDPE file or data frame.
 It is a wrapper around geom_arc that provides a simpler interface.
+
+The function automatically handles different input types:
+\itemize{
+\item For BEDPE files: Uses \code{interaction_track} to read and process the data
+\item For data frames: Expects columns for interaction coordinates (chr1, start1, end1, chr2, start2, end2)
+and optionally a 'score' column if \code{use_score = TRUE}
+}
+
+The visualization includes:
+\itemize{
+\item Arcs connecting interaction anchors
+\item Optional score-based coloring
+\item Automatic scaling to fit the specified genomic region
+}
 }
 \examples{
 \dontrun{
-track <- ez_arc("interactions.bedpe", "chr1:1000000-2000000", use_score = TRUE)
+# From a BEDPE file with score-based coloring
+track1 <- ez_arc(
+  "interactions.bedpe",
+  "chr1:1000000-2000000",
+  use_score = TRUE,
+  high = "red",
+  low = "blue"
+)
+
+# From a data frame with uniform coloring
+interactions <- data.frame(
+  chr1 = c("chr1", "chr1", "chr1"),
+  start1 = c(1000, 3000, 5000),
+  end1 = c(2000, 4000, 6000),
+  chr2 = c("chr1", "chr1", "chr1"),
+  start2 = c(8000, 7000, 9000),
+  end2 = c(9000, 8000, 10000),
+  score = c(5, 10, 15)
+)
+track2 <- ez_arc(
+  interactions,
+  "chr1:1-15000",
+  color = "darkblue",
+  size = 1,
+  alpha = 0.8
+)
 }
 }

@@ -16,31 +16,75 @@ ez_feature(
 )
 }
 \arguments{
-\item{input}{A BED file path or data frame with peak data}
+\item{input}{Either a file path to a BED file or a data frame containing
+genomic coordinates with columns for chromosome, start, and end positions.}
 
-\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+\item{region}{Genomic region to display in the format "chr:start-end".
+Example: "chr1:1000000-2000000"}
 
-\item{color}{Border color of the peaks (default: "black")}
+\item{color}{Border color of the features. Default: "black"}
 
-\item{fill}{Fill color of the peaks (default: "gray70")}
+\item{fill}{Fill color of the features. When \code{use_score = TRUE}, this will be
+used as the high value in the color gradient. Default: "gray70"}
 
-\item{alpha}{Transparency (default: 0.7)}
+\item{alpha}{Transparency level of the features (0 = transparent, 1 = opaque).
+Default: 0.7}
 
-\item{height}{Height of the peaks (default: 0.8)}
+\item{height}{Height of the feature rectangles (0 to 1). Default: 0.8}
 
-\item{use_score}{Use the score column for fill color (default: FALSE)}
+\item{use_score}{Logical indicating whether to use the 'score' column for
+fill color. If TRUE, a gradient from white to the specified fill color will
+be used. Default: FALSE}
 
-\item{...}{Additional arguments passed to geom_feature}
+\item{...}{Additional arguments passed to \code{geom_feature()}}
 }
 \value{
-A ggplot2 object
+A ggplot2 object representing the feature track.
 }
 \description{
+This function creates a feature track visualization from genomic regions,
+such as peaks or other genomic annotations. It can read directly from BED files
+or work with data frames containing genomic coordinates.
+}
+\details{
 This function creates a peak track visualization from a BED file or data frame.
 It is a wrapper around geom_feature that provides a simpler interface.
+
+The function automatically handles both file paths and data frames as input.
+When a file path is provided, it reads the BED file and creates the track.
+When a data frame is provided, it should contain at least 'chrom', 'start',
+and 'end' columns. If 'score' column is present and \code{use_score = TRUE},
+features will be colored by their score values.
 }
 \examples{
 \dontrun{
-track <- ez_feature("peaks.bed", "chr1:1000000-2000000", use_score = TRUE)
+# From a BED file with score-based coloring
+track1 <- ez_feature(
+  "peaks.bed",
+  "chr1:1000000-2000000",
+  fill = "blue",
+  use_score = TRUE
+)
+
+# From a data frame with uniform coloring
+features <- data.frame(
+  chrom = c("chr1", "chr1", "chr1"),
+  start = c(1000, 3000, 5000),
+  end = c(2000, 4000, 6000),
+  name = c("peak1", "peak2", "peak3"),
+  score = c(10, 30, 50)
+)
+track2 <- ez_feature(
+  features,
+  "chr1:1-10000",
+  fill = "darkgreen",
+  alpha = 0.8
+)
+
+# Combine with other tracks using aplot
+ez_plot(list(
+  "Features" = track1,
+  "Genes" = track2
+), "chr1:1-10000")
 }
 }

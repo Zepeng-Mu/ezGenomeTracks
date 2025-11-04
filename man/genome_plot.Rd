@@ -26,7 +26,7 @@ a common x-axis. It uses the aplot package for track stacking.
 }
 \examples{
 \dontrun{
-track1 <- ez_signal("signal.bw", "chr1:1000000-2000000")
+track1 <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 track2 <- ez_peak("peaks.bed", "chr1:1000000-2000000")
 track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
 p <- genome_plot(track1, track2, track3, region = "chr1:1000000-2000000")

@@ -35,7 +35,7 @@ It is useful for highlighting specific genomic positions.
 }
 \examples{
 \dontrun{
-track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 track <- add_vline(track, 1500000)
 }
 }

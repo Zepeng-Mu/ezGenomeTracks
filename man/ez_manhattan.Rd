@@ -26,47 +26,98 @@ ez_manhattan(
 )
 }
 \arguments{
-\item{data}{A data frame with GWAS results. Must include columns for chromosome, base pair position, and p-value. Optional column for SNP identifier and R-squared values.}
+\item{data}{A data frame containing GWAS results with columns for chromosome,
+position, p-values, and optionally SNP names.}
 
-\item{chr}{Name of the chromosome column in \code{data} (default: "CHR").}
+\item{chr}{Character string specifying the column name for chromosome numbers.
+Default: "CHR".}
 
-\item{bp}{Name of the base pair position column in \code{data} (default: "BP").}
+\item{bp}{Character string specifying the column name for base pair positions.
+Default: "BP".}
 
-\item{p}{Name of the p-value column in \code{data} (default: "P").}
+\item{p}{Character string specifying the column name for p-values.
+Default: "P".}
 
-\item{snp}{Name of the SNP identifier column in \code{data} (default: "SNP").}
+\item{snp}{Character string specifying the column name for SNP identifiers.
+Default: "SNP".}
 
-\item{logp}{Logical. If \code{TRUE} (default), -log10(p-value) is used for the y-axis. If \code{FALSE}, raw p-value is used.}
+\item{logp}{Logical indicating whether to plot -log10(p-values).
+Default: TRUE.}
 
-\item{size}{Point size (default: 0.5).}
+\item{size}{Numeric value for point size in the plot.
+Default: 0.5.}
 
-\item{lead.snp}{Vector of leading SNP identifiers to highlight.}
+\item{lead.snp}{Character string of SNP ID to highlight as the lead variant.
+Default: NULL.}
 
-\item{r2}{Vector of R-squared values for linkage disequilibrium (LD) coloring.}
+\item{r2}{Numeric vector of r² values for coloring points by linkage
+disequilibrium (LD) with lead variant. Must be same length as number of
+rows in data. Default: NULL.}
 
-\item{colors}{Vector of colors to use for alternating chromosome colors (default: c("grey", "skyblue")).}
+\item{colors}{Character vector of length 2 specifying colors for
+alternating chromosomes. Default: c("grey", "skyblue").}
 
-\item{highlight_snps}{Data frame of SNPs to highlight, with columns \code{CHR}, \code{BP}, and \code{P}.}
+\item{highlight_snps}{Character vector of SNP IDs to highlight.
+Default: NULL.}
 
-\item{highlight_color}{Color for highlighted SNPs (default: "purple").}
+\item{highlight_color}{Color for highlighting significant or lead SNPs.
+Default: "purple".}
 
-\item{threshold_p}{A numeric value for the p-value threshold to draw a horizontal line (e.g., 5e-8).}
+\item{threshold_p}{Numeric p-value threshold for drawing a significance line.
+If NULL, no line is drawn. Default: NULL.}
 
-\item{threshold_color}{Color for the threshold line (default: "red").}
+\item{threshold_color}{Color for the significance threshold line.
+Default: "red".}
 
-\item{threshold_linetype}{Linetype for the threshold line (default: 2).}
+\item{threshold_linetype}{Linetype for the significance threshold line.
+Default: 2 (dashed).}
 
-\item{colorBy}{Character string indicating how points should be colored.
-Options are "chr" (default, alternating chromosome colors in colors) or "r2" (based on R-squared values).}
+\item{colorBy}{Character string specifying the variable to use for coloring points.
+Must be a column name in the data. Default: "chr".}
 
-\item{y_axis_label}{Label for the y-axis (default: \code{expression(paste("-log"[10], "(P)"))}).}
+\item{y_axis_label}{Label for the y-axis. Default: \code{expression(paste("-log"[10], "(P)"))}.}
 
 \item{...}{Additional arguments passed to \code{geom_manhattan()}.}
 }
 \value{
-A \code{ggplot2} object.
+A ggplot2 object containing the Manhattan plot.
 }
 \description{
+This function creates a Manhattan plot from GWAS (Genome-Wide Association Study)
+data, which is a standard way to visualize p-values across the genome.
+}
+\details{
 This function creates a Manhattan plot for GWAS results.
 It is a wrapper around geom_manhattan that provides a simpler interface.
+
+The function creates a Manhattan plot with chromosomes on the x-axis and
+-log10(p-values) on the y-axis. Points are colored by chromosome and can be
+highlighted based on significance or LD with lead variants.
+}
+\examples{
+\dontrun{
+# Basic Manhattan plot
+data(gwas_data)  # Example GWAS data
+ez_manhattan(
+  gwas_data,
+  chr = "CHR",
+  bp = "BP",
+  p = "P",
+  snp = "SNP",
+  colors = c("dodgerblue", "darkblue")
+)
+
+# With highlighted lead SNP and threshold line
+ez_manhattan(
+  gwas_data,
+  chr = "CHR",
+  bp = "BP",
+  p = "P",
+  snp = "SNP",
+  lead.snp = "rs123456",
+  highlight_color = "red",
+  threshold_p = 5e-8,
+  threshold_color = "red"
+)
+}
 }

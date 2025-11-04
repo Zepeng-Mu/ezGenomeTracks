@@ -41,7 +41,7 @@ It is useful for highlighting specific genomic regions.
 }
 \examples{
 \dontrun{
-track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 track <- add_rect(track, 1200000, 1400000)
 }
 }
