@@ -15,7 +15,7 @@
 #'
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
-#' @importFrom ggplot2 GeomSegment GeomArea GeomTile layer aes ggproto Geom
+#' @importFrom ggplot2 GeomRect GeomTile layer aes ggproto Geom
 #'
 #' @examples
 #' \dontrun{
@@ -44,9 +44,11 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
                           na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
   type <- match.arg(type, c("area", "line", "heatmap"))
   if (type == "area") {
-    default_aes <- aes(x = .data$start, ymin = 0, ymax = .data$score)
+    default_aes <- aes(xmin = .data$start, xmax = .data$end,
+                       ymin = 0, ymax = .data$score)
   } else if (type == "line") {
-    default_aes <- aes(x = (.data$start + .data$end) / 2, y = .data$score)
+    default_aes <- aes(xmin = .data$start, xmax = .data$end,
+                       ymin = .data$score, ymax = .data$score)
   } else if (type == "heatmap") {
     default_aes <- aes(x = (.data$start + .data$end) / 2, fill = .data$score, y = 1, height = 1)
   }
@@ -78,18 +80,22 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
 #' @format NULL
 #' @usage NULL
 GeomSignal <- ggproto("GeomSignal", Geom,
-  required_aes = c("x", "y"),
+  required_aes = c("xmin", "xmax", "ymin", "ymax"),
   setup_params = function(data, params) {
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params
   },
   draw_panel = function(data, panel_params, coord, type = "area", na.rm = FALSE) {
-    Geom <- switch(type,
-      line = GeomLine,
-      area = GeomArea,
-      heatmap = GeomTile
-    )
-    Geom$draw_panel(data, panel_params, coord)
+    if (type == "heatmap") {
+      # For heatmap, transform xmin/xmax to x and keep y/height
+      data$x <- (data$xmin + data$xmax) / 2
+      data$y <- 1
+      data$height <- 1
+      GeomTile$draw_panel(data, panel_params, coord)
+    } else {
+      # Use GeomRect for area and line (which accepts xmin, xmax, ymin, ymax)
+      GeomRect$draw_panel(data, panel_params, coord)
+    }
   },
   default_aes = aes(
     colour = "purple2", fill = "purple2", linewidth = 0.5, linetype = 1,
