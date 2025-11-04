@@ -1,6 +1,6 @@
-#' Easy signal track visualization
+#' Easy coverage track visualization
 #'
-#' This function creates a signal track visualization from various input types.
+#' This function creates a coverage track visualization from various input types.
 #' It provides a flexible interface with support for grouping and multiple tracks.
 #'
 #' @param input A data frame, character vector of file paths, or named list of data sources
@@ -28,13 +28,13 @@
 #'   seqnames = "chr1", start = 1:100, end = 1:100,
 #'   score = rnorm(100), sample = rep(c("A", "B"), 50)
 #' )
-#' ez_signal(df, "chr1:1-100", group_var = "sample")
+#' ez_coverage(df, "chr1:1-100", group_var = "sample")
 #'
 #' # Character vector of files
-#' ez_signal(c("sample1.bw", "sample2.bw"), "chr1:1-100")
+#' ez_coverage(c("sample1.bw", "sample2.bw"), "chr1:1-100")
 #'
 #' # Named list with stacking
-#' ez_signal(
+#' ez_coverage(
 #'   list(
 #'     "ATAC-seq" = "atac.bw",
 #'     "H3K27ac" = "h3k27ac.bw",
@@ -43,12 +43,22 @@
 #'   "chr1:1-100"
 #' )
 #' }
-ez_signal <- function(input, region, track_labels = NULL,
-                      type = c("area", "line", "heatmap"),
-                      color = "steelblue", fill = "steelblue",
-                      group_var = NULL, color_by = c("group", "track"),
-                      colors = NULL, y_axis_style = c("none", "simple", "full"),
-                      y_range = NULL, alpha = 0.5, bin_width = NULL, ...) {
+ez_coverage <- function(
+  input,
+  region,
+  track_labels = NULL,
+  type = c("area", "line", "heatmap"),
+  color = "steelblue",
+  fill = "steelblue",
+  group_var = NULL,
+  color_by = c("group", "track"),
+  colors = NULL,
+  y_axis_style = c("none", "simple", "full"),
+  y_range = NULL,
+  alpha = 0.5,
+  bin_width = NULL,
+  ...
+) {
   # Validate inputs
   type <- match.arg(type)
   y_axis_style <- match.arg(y_axis_style)
@@ -57,7 +67,8 @@ ez_signal <- function(input, region, track_labels = NULL,
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
     "region must be provided" = !missing(region),
-    "bin_width must be positive integer" = is.null(bin_width) || (bin_width > 0 && is.integer(bin_width))
+    "bin_width must be positive integer" = is.null(bin_width) ||
+      (bin_width > 0 && is.integer(bin_width))
   )
 
   chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
@@ -65,7 +76,17 @@ ez_signal <- function(input, region, track_labels = NULL,
   # Default color palette function
   get_default_colors <- function(n) {
     if (n <= 9) {
-      return(c("#1f4e79", "#d35400", "#27ae60", "#8e44ad", "#f1c40f", "#16a085", "#e74c3c", "#8b4513", "#5d6d7e")[1:n])
+      return(c(
+        "#1f4e79",
+        "#d35400",
+        "#27ae60",
+        "#8e44ad",
+        "#f1c40f",
+        "#16a085",
+        "#e74c3c",
+        "#8b4513",
+        "#5d6d7e"
+      )[1:n])
     } else {
       return(rainbow(n))
     }
@@ -88,17 +109,38 @@ ez_signal <- function(input, region, track_labels = NULL,
     if (has_track) {
       # Multiple tracks with grouping
       if (color_by == "group") {
-        aes_mapping <- ggplot2::aes(x = start, y = score, color = .data[[group_var]], fill = .data[[group_var]])
+        aes_mapping <- ggplot2::aes(
+          xmin = start,
+          xmax = end,
+          ymin = 0,
+          ymax = score,
+          color = .data[[group_var]],
+          fill = .data[[group_var]]
+        )
         color_values <- unique(plotDt[[group_var]])
         legend_name <- group_var
       } else {
-        aes_mapping <- ggplot2::aes(x = start, y = score, color = track, fill = track)
+        aes_mapping <- ggplot2::aes(
+          xmin = start,
+          xmax = end,
+          ymin = 0,
+          ymax = score,
+          color = track,
+          fill = track
+        )
         color_values <- unique(plotDt$track)
         legend_name <- "Track"
       }
     } else {
       # Single track with grouping
-      aes_mapping <- ggplot2::aes(x = start, y = score, color = .data[[group_var]], fill = .data[[group_var]])
+      aes_mapping <- ggplot2::aes(
+        xmin = start,
+        xmax = end,
+        ymin = 0,
+        ymax = score,
+        color = .data[[group_var]],
+        fill = .data[[group_var]]
+      )
       color_values <- unique(plotDt[[group_var]])
       legend_name <- group_var
     }
@@ -122,7 +164,14 @@ ez_signal <- function(input, region, track_labels = NULL,
     # No grouping - use single color or track-based colors
     if (has_track) {
       # Multiple tracks without grouping
-      aes_mapping <- ggplot2::aes(x = start, y = score, color = track, fill = track)
+      aes_mapping <- ggplot2::aes(
+        xmin = start,
+        xmax = end,
+        ymin = 0,
+        ymax = score,
+        color = track,
+        fill = track
+      )
       color_values <- unique(plotDt$track)
       legend_name <- "Track"
 
@@ -143,8 +192,14 @@ ez_signal <- function(input, region, track_labels = NULL,
         ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
     } else {
       # Single track without grouping
-      p <- ggplot2::ggplot(plotDt, ggplot2::aes(x = start, y = score)) +
-        geom_coverage(type = type, color = color, fill = fill, alpha = alpha, ...)
+      p <- ggplot2::ggplot(plotDt, ggplot2::aes(xmin = start, xmax = end, ymin = 0, ymax = score)) +
+        geom_coverage(
+          type = type,
+          color = color,
+          fill = fill,
+          alpha = alpha,
+          ...
+        )
     }
   }
 
@@ -168,6 +223,10 @@ ez_signal <- function(input, region, track_labels = NULL,
 
   return(p)
 }
+
+#' @export
+#' @rdname ez_coverage
+ez_signal <- ez_coverage
 
 #' Easy peak track visualization
 #'
@@ -243,27 +302,50 @@ ez_signal <- function(input, region, track_labels = NULL,
 #'   "Genes" = track2
 #' ), "chr1:1-10000")
 #' }
-ez_feature <- function(input, region, color = "black", fill = "gray70",
-                       alpha = 0.7, height = 0.8, use_score = FALSE, ...) {
+ez_feature <- function(
+  input,
+  region,
+  color = "black",
+  fill = "gray70",
+  alpha = 0.7,
+  height = 0.8,
+  use_score = FALSE,
+  ...
+) {
   # Check if data is a file path or data frame
   if (is.character(input) && length(input) == 1) {
     # It's a file path, use peak_track
-    return(peak_track(input, region,
-      color = color, fill = fill,
-      alpha = alpha, height = height, use_score = use_score, ...
+    return(peak_track(
+      input,
+      region,
+      color = color,
+      fill = fill,
+      alpha = alpha,
+      height = height,
+      use_score = use_score,
+      ...
     ))
   } else if (is.data.frame(input)) {
     # It's a data frame, create the plot directly
     if (use_score && "score" %in% colnames(input)) {
       p <- ggplot2::ggplot(input) +
-        geom_feature(ggplot2::aes(xmin = start, xmax = end, fill = score),
-          color = color, alpha = alpha, height = height, ...
+        geom_feature(
+          ggplot2::aes(xmin = start, xmax = end, fill = score),
+          color = color,
+          alpha = alpha,
+          height = height,
+          ...
         ) +
         ggplot2::scale_fill_gradient(low = "white", high = fill)
     } else {
       p <- ggplot2::ggplot(input) +
-        geom_feature(ggplot2::aes(xmin = start, xmax = end),
-          color = color, fill = fill, alpha = alpha, height = height, ...
+        geom_feature(
+          ggplot2::aes(xmin = start, xmax = end),
+          color = color,
+          fill = fill,
+          alpha = alpha,
+          height = height,
+          ...
         )
     }
 
@@ -285,10 +367,10 @@ ez_feature <- function(input, region, color = "black", fill = "gray70",
 #' It is a wrapper around geom_manhattan that provides a simpler interface.
 #'
 #' @description
-#' This function creates a Manhattan plot from GWAS (Genome-Wide Association Study) 
+#' This function creates a Manhattan plot from GWAS (Genome-Wide Association Study)
 #' data, which is a standard way to visualize p-values across the genome.
 #'
-#' @param data A data frame containing GWAS results with columns for chromosome, 
+#' @param data A data frame containing GWAS results with columns for chromosome,
 #'   position, p-values, and optionally SNP names.
 #' @param chr Character string specifying the column name for chromosome numbers.
 #'   Default: "CHR".
@@ -304,10 +386,10 @@ ez_feature <- function(input, region, color = "black", fill = "gray70",
 #'   Default: 0.5.
 #' @param lead.snp Character string of SNP ID to highlight as the lead variant.
 #'   Default: NULL.
-#' @param r2 Numeric vector of r² values for coloring points by linkage 
-#'   disequilibrium (LD) with lead variant. Must be same length as number of 
+#' @param r2 Numeric vector of r² values for coloring points by linkage
+#'   disequilibrium (LD) with lead variant. Must be same length as number of
 #'   rows in data. Default: NULL.
-#' @param colors Character vector of length 2 specifying colors for 
+#' @param colors Character vector of length 2 specifying colors for
 #'   alternating chromosomes. Default: c("grey", "skyblue").
 #' @param highlight_snps Character vector of SNP IDs to highlight.
 #'   Default: NULL.
@@ -327,8 +409,8 @@ ez_feature <- function(input, region, color = "black", fill = "gray70",
 #' @return A ggplot2 object containing the Manhattan plot.
 #'
 #' @details
-#' The function creates a Manhattan plot with chromosomes on the x-axis and 
-#' -log10(p-values) on the y-axis. Points are colored by chromosome and can be 
+#' The function creates a Manhattan plot with chromosomes on the x-axis and
+#' -log10(p-values) on the y-axis. Points are colored by chromosome and can be
 #' highlighted based on significance or LD with lead variants.
 #'
 #' @export
@@ -365,11 +447,23 @@ ez_feature <- function(input, region, color = "black", fill = "gray70",
 #' }
 ez_manhattan <- function(
   data,
-  chr = "CHR", bp = "BP", p = "P", snp = "SNP", logp = TRUE, size = 0.5,
-  lead.snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
-  highlight_snps = NULL, highlight_color = "purple",
-  threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
-  colorBy = "chr", y_axis_label = expression(paste("-log"[10], "(P)")), ...
+  chr = "CHR",
+  bp = "BP",
+  p = "P",
+  snp = "SNP",
+  logp = TRUE,
+  size = 0.5,
+  lead.snp = NULL,
+  r2 = NULL,
+  colors = c("grey", "skyblue"),
+  highlight_snps = NULL,
+  highlight_color = "purple",
+  threshold_p = NULL,
+  threshold_color = "red",
+  threshold_linetype = 2,
+  colorBy = "chr",
+  y_axis_label = expression(paste("-log"[10], "(P)")),
+  ...
 ) {
   if (!is.data.frame(data)) {
     stop("Input 'data' must be a data.frame.")
@@ -379,7 +473,11 @@ ez_manhattan <- function(
   p <- ggplot2::ggplot(data) +
     geom_manhattan(
       data = data,
-      chr = chr, bp = bp, p = p, snp = snp, logp = logp,
+      chr = chr,
+      bp = bp,
+      p = p,
+      snp = snp,
+      logp = logp,
       size = size,
       lead.snp = lead.snp,
       r2 = r2,
@@ -489,6 +587,18 @@ ez_manhattan <- function(
 #'   intron_width = 0.6
 #' )
 #' }
+ez_gene <- function(
+  data,
+  region,
+  exon_height = 0.75,
+  intron_width = 0.4,
+  exon_color = "black",
+  exon_fill = "gray50",
+  intron_color = "gray50",
+  gene_id = "gene_id",
+  gene_name = "gene_name",
+  ...
+) {
   # Parse the region
   region_gr <- parse_region(region)
 
@@ -496,11 +606,17 @@ ez_manhattan <- function(
   if (is.character(data) && length(data) == 1) {
     # GTF/GFF file path
     gene_gr <- rtracklayer::import(data, which = region_gr)
-    gene_data <- process_gene_data(gene_gr, gene_id = gene_id, gene_name = gene_name)
+    gene_data <- process_gene_data(
+      gene_gr,
+      gene_id = gene_id,
+      gene_name = gene_name
+    )
   } else if (methods::is(data, "TxDb")) {
     # TxDb object
     if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
-      stop("Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')")
+      stop(
+        "Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')"
+      )
     }
     gene_data <- extract_txdb_data(data, region_gr)
   } else if (is.data.frame(data)) {
@@ -514,9 +630,12 @@ ez_manhattan <- function(
   p <- ggplot2::ggplot(gene_data) +
     geom_gene(
       ggplot2::aes(xstart = xstart, xend = xend, y = strand, type = type),
-      exon_height = exon_height, intron_width = intron_width,
-      exon_color = exon_color, exon_fill = exon_fill,
-      intron_color = intron_color, ...
+      exon_height = exon_height,
+      intron_width = intron_width,
+      exon_color = exon_color,
+      exon_fill = exon_fill,
+      intron_color = intron_color,
+      ...
     )
 
   # Apply theme and scale
@@ -608,39 +727,74 @@ ez_manhattan <- function(
 #'   alpha = 0.8
 #' )
 #' }
-ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
-                   size = 0.5, alpha = 0.7, use_score = FALSE, ...) {
+ez_arc <- function(
+  data,
+  region,
+  curvature = 0.5,
+  color = "gray50",
+  size = 0.5,
+  alpha = 0.7,
+  use_score = FALSE,
+  ...
+) {
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use interaction_track
-    return(interaction_track(data, region,
-      curvature = curvature, color = color,
-      size = size, alpha = alpha, use_score = use_score, ...
+    return(interaction_track(
+      data,
+      region,
+      curvature = curvature,
+      color = color,
+      size = size,
+      alpha = alpha,
+      use_score = use_score,
+      ...
     ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
     if (use_score && "score" %in% colnames(data)) {
       p <- ggplot2::ggplot(data) +
-        geom_arc(ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
-          curvature = curvature, size = size, alpha = alpha, ...
+        geom_arc(
+          ggplot2::aes(
+            x = start1,
+            y = 0,
+            xend = start2,
+            yend = 0,
+            color = score
+          ),
+          curvature = curvature,
+          size = size,
+          alpha = alpha,
+          ...
         ) +
         ggplot2::scale_color_gradient(low = "blue", high = "red")
     } else {
       p <- ggplot2::ggplot(data) +
-        geom_arc(ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0),
-          curvature = curvature, color = color, size = size, alpha = alpha, ...
+        geom_arc(
+          ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0),
+          curvature = curvature,
+          color = color,
+          size = size,
+          alpha = alpha,
+          ...
         )
     }
 
     # Apply the appropriate theme and scale
-    p <- p + ez_feature_theme() +
+    p <- p +
+      ez_feature_theme() +
       scale_x_genome_region(region) +
       ggplot2::ylim(-0.5, 0.5) # Fixed y-axis for arcs
 
     return(p)
-    return(hic_track(data, region,
-      resolution = resolution, log_transform = log_transform,
-      low = low, high = high, ...
+    return(hic_track(
+      data,
+      region,
+      resolution = resolution,
+      log_transform = log_transform,
+      low = low,
+      high = high,
+      ...
     ))
   } else if (is.data.frame(data)) {
     # It's a data frame, create the plot directly
@@ -659,7 +813,8 @@ ez_arc <- function(data, region, curvature = 0.5, color = "gray50",
       ggplot2::coord_fixed() # Ensure the plot is square
 
     # Apply the appropriate theme and scale
-    p <- p + ez_theme() +
+    p <- p +
+      ez_theme() +
       scale_x_genome_region(region) +
       scale_x_genome_region(region) # Same scale for y-axis
 

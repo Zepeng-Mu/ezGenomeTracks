@@ -13,7 +13,7 @@
 #' @importFrom aplot plot_list
 #' @examples
 #' \dontrun{
-#' track1 <- ez_signal("signal.bw", "chr1:1000000-2000000")
+#' track1 <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track2 <- ez_peak("peaks.bed", "chr1:1000000-2000000")
 #' track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
 #' p <- genome_plot(track1, track2, track3, region = "chr1:1000000-2000000")
@@ -74,7 +74,7 @@ genome_plot <- function(..., region = NULL, heights = NULL, ncol = 1, align_trac
 #' @importFrom ggplot2 geom_vline
 #' @examples
 #' \dontrun{
-#' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+#' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_vline(track, 1500000)
 #' }
 add_vline <- function(plot, position, color = "red", linewidth = 0.5,
@@ -103,7 +103,7 @@ add_vline <- function(plot, position, color = "red", linewidth = 0.5,
 #' @importFrom ggplot2 geom_hline
 #' @examples
 #' \dontrun{
-#' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+#' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_hline(track, 10)
 #' }
 add_hline <- function(plot, y, color = "blue", size = 0.5,
@@ -135,7 +135,7 @@ add_hline <- function(plot, y, color = "blue", size = 0.5,
 #' @importFrom ggplot2 geom_rect
 #' @examples
 #' \dontrun{
-#' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+#' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_rect(track, 1200000, 1400000)
 #' }
 add_rect <- function(plot, xmin, xmax, ymin = -Inf, ymax = Inf,
@@ -170,7 +170,7 @@ add_rect <- function(plot, xmin, xmax, ymin = -Inf, ymax = Inf,
 #' @importFrom ggplot2 geom_text
 #' @examples
 #' \dontrun{
-#' track <- ez_signal("signal.bw", "chr1:1000000-2000000")
+#' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_text(track, 1500000, 20, "Peak")
 #' }
 add_text <- function(plot, x, y, label, color = "black", size = 3,
