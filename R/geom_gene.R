@@ -1,46 +1,106 @@
 #' Geom for gene model tracks
 #'
-#' This function creates a geom for gene model tracks, displaying genes with exons,
-#' introns, and optional directional arrows. It is designed to work with gene
-#' annotation data from GTF/GFF files after lightweight preprocessing.
+#' @description
+#' `geom_gene` provides a flexible way to visualize gene models in genomic coordinates.
+#' It can display exons, introns, and strand information, with automatic handling
+#' of gene structure and strand separation.
 #'
-#' Expected columns in the data:
-#' - `xstart`, `xend`, `type` (required)
-#' - optional: `exon_start`, `exon_end` for long-format exon rows
-#' - optional: `strand` for arrow direction ("+" or "-")
+#' @section Aesthetics:
+#' The following aesthetics are required:
+#' - `xstart`: Start position of the feature (genomic coordinate)
+#' - `xend`: End position of the feature (genomic coordinate)
+#' - `type`: Type of feature ("gene" or "exon")
 #'
-#' The `type` column should contain "gene" for gene body lines or "exon" for exon rectangles.
+#' Optional aesthetics:
+#' - `color`: Color for both exons (fill) and introns (color)
+#' - `fill`: Fill color for exons (overrides `color` for fill if specified)
+#' - `strand`: Strand information ("+" or "-")
+#' - `y`: Optional grouping variable (overrides automatic strand-based grouping)
 #'
-#' Color mapping: The `color` aesthetic is used for both exons (as fill) and introns (as color).
+#' @section Data Format:
+#' The function expects a data frame with the following columns:
+#' - Required:
+#'   - `xstart`, `xend`: Genomic coordinates of features
+#'   - `type`: Either "gene" (for introns) or "exon"
+#' - Optional:
+#'   - `strand`: "+" or "-" for forward/reverse strand
+#'   - `exon_start`, `exon_end`: For long-format exon data
+#'   - Any additional columns for aesthetics (e.g., gene names, biotypes)
 #'
-#' Strand separation: When `strand` is provided in the data, genes are automatically displayed on discrete y-axis tracks:
-#' positive strand genes on "+ strand" track, negative strand genes on "- strand" track.
-#' The y aesthetic is automatically created based on strand information, but users can override this
-#' by explicitly mapping a `y` aesthetic to use a different grouping variable.
+#' @section Features:
+#' - Automatic strand separation with customizable track heights
+#' - Support for both wide and long data formats
+#' - Customizable appearance of exons and introns
+#' - Optional directional arrows for strand indication
+#' - Integration with ggplot2's theming system
 #'
 #' @inheritParams ggplot2::layer
-#' @param height Height of gene tracks for discrete y-axis (default: 1)
-#' @param exon_height Height of exons relative to track height (default: 0.75)
-#' @param intron_width Line width of gene body (default: 0.4)
-#' @param arrow_length Length of directional arrows in inches (default: 0)
-#' @param arrow_type Type of arrow head (default: "open")
-#' @param exon_color Color of exon borders (default: "black", overridden by color mapping)
-#' @param exon_fill Fill color of exons (default: "gray50", overridden by color mapping)
-#' @param intron_color Color of intron/gene body (default: "gray50", overridden by color mapping)
-#' @param na.rm If `TRUE`, silently drop `NA` values.
+#' @param mapping Set of aesthetic mappings created by [aes()].
+#' @param data The data to be displayed in this layer.
+#' @param stat The statistical transformation to use on the data.
+#' @param position Position adjustment, either as a string, or the result of
+#'   a call to a position adjustment function.
+#' @param height Height of gene tracks for discrete y-axis. If `NULL` (default),
+#'   uses the `exon_height` parameter to determine track height.
+#' @param exon_height Height of exons relative to track height. A numeric value
+#'   between 0 and 1. Default: 0.75
+#' @param intron_width Line width for intron segments. Default: 0.4
+#' @param arrow_length Length of directional arrows in inches. Set to 0 to
+#'   disable arrows. Default: 0
+#' @param arrow_type Type of arrow head. See [grid::arrow()] for options.
+#'   Default: "open"
+#' @param exon_color Default border color for exons. Can be overridden by
+#'   `color` or `colour` aesthetics. Default: "black"
+#' @param exon_fill Default fill color for exons. Can be overridden by `fill`
+#'   aesthetic. Default: "gray50"
+#' @param intron_color Default color for intron lines. Can be overridden by
+#'   `color` or `colour` aesthetics. Default: "gray50"
+#' @param na.rm If `FALSE`, the default, missing values are removed with
+#'   a warning. If `TRUE`, missing values are silently removed.
+#' @param show.legend Logical. Should this layer be included in the legends?
+#'   `NA` (the default) includes the layer in the legends if any aesthetics
+#'   are mapped.
+#' @param inherit.aes If `FALSE`, overrides the default aesthetics, rather
+#'   than combining with them.
+#' @param ... Other arguments passed on to [layer()]. These are often
+#'   aesthetics, used to set an aesthetic to a fixed value, like
+#'   `color = "red"` or `size = 3`.
+#'
 #' @return A ggplot2 layer that can be added to a plot.
+#'
 #' @export
-#' @importFrom ggplot2 GeomSegment GeomRect layer aes ggproto Geom arrow unit
+#' @importFrom ggplot2 layer aes ggproto Geom
+#' @importFrom rlang .data
+#'
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
-#' # Basic usage - strand is automatically used for y-axis separation
-#' p <- ggplot(gene_data) +
-#'   geom_gene(aes(xstart = xstart, xend = xend, type = type, color = gene_name))
 #'
-#' # Custom y grouping (overrides automatic strand-based grouping)
-#' p2 <- ggplot(gene_data) +
-#'   geom_gene(aes(xstart = xstart, xend = xend, type = type, y = gene_biotype))
+#' # Example 1: Basic usage with automatic strand separation
+#' ggplot(gene_data) +
+#'   geom_gene(aes(
+#'     xstart = start, xend = end,
+#'     type = feature, color = gene_name
+#'   ))
+#'
+#' # Example 2: Custom y-axis grouping by biotype
+#' ggplot(gene_data) +
+#'   geom_gene(aes(
+#'     xstart = start, xend = end,
+#'     type = feature, y = biotype,
+#'     fill = gene_name
+#'   ))
+#'
+#' # Example 3: Styling options
+#' ggplot(gene_data) +
+#'   geom_gene(
+#'     aes(xstart = start, xend = end, type = feature),
+#'     exon_fill = "steelblue",
+#'     intron_color = "darkblue",
+#'     intron_width = 0.6,
+#'     exon_height = 0.8,
+#'     arrow_length = unit(0.05, "inches")
+#'   )
 #' }
 geom_gene <- function(
   mapping = NULL,
@@ -100,9 +160,41 @@ geom_gene <- function(
 #' @rdname geom_gene
 #' @format NULL
 #' @usage NULL
+#' @details
+#' The `GeomGene` ggproto object implements the core functionality for rendering gene models.
+#' It handles both the data processing and the actual drawing of gene features.
+#'
+#' Key features:
+#' - Automatically processes input data to handle different input formats
+#' - Manages the coordinate transformation for proper genomic scaling
+#' - Handles the rendering of both exons and introns with appropriate styling
+#' - Supports strand-specific visualization with optional directional arrows
+#' - Implements proper handling of missing values and edge cases
+#'
+#' @section Aesthetics:
+#' The following aesthetics are used by the geom:
+#' - `xstart`, `xend`: Start and end genomic coordinates
+#' - `type`: Feature type ("gene" or "exon")
+#' - `strand`: Strand information ("+" or "-")
+#' - `y`: Optional y-axis grouping
+#' - `colour`: Color for both exons (fill) and introns (line)
+#' - `fill`: Fill color for exons (overrides `colour` for fill)
+#' - `linewidth`: Width of intron lines
+#' - `alpha`: Transparency (0-1)
+#' - `linetype`: Line type for introns
+#' - `size`: Size of points (unused, for compatibility)
+#'
+#' @section Methods:
+#' The ggproto object implements the following methods:
+#' - `setup_data()`: Processes input data and sets up y-axis positions
+#' - `setup_params()`: Configures drawing parameters including arrow settings
+#' - `draw_panel()`: Main drawing method that renders the gene models
+#' - `draw_key()`: Defines how to draw the legend key
+#'
+#' @export
 GeomGene <- ggplot2::ggproto(
   "GeomGene",
-  Geom,
+  ggplot2::Geom,
   required_aes = c("xstart", "xend", "type"),
   optional_aes = c("strand", "y"),
   setup_data = function(self, data, params) {
