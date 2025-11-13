@@ -50,11 +50,14 @@
 #' @param arrow_type Type of arrow head. See [grid::arrow()] for options.
 #'   Default: "open"
 #' @param exon_color Default border color for exons. Can be overridden by
-#'   `color` or `colour` aesthetics. Default: "black"
+#'   `color` or `colour` aesthetics. Default: "gray50"
 #' @param exon_fill Default fill color for exons. Can be overridden by `fill`
 #'   aesthetic. Default: "gray50"
 #' @param intron_color Default color for intron lines. Can be overridden by
 #'   `color` or `colour` aesthetics. Default: "gray50"
+#' @param clip_to_region Optional numeric vector of length 2 specifying the
+#'   genomic region boundaries (start, end) to clip features to. Features
+#'   partially overlapping the region will be trimmed. Default: NULL
 #' @param na.rm If `FALSE`, the default, missing values are removed with
 #'   a warning. If `TRUE`, missing values are silently removed.
 #' @param show.legend Logical. Should this layer be included in the legends?
@@ -96,6 +99,7 @@
 #'   geom_gene(
 #'     aes(xstart = start, xend = end, type = feature),
 #'     exon_fill = "steelblue",
+#'     exon_color = "navy",
 #'     intron_color = "darkblue",
 #'     intron_width = 0.6,
 #'     exon_height = 0.8,
@@ -113,9 +117,10 @@ geom_gene <- function(
   intron_width = 0.4,
   arrow_length = 0,
   arrow_type = "open",
-  exon_color = "black",
+  exon_color = "gray50",
   exon_fill = "gray50",
   intron_color = "gray50",
+  clip_to_region = NULL,
   na.rm = TRUE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -151,6 +156,7 @@ geom_gene <- function(
       exon_color = exon_color,
       exon_fill = exon_fill,
       intron_color = intron_color,
+      clip_to_region = clip_to_region,
       na.rm = na.rm,
       ...
     )
@@ -217,6 +223,30 @@ GeomGene <- ggplot2::ggproto(
       }
     }
 
+    # Clip features to visible region (similar to coord_cartesian behavior)
+    # This ensures partially overlapping genes are still displayed
+    if (!is.null(params$clip_to_region) && length(params$clip_to_region) == 2) {
+      # Clip main gene coordinates
+      data$xstart <- pmax(data$xstart, params$clip_to_region[1], na.rm = TRUE)
+      data$xend <- pmin(data$xend, params$clip_to_region[2], na.rm = TRUE)
+
+      # Clip exon coordinates if present
+      if ("exon_start" %in% names(data)) {
+        data$exon_start <- pmax(data$exon_start, params$clip_to_region[1], na.rm = TRUE)
+      }
+      if ("exon_end" %in% names(data)) {
+        data$exon_end <- pmin(data$exon_end, params$clip_to_region[2], na.rm = TRUE)
+      }
+
+      # Remove features that are completely outside the region (where xstart >= xend after clipping)
+      data <- data[data$xstart < data$xend, ]
+
+      # Keep only exons that still have valid ranges after clipping
+      if ("exon_start" %in% names(data) && "exon_end" %in% names(data)) {
+        data <- data[is.na(data$exon_start) | data$exon_start < data$exon_end, ]
+      }
+    }
+
     # Use compute_data_size to properly handle discrete y-axis
     # This is the same approach as GeomTile
     data <- ggplot2:::compute_data_size(
@@ -251,7 +281,7 @@ GeomGene <- ggplot2::ggproto(
     exon_height = 0.75,
     intron_width = 0.4,
     arrow = NULL,
-    exon_color = "black",
+    exon_color = "gray50",
     exon_fill = "gray50",
     intron_color = "gray50",
     na.rm = FALSE
@@ -272,10 +302,16 @@ GeomGene <- ggplot2::ggproto(
           ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
           ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
         )
-        # Exons use fill from mapping (color aesthetic), no border color
-        exons$colour <- NA
-        # Use mapped color as fill, fallback to exon_fill parameter
-        if ("colour" %in% names(exon_data)) {
+        # Handle exon border color: use mapped colour, or fill aesthetic, or exon_color parameter
+        if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
+          exons$colour <- exon_data$colour
+        } else if (!is.null(exon_color)) {
+          exons$colour <- exon_color
+        }
+        # Handle exon fill: use mapped fill, or colour aesthetic, or exon_fill parameter
+        if ("fill" %in% names(exon_data) && !is.na(exon_data$fill[1])) {
+          exons$fill <- exon_data$fill
+        } else if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
           exons$fill <- exon_data$colour
         } else if (!is.null(exon_fill)) {
           exons$fill <- exon_fill
@@ -294,10 +330,16 @@ GeomGene <- ggplot2::ggproto(
           ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
           ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
         )
-        # Exons use fill from mapping (color aesthetic), no border color
-        exons$colour <- NA
-        # Use mapped color as fill, fallback to exon_fill parameter
-        if ("colour" %in% names(exon_data)) {
+        # Handle exon border color: use mapped colour, or fill aesthetic, or exon_color parameter
+        if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
+          exons$colour <- exon_data$colour
+        } else if (!is.null(exon_color)) {
+          exons$colour <- exon_color
+        }
+        # Handle exon fill: use mapped fill, or colour aesthetic, or exon_fill parameter
+        if ("fill" %in% names(exon_data) && !is.na(exon_data$fill[1])) {
+          exons$fill <- exon_data$fill
+        } else if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
           exons$fill <- exon_data$colour
         } else if (!is.null(exon_fill)) {
           exons$fill <- exon_fill
@@ -320,7 +362,7 @@ GeomGene <- ggplot2::ggproto(
         yend = y
       )
       # Introns use color from mapping, fallback to intron_color parameter
-      if ("colour" %in% names(gene_data)) {
+      if ("colour" %in% names(gene_data) && !is.na(gene_data$colour[1])) {
         body_data$colour <- gene_data$colour
       } else if (!is.null(intron_color)) {
         body_data$colour <- intron_color

@@ -7,7 +7,6 @@
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param track_labels Optional vector of track labels (used for character vector input)
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
-#' @param color Line color (default: "steelblue"). Can be a vector for multiple colors.
 #' @param fill Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.
 #' @param group_var Column name for grouping data within a single data frame (default: NULL)
 #' @param color_by Whether colors distinguish "group" or "track" (default: "group")
@@ -48,7 +47,6 @@ ez_coverage <- function(
   region,
   track_labels = NULL,
   type = c("area", "line", "heatmap"),
-  color = "steelblue",
   fill = "steelblue",
   group_var = NULL,
   color_by = c("group", "track"),
@@ -114,7 +112,6 @@ ez_coverage <- function(
           xmax = end,
           ymin = 0,
           ymax = score,
-          color = .data[[group_var]],
           fill = .data[[group_var]]
         )
         color_values <- unique(plotDt[[group_var]])
@@ -125,7 +122,6 @@ ez_coverage <- function(
           xmax = end,
           ymin = 0,
           ymax = score,
-          color = track,
           fill = track
         )
         color_values <- unique(plotDt$track)
@@ -138,7 +134,6 @@ ez_coverage <- function(
         xmax = end,
         ymin = 0,
         ymax = score,
-        color = .data[[group_var]],
         fill = .data[[group_var]]
       )
       color_values <- unique(plotDt[[group_var]])
@@ -158,7 +153,6 @@ ez_coverage <- function(
     names(plot_colors) <- color_values
 
     p <- p +
-      ggplot2::scale_color_manual(values = plot_colors, name = legend_name) +
       ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
   } else {
     # No grouping - use single color or track-based colors
@@ -169,7 +163,6 @@ ez_coverage <- function(
         xmax = end,
         ymin = 0,
         ymax = score,
-        color = track,
         fill = track
       )
       color_values <- unique(plotDt$track)
@@ -188,14 +181,12 @@ ez_coverage <- function(
       names(plot_colors) <- color_values
 
       p <- p +
-        ggplot2::scale_color_manual(values = plot_colors, name = legend_name) +
         ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
     } else {
       # Single track without grouping
       p <- ggplot2::ggplot(plotDt, ggplot2::aes(xmin = start, xmax = end, ymin = 0, ymax = score)) +
         geom_coverage(
           type = type,
-          color = color,
           fill = fill,
           alpha = alpha,
           ...
@@ -505,9 +496,7 @@ ez_manhattan <- function(
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param exon_height Height of exons (default: 0.75)
 #' @param intron_width Width of introns (default: 0.4)
-#' @param exon_color Color of exon borders (default: "black")
-#' @param exon_fill Fill color of exons (default: "gray50")
-#' @param intron_color Color of introns (default: "gray50")
+#' @param color Color for both exons and introns (default: "gray50")
 #' @param gene_id Column name for gene ID (default: "gene_id")
 #' @param gene_name Column name for gene name (default: "gene_name")
 #' @param ... Additional arguments passed to geom_gene
@@ -541,9 +530,9 @@ ez_manhattan <- function(
 #'   Example: "chr1:1000000-2000000"
 #' @param exon_height Relative height of exons (0 to 1). Default: 0.75
 #' @param intron_width Line width for introns. Default: 0.4
-#' @param exon_color Border color of exons. Default: "black"
-#' @param exon_fill Fill color of exons. Default: "gray50"
-#' @param intron_color Color of intron lines. Default: "gray50"
+#' @param exon_color Border color for exons. Default: "gray50"
+#' @param exon_fill Fill color for exons. Default: "gray50"
+#' @param intron_color Color for intron lines. Default: "gray50"
 #' @param gene_id Column name for gene identifiers. Default: "gene_id"
 #' @param gene_name Column name for gene symbols/names. Default: "gene_name"
 #' @param ... Additional arguments passed to `geom_gene()`
@@ -592,7 +581,7 @@ ez_gene <- function(
   region,
   exon_height = 0.75,
   intron_width = 0.4,
-  exon_color = "black",
+  exon_color = "gray50",
   exon_fill = "gray50",
   intron_color = "gray50",
   gene_id = "gene_id",
@@ -601,6 +590,12 @@ ez_gene <- function(
 ) {
   # Parse the region
   region_gr <- parse_region(region)
+
+  # Extract region limits for clipping
+  region_limits <- c(
+    GenomicRanges::start(region_gr),
+    GenomicRanges::end(region_gr)
+  )
 
   # Process data based on input type
   if (is.character(data) && length(data) == 1) {
@@ -635,6 +630,7 @@ ez_gene <- function(
       exon_color = exon_color,
       exon_fill = exon_fill,
       intron_color = intron_color,
+      clip_to_region = region_limits,
       ...
     )
 

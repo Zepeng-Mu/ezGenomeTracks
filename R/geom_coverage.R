@@ -11,7 +11,8 @@
 #'   - `"heatmap"`: `score` is mapped to `fill`, producing colored tiles.
 #' @param na.rm If `TRUE`, silently drop `NA` values.
 #' @param ... Additional arguments passed to [ggplot2::layer()], e.g.
-#'   `color = "black"`, `linewidth = 0.8`, or `alpha = 0.6`.
+#'   `linewidth = 0.8`, or `alpha = 0.6`. Note: `color` and `colour` parameters
+#'   are ignored as this geom only uses fill aesthetics.
 #'
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
@@ -60,6 +61,11 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
     mapping <- do.call(aes, mapping)
   }
 
+  # Filter out color parameter to prevent color aesthetics from being applied
+  dots <- list(...)
+  dots$color <- NULL
+  dots$colour <- NULL
+
   layer(
     data = data,
     mapping = mapping,
@@ -68,10 +74,12 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
     position = position,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
-    params = list(
-      type = type,
-      na.rm = na.rm,
-      ...
+    params = utils::modifyList(
+      list(
+        type = type,
+        na.rm = na.rm
+      ),
+      dots
     )
   )
 }
@@ -98,7 +106,7 @@ GeomSignal <- ggproto("GeomSignal", Geom,
     }
   },
   default_aes = aes(
-    colour = "purple2", fill = "purple2", linewidth = 0.5, linetype = 1,
+    colour = NA, fill = "purple2", linewidth = 0.5, linetype = 1,
     alpha = 0.7
   )
 )
