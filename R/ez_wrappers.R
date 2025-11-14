@@ -535,6 +535,12 @@ ez_manhattan <- function(
 #' @param intron_color Color for intron lines. Default: "gray50"
 #' @param gene_id Column name for gene identifiers. Default: "gene_id"
 #' @param gene_name Column name for gene symbols/names. Default: "gene_name"
+#' @param label Column name to use for text labels. If NULL (default), no labels
+#'   are displayed. Set to a column name (e.g., "gene_name") to show labels.
+#' @param label_size Size of text labels. Default: 3
+#' @param label_vjust Vertical adjustment for labels. Negative values place labels
+#'   above genes. Default: -1.5. Automatically adjusted based on exon_height.
+#' @param label_color Color of text labels. Default: "black"
 #' @param ... Additional arguments passed to `geom_gene()`
 #'
 #' @return A ggplot2 object representing the gene track.
@@ -575,6 +581,12 @@ ez_manhattan <- function(
 #'   intron_color = "darkblue",
 #'   intron_width = 0.6
 #' )
+#'
+#' # With gene name labels
+#' track4 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
+#'   label = "gene_name",
+#'   label_size = 3
+#' )
 #' }
 ez_gene <- function(
   data,
@@ -586,6 +598,10 @@ ez_gene <- function(
   intron_color = "gray50",
   gene_id = "gene_id",
   gene_name = "gene_name",
+  label = NULL,
+  label_size = 3,
+  label_vjust = -2,
+  label_color = "black",
   ...
 ) {
   # Parse the region
@@ -634,6 +650,38 @@ ez_gene <- function(
       ...
     )
 
+  # Add labels if requested
+  if (!is.null(label) && label %in% names(gene_data)) {
+    # Get unique gene positions for labels (use gene type, not exons)
+    label_data <- gene_data[gene_data$type == "gene", ]
+
+    # Remove duplicates based on gene_id to avoid duplicate labels
+    if (gene_id %in% names(label_data)) {
+      label_data <- label_data[!duplicated(label_data[[gene_id]]), ]
+    }
+
+    # Calculate label positions (middle of gene)
+    label_data$label_x <- (label_data$xstart + label_data$xend) / 2
+
+    # Use strand directly (it's already a factor that matches the y-axis)
+    label_data$label_y <- label_data$strand
+
+    # Calculate effective vjust accounting for exon height
+    # vjust < 0 places text above the point; we need more negative values for taller exons
+    # Adjust by the exon height to ensure labels clear the top of exons
+    effective_vjust <- label_vjust - exon_height
+
+    p <- p +
+      ggplot2::geom_text(
+        data = label_data,
+        ggplot2::aes(x = .data$label_x, y = .data$label_y, label = .data[[label]]),
+        size = label_size,
+        vjust = effective_vjust,
+        color = label_color,
+        inherit.aes = FALSE
+      )
+  }
+
   # Apply theme and scale
   p <- p +
     ggplot2::scale_y_discrete(
@@ -641,7 +689,8 @@ ez_gene <- function(
       drop = FALSE # Keep all levels even if not present
     ) +
     scale_x_genome_region(region) +
-    ez_gene_theme()
+    ez_gene_theme() +
+    ggplot2::labs(x = NULL)  # Remove x-axis title
 
   return(p)
 }
@@ -819,3 +868,10 @@ ez_arc <- function(
     stop("Data must be a file path or data frame")
   }
 }
+
+# Declare global variables used in aes() mappings to avoid R CMD check notes
+utils::globalVariables(c(
+  "type", "label_x", "label_y", "start1", "start2", "score",
+  "resolution", "log_transform", "low", "high", "pos1", "pos2", "count",
+  "track", "start", "end"
+))
