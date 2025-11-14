@@ -184,7 +184,10 @@ ez_coverage <- function(
         ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
     } else {
       # Single track without grouping
-      p <- ggplot2::ggplot(plotDt, ggplot2::aes(xmin = start, xmax = end, ymin = 0, ymax = score)) +
+      p <- ggplot2::ggplot(
+        plotDt,
+        ggplot2::aes(xmin = start, xmax = end, ymin = 0, ymax = score)
+      ) +
         geom_coverage(
           type = type,
           fill = fill,
@@ -206,7 +209,7 @@ ez_coverage <- function(
 
   # Apply the appropriate theme and scale
   p <- p +
-    ez_signal_theme(y_axis_style = y_axis_style) +
+    ez_coverage_theme(y_axis_style = y_axis_style) +
     scale_x_genome_region(region) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
     ggplot2::coord_cartesian(ylim = y_range) +
@@ -214,10 +217,6 @@ ez_coverage <- function(
 
   return(p)
 }
-
-#' @export
-#' @rdname ez_coverage
-ez_signal <- ez_coverage
 
 #' Easy peak track visualization
 #'
@@ -674,7 +673,11 @@ ez_gene <- function(
     p <- p +
       ggplot2::geom_text(
         data = label_data,
-        ggplot2::aes(x = .data$label_x, y = .data$label_y, label = .data[[label]]),
+        ggplot2::aes(
+          x = .data$label_x,
+          y = .data$label_y,
+          label = .data[[label]]
+        ),
         size = label_size,
         vjust = effective_vjust,
         color = label_color,
@@ -690,7 +693,7 @@ ez_gene <- function(
     ) +
     scale_x_genome_region(region) +
     ez_gene_theme() +
-    ggplot2::labs(x = NULL)  # Remove x-axis title
+    ggplot2::labs(x = NULL) # Remove x-axis title
 
   return(p)
 }
@@ -871,7 +874,20 @@ ez_arc <- function(
 
 # Declare global variables used in aes() mappings to avoid R CMD check notes
 utils::globalVariables(c(
-  "type", "label_x", "label_y", "start1", "start2", "score",
-  "resolution", "log_transform", "low", "high", "pos1", "pos2", "count",
-  "track", "start", "end"
+  "type",
+  "label_x",
+  "label_y",
+  "start1",
+  "start2",
+  "score",
+  "resolution",
+  "log_transform",
+  "low",
+  "high",
+  "pos1",
+  "pos2",
+  "count",
+  "track",
+  "start",
+  "end"
 ))

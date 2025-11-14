@@ -70,7 +70,7 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
     data = data,
     mapping = mapping,
     stat = stat,
-    geom = GeomSignal,
+    geom = GeomCoverage,
     position = position,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
@@ -87,7 +87,7 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
 #' @rdname geom_coverage
 #' @format NULL
 #' @usage NULL
-GeomSignal <- ggproto("GeomSignal", Geom,
+GeomCoverage <- ggproto("GeomCoverage", Geom,
   required_aes = c("xmin", "xmax", "ymin", "ymax"),
   setup_params = function(data, params) {
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))

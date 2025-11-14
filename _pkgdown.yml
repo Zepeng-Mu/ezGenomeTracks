@@ -15,7 +15,7 @@ reference:
   desc: >-
     Main functions for creating genomic tracks
   contents:
-  - ez_signal
+  - ez_coverage
   - ez_peak
   - ez_gene
   - ez_arc
@@ -25,7 +25,7 @@ reference:
 - title: "Geom Functions"
   desc: "Low-level geometric objects for genomic data"
   contents:
-  - geom_signal
+  - geom_coverage
   - geom_peak
   - geom_gene
   - geom_arc
@@ -44,7 +44,7 @@ reference:
   desc: "Functions for customizing track appearance"
   contents:
   - ez_theme
-  - ez_signal_theme
+  - ez_coverage_theme
   - ez_gene_theme
   - ez_peak_theme
   - scale_x_genome

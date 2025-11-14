@@ -9,11 +9,15 @@ ez_gene(
   region,
   exon_height = 0.75,
   intron_width = 0.4,
-  exon_color = "black",
+  exon_color = "gray50",
   exon_fill = "gray50",
   intron_color = "gray50",
   gene_id = "gene_id",
   gene_name = "gene_name",
+  label = NULL,
+  label_size = 3,
+  label_vjust = -2,
+  label_color = "black",
   ...
 )
 }
@@ -32,17 +36,29 @@ Example: "chr1:1000000-2000000"}
 
 \item{intron_width}{Line width for introns. Default: 0.4}
 
-\item{exon_color}{Border color of exons. Default: "black"}
+\item{exon_color}{Border color for exons. Default: "gray50"}
 
-\item{exon_fill}{Fill color of exons. Default: "gray50"}
+\item{exon_fill}{Fill color for exons. Default: "gray50"}
 
-\item{intron_color}{Color of intron lines. Default: "gray50"}
+\item{intron_color}{Color for intron lines. Default: "gray50"}
 
 \item{gene_id}{Column name for gene identifiers. Default: "gene_id"}
 
 \item{gene_name}{Column name for gene symbols/names. Default: "gene_name"}
 
+\item{label}{Column name to use for text labels. If NULL (default), no labels
+are displayed. Set to a column name (e.g., "gene_name") to show labels.}
+
+\item{label_size}{Size of text labels. Default: 3}
+
+\item{label_vjust}{Vertical adjustment for labels. Negative values place labels
+above genes. Default: -1.5. Automatically adjusted based on exon_height.}
+
+\item{label_color}{Color of text labels. Default: "black"}
+
 \item{...}{Additional arguments passed to \code{geom_gene()}}
+
+\item{color}{Color for both exons and introns (default: "gray50")}
 }
 \value{
 A ggplot2 object
@@ -101,6 +117,12 @@ track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
   exon_color = "navy",
   intron_color = "darkblue",
   intron_width = 0.6
+)
+
+# With gene name labels
+track4 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
+  label = "gene_name",
+  label_size = 3
 )
 }
 }

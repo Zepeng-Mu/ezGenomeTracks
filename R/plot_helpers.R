@@ -15,7 +15,7 @@
 #' @param alpha Transparency (default: 0.8)
 #' @param binwidth Width of bins in base pairs (default: NULL)
 #' @param facet_scales Scale parameter for facet_wrap (default: "free_y")
-#' @param ... Additional arguments passed to geom_signal
+#' @param ... Additional arguments passed to geom_coverage
 #' @return A ggplot2 object
 #' @export
 #' @importFrom ggplot2 ggplot aes facet_wrap scale_fill_manual scale_color_manual
@@ -65,7 +65,7 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
     # Convert list to an aes object
     mapping <- do.call(ggplot2::aes, mapping_list)
 
-    # Add geom_signal with the mapping
+    # Add geom_coverage with the mapping
     p <- p + geom_coverage(
       mapping = mapping,
       type = type,
@@ -81,7 +81,7 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
         ggplot2::scale_colour_manual(values = colors, name = legend_name)
     }
   } else {
-    # Add geom_signal without grouping or color mapping
+    # Add geom_coverage without grouping or color mapping
     p <- p + geom_coverage(
       mapping = ggplot2::aes(x = .data$start, y = .data$score),
       type = type,
@@ -106,7 +106,7 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
   }
 
   # Apply the appropriate theme and scale
-  p <- p + ez_signal_theme() +
+  p <- p + ez_coverage_theme() +
     scale_x_genome_region(region)
 
   return(p)

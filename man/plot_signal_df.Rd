@@ -40,7 +40,7 @@ track_by (optional), and group_by (optional)}
 
 \item{facet_scales}{Scale parameter for facet_wrap (default: "free_y")}
 
-\item{...}{Additional arguments passed to geom_signal}
+\item{...}{Additional arguments passed to geom_coverage}
 }
 \value{
 A ggplot2 object

@@ -26,9 +26,9 @@ test_that("ez_theme returns a ggplot2 theme object", {
   expect_true("panel.background" %in% names(theme))
 })
 
-test_that("ez_signal_theme returns a ggplot2 theme object", {
+test_that("ez_coverage_theme returns a ggplot2 theme object", {
   # Get the theme
-  theme <- ez_signal_theme()
+  theme <- ez_coverage_theme()
 
   # Check that it's a theme object
   expect_s3_class(theme, "theme")
@@ -50,11 +50,11 @@ test_that("ez_gene_theme returns a ggplot2 theme object", {
   expect_true("axis.title.y" %in% names(theme))
 })
 
-test_that("ez_signal_theme handles y_axis_style parameter", {
+test_that("ez_coverage_theme handles y_axis_style parameter", {
   # Test different y_axis_style options
-  theme_none <- ez_signal_theme(y_axis_style = "none")
-  theme_simple <- ez_signal_theme(y_axis_style = "simple")
-  theme_full <- ez_signal_theme(y_axis_style = "full")
+  theme_none <- ez_coverage_theme(y_axis_style = "none")
+  theme_simple <- ez_coverage_theme(y_axis_style = "simple")
+  theme_full <- ez_coverage_theme(y_axis_style = "full")
 
   # All should be theme objects
   expect_s3_class(theme_none, "theme")
@@ -75,7 +75,7 @@ test_that("themes can be applied to plots", {
   p1 <- p + ez_theme()
   expect_s3_class(p1, "ggplot")
 
-  p2 <- p + ez_signal_theme()
+  p2 <- p + ez_coverage_theme()
   expect_s3_class(p2, "ggplot")
 
   p3 <- p + ez_gene_theme()

@@ -65,11 +65,11 @@ head(example_hic)
 
 ### Signal Track
 
-Signal tracks are used to visualize continuous data, such as coverage from RNA-seq or ATAC-seq experiments. The `ez_signal()` function creates a signal track from a data frame or a bigWig file.
+Signal tracks are used to visualize continuous data, such as coverage from RNA-seq or ATAC-seq experiments. The `ez_coverage()` function creates a signal track from a data frame or a bigWig file.
 
 ```{r}
 # Create a signal track from the example data
-signal_track <- ez_signal(
+signal_track <- ez_coverage(
   data = example_signal,
   fill = "steelblue",
   color = "navy",
@@ -217,8 +217,8 @@ The package provides several themes for customizing the appearance of tracks.
 # Apply the ez_theme to the signal track
 signal_track_themed <- signal_track + ez_theme()
 
-# Apply the ez_signal_theme to the signal track
-signal_track_signal_themed <- signal_track + ez_signal_theme()
+# Apply the ez_coverage_theme to the signal track
+signal_track_signal_themed <- signal_track + ez_coverage_theme()
 
 # Apply the ez_gene_theme to the gene track
 gene_track_themed <- gene_track + ez_gene_theme()

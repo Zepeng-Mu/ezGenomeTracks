@@ -2,7 +2,6 @@
 % Please edit documentation in R/ez_wrappers.R
 \name{ez_coverage}
 \alias{ez_coverage}
-\alias{ez_signal}
 \title{Easy coverage track visualization}
 \usage{
 ez_coverage(
@@ -10,24 +9,6 @@ ez_coverage(
   region,
   track_labels = NULL,
   type = c("area", "line", "heatmap"),
-  color = "steelblue",
-  fill = "steelblue",
-  group_var = NULL,
-  color_by = c("group", "track"),
-  colors = NULL,
-  y_axis_style = c("none", "simple", "full"),
-  y_range = NULL,
-  alpha = 0.5,
-  bin_width = NULL,
-  ...
-)
-
-ez_signal(
-  input,
-  region,
-  track_labels = NULL,
-  type = c("area", "line", "heatmap"),
-  color = "steelblue",
   fill = "steelblue",
   group_var = NULL,
   color_by = c("group", "track"),
@@ -47,8 +28,6 @@ ez_signal(
 \item{track_labels}{Optional vector of track labels (used for character vector input)}
 
 \item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area")}
-
-\item{color}{Line color (default: "steelblue"). Can be a vector for multiple colors.}
 
 \item{fill}{Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.}
 

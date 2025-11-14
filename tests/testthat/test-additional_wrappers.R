@@ -126,7 +126,7 @@ test_that("ez_hic creates Hi-C tracks from data frames", {
   expect_error(ez_hic("not_a_dataframe", "chr1:1000-5000"))
 })
 
-test_that("ez_signal handles complex input scenarios", {
+test_that("ez_coverage handles complex input scenarios", {
   # Test with grouping
   test_data <- data.frame(
     seqnames = "chr1",
@@ -137,7 +137,7 @@ test_that("ez_signal handles complex input scenarios", {
   )
 
   # Test with grouping
-  p1 <- ez_signal(test_data, "chr1:1000-2000", group_var = "sample")
+  p1 <- ez_coverage(test_data, "chr1:1000-2000", group_var = "sample")
   expect_s3_class(p1, "ggplot")
   expect_true(length(p1$layers) > 0)
 
@@ -147,33 +147,33 @@ test_that("ez_signal handles complex input scenarios", {
     "Track2" = test_data[test_data$sample == "Sample2", ]
   )
 
-  p2 <- ez_signal(track_list, "chr1:1000-2000")
+  p2 <- ez_coverage(track_list, "chr1:1000-2000")
   expect_s3_class(p2, "ggplot")
   expect_true(length(p2$layers) > 0)
 
   # Test with different visualization types
-  p3 <- ez_signal(test_data, "chr1:1000-2000", type = "line")
+  p3 <- ez_coverage(test_data, "chr1:1000-2000", type = "line")
   expect_s3_class(p3, "ggplot")
   expect_true(length(p3$layers) > 0)
 
-  p4 <- ez_signal(test_data, "chr1:1000-2000", type = "heatmap")
+  p4 <- ez_coverage(test_data, "chr1:1000-2000", type = "heatmap")
   expect_s3_class(p4, "ggplot")
   expect_true(length(p4$layers) > 0)
 
   # Test with binning
-  p5 <- ez_signal(test_data, "chr1:1000-2000", bin_width = 50L)
+  p5 <- ez_coverage(test_data, "chr1:1000-2000", bin_width = 50L)
   expect_s3_class(p5, "ggplot")
   expect_true(length(p5$layers) > 0)
 
   # Test with custom colors
-  p6 <- ez_signal(test_data, "chr1:1000-2000", group_var = "sample",
+  p6 <- ez_coverage(test_data, "chr1:1000-2000", group_var = "sample",
                   colors = c("red", "blue"))
   expect_s3_class(p6, "ggplot")
   expect_true(length(p6$layers) > 0)
 
   # Test error handling
-  expect_error(ez_signal(test_data, "chr1:1000-2000", alpha = 2)) # Invalid alpha
-  expect_error(ez_signal(test_data, "chr1:1000-2000", type = "invalid")) # Invalid type
+  expect_error(ez_coverage(test_data, "chr1:1000-2000", alpha = 2)) # Invalid alpha
+  expect_error(ez_coverage(test_data, "chr1:1000-2000", type = "invalid")) # Invalid type
 })
 
 test_that("ez_gene handles different input types", {

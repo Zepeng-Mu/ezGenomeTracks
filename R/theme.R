@@ -60,9 +60,9 @@ ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
   return(theme)
 }
 
-#' A theme for signal tracks
+#' A theme for coverage tracks
 #'
-#' This function creates a theme specifically for signal tracks.
+#' This function creates a theme specifically for coverage/signal tracks.
 #' It removes the y-axis text and title, and makes the plot more compact.
 #'
 #' @param y_axis_style Style of the y-axis. Options are "none", "simple", and "full".
@@ -75,9 +75,9 @@ ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
 #' library(ggplot2)
 #' p <- ggplot(data, aes(x = start, y = score)) +
 #'   geom_line() +
-#'   ez_signal_theme()
+#'   ez_coverage_theme()
 #' }
-ez_signal_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
+ez_coverage_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
   y_axis_style <- match.arg(y_axis_style)
 
   if (y_axis_style == "none") {

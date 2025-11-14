@@ -3,7 +3,7 @@
 \docType{data}
 \name{geom_coverage}
 \alias{geom_coverage}
-\alias{GeomSignal}
+\alias{GeomCoverage}
 \title{Coverage visualization geom}
 \usage{
 geom_coverage(
@@ -72,7 +72,8 @@ to use \code{position_jitter()}, give the position as \code{"jitter"}.
 }}
 
 \item{...}{Additional arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}, e.g.
-\code{color = "black"}, \code{linewidth = 0.8}, or \code{alpha = 0.6}.}
+\code{linewidth = 0.8}, or \code{alpha = 0.6}. Note: \code{color} and \code{colour} parameters
+are ignored as this geom only uses fill aesthetics.}
 
 \item{na.rm}{If \code{TRUE}, silently drop \code{NA} values.}
 

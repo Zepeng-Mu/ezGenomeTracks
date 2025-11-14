@@ -1,24 +1,24 @@
 # Tests for ez_wrappers.R functions
 
-test_that("ez_signal handles various input types correctly", {
+test_that("ez_coverage handles various input types correctly", {
   data(example_signal)
 
   # Test with data frame
-  p1 <- ez_signal(example_signal, region = "chr1:1000000-2000000")
+  p1 <- ez_coverage(example_signal, region = "chr1:1000000-2000000")
   expect_s3_class(p1, "ggplot")
   expect_true(length(p1$layers) > 0)
 
   # Test different types
-  p2 <- ez_signal(example_signal, region = "chr1:1000000-2000000", type = "line")
+  p2 <- ez_coverage(example_signal, region = "chr1:1000000-2000000", type = "line")
   expect_s3_class(p2, "ggplot")
 
   # Test parameter validation
-  expect_error(ez_signal(example_signal, region = "chr1:1000000-2000000", alpha = 2))
-  expect_error(ez_signal(example_signal, region = "chr1:1000000-2000000", type = "invalid"))
+  expect_error(ez_coverage(example_signal, region = "chr1:1000000-2000000", alpha = 2))
+  expect_error(ez_coverage(example_signal, region = "chr1:1000000-2000000", type = "invalid"))
 
   # Test with missing required columns
   bad_data <- example_signal[, -which(names(example_signal) == "score")]
-  expect_error(ez_signal(bad_data, region = "chr1:1000000-2000000"))
+  expect_error(ez_coverage(bad_data, region = "chr1:1000000-2000000"))
 })
 
 test_that("ez_feature creates a feature track", {

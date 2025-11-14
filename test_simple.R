@@ -13,7 +13,7 @@ print("Region parsed successfully")
 print(paste("Start:", GenomicRanges::start(region_gr)))
 print(paste("End:", GenomicRanges::end(region_gr)))
 
-# Test ez_signal
-p <- ez_signal(example_signal, "chr1:1000000-2000000")
-print("ez_signal created successfully")
+# Test ez_coverage
+p <- ez_coverage(example_signal, "chr1:1000000-2000000")
+print("ez_coverage created successfully")
 print(class(p))

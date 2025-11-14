@@ -17,9 +17,10 @@ geom_gene(
   intron_width = 0.4,
   arrow_length = 0,
   arrow_type = "open",
-  exon_color = "black",
+  exon_color = "gray50",
   exon_fill = "gray50",
   intron_color = "gray50",
+  clip_to_region = NULL,
   na.rm = TRUE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -54,13 +55,17 @@ disable arrows. Default: 0}
 Default: "open"}
 
 \item{exon_color}{Default border color for exons. Can be overridden by
-\code{color} or \code{colour} aesthetics. Default: "black"}
+\code{color} or \code{colour} aesthetics. Default: "gray50"}
 
 \item{exon_fill}{Default fill color for exons. Can be overridden by \code{fill}
 aesthetic. Default: "gray50"}
 
 \item{intron_color}{Default color for intron lines. Can be overridden by
 \code{color} or \code{colour} aesthetics. Default: "gray50"}
+
+\item{clip_to_region}{Optional numeric vector of length 2 specifying the
+genomic region boundaries (start, end) to clip features to. Features
+partially overlapping the region will be trimmed. Default: NULL}
 
 \item{na.rm}{If \code{FALSE}, the default, missing values are removed with
 a warning. If \code{TRUE}, missing values are silently removed.}
@@ -190,6 +195,7 @@ ggplot(gene_data) +
   geom_gene(
     aes(xstart = start, xend = end, type = feature),
     exon_fill = "steelblue",
+    exon_color = "navy",
     intron_color = "darkblue",
     intron_width = 0.6,
     exon_height = 0.8,

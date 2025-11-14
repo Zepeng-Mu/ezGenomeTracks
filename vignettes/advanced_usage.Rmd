@@ -74,14 +74,14 @@ Now, let's create a complex visualization with multiple tracks, custom styling, 
 
 ```{r}
 # Create a signal track
-signal_track <- ez_signal(
+signal_track <- ez_coverage(
   data = signal_data,
   fill = "steelblue",
   color = "navy",
   type = "area"
-) + 
+) +
   ggtitle("Signal Track") +
-  ez_signal_theme()
+  ez_coverage_theme()
 
 # Create a peak track
 peak_track <- ez_peak(
@@ -89,7 +89,7 @@ peak_track <- ez_peak(
   fill = "coral",
   color = "red",
   use_score = TRUE
-) + 
+) +
   ggtitle("Peak Track") +
   ez_peak_theme()
 
@@ -98,7 +98,7 @@ gene_track <- ez_gene(
   data = gene_data,
   fill = "darkgreen",
   color = "black"
-) + 
+) +
   ggtitle("Gene Track") +
   ez_gene_theme()
 ```
@@ -160,7 +160,7 @@ region2 <- "chr1:1050000-1100000"
 
 # Create stacked tracks for region 1
 p1 <- genome_plot(
-  ez_signal(data = signal_data, fill = "steelblue", region = region1),
+  ez_coverage(data = signal_data, fill = "steelblue", region = region1),
   ez_peak(data = peak_data, fill = "coral", region = region1),
   ez_gene(data = gene_data, fill = "darkgreen", region = region1),
   heights = c(2, 1, 1.5),
@@ -169,7 +169,7 @@ p1 <- genome_plot(
 
 # Create stacked tracks for region 2
 p2 <- genome_plot(
-  ez_signal(data = signal_data, fill = "steelblue", region = region2),
+  ez_coverage(data = signal_data, fill = "steelblue", region = region2),
   ez_peak(data = peak_data, fill = "coral", region = region2),
   ez_gene(data = gene_data, fill = "darkgreen", region = region2),
   heights = c(2, 1, 1.5),
@@ -189,29 +189,29 @@ The `ezGenomeTracks` package provides several options for customizing the appear
 
 ```{r}
 # Create a signal track with different visualization types
-signal_line <- ez_signal(
+signal_line <- ez_coverage(
   data = signal_data,
   type = "line",
   color = "blue",
   size = 1
-) + 
+) +
   ggtitle("Line Signal Track")
 
-signal_area <- ez_signal(
+signal_area <- ez_coverage(
   data = signal_data,
   type = "area",
   fill = "lightblue",
   color = "blue",
   alpha = 0.7
-) + 
+) +
   ggtitle("Area Signal Track")
 
-signal_heatmap <- ez_signal(
+signal_heatmap <- ez_coverage(
   data = signal_data,
   type = "heatmap",
   low = "white",
   high = "blue"
-) + 
+) +
   ggtitle("Heatmap Signal Track")
 
 # Stack the different signal tracks
@@ -236,7 +236,7 @@ peak_score <- ez_peak(
   fill = "coral",
   color = "red",
   use_score = TRUE
-) + 
+) +
   ggtitle("Score-colored Peak Track")
 
 # Create a peak track with fixed coloring
@@ -245,7 +245,7 @@ peak_fixed <- ez_peak(
   fill = "purple",
   color = "darkpurple",
   use_score = FALSE
-) + 
+) +
   ggtitle("Fixed-color Peak Track")
 
 # Stack the different peak tracks
