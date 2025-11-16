@@ -61,10 +61,20 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
     mapping <- do.call(aes, mapping)
   }
 
-  # Filter out color parameter to prevent color aesthetics from being applied
+  # Force color aesthetic to NA to prevent borders
   dots <- list(...)
   dots$color <- NULL
   dots$colour <- NULL
+  
+  # Explicitly set colour to NA in params
+  params_list <- utils::modifyList(
+    list(
+      type = type,
+      na.rm = na.rm,
+      colour = NA  # Force no border
+    ),
+    dots
+  )
 
   layer(
     data = data,
@@ -74,13 +84,7 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
     position = position,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
-    params = utils::modifyList(
-      list(
-        type = type,
-        na.rm = na.rm
-      ),
-      dots
-    )
+    params = params_list
   )
 }
 
