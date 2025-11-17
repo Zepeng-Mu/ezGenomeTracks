@@ -210,7 +210,7 @@ GeomGene <- ggplot2::ggproto(
       if ("strand" %in% names(data)) {
         # Create factor with numeric levels but character labels
         data$y <- factor(
-          ifelse(is.na(data$strand) | data$strand == "*",
+          ifelse(is.na(data$strand) | data$strand == ".",
             "Unknown",
             ifelse(data$strand == "+", "plus", "minus")
           ),

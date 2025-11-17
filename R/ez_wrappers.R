@@ -498,6 +498,7 @@ ez_manhattan <- function(
 #' @param color Color for both exons and introns (default: "gray50")
 #' @param gene_id Column name for gene ID (default: "gene_id")
 #' @param gene_name Column name for gene name (default: "gene_name")
+#' @param y Column name for the y-axis grouping variable. Default: "strand"
 #' @param ... Additional arguments passed to geom_gene
 #' @return A ggplot2 object
 #' @export
@@ -554,7 +555,7 @@ ez_manhattan <- function(
 #' - Exons as filled rectangles
 #' - Introns as connecting lines
 #' - Strand information with arrowheads
-#' - Automatic y-axis separation by strand
+#' - Automatic y-axis separation by the specified y variable
 #'
 #' @export
 #' @importFrom GenomicFeatures exonsBy transcriptsBy
@@ -586,6 +587,11 @@ ez_manhattan <- function(
 #'   label = "gene_name",
 #'   label_size = 3
 #' )
+#'
+#' # With custom y-axis grouping by transcript
+#' track5 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
+#'   y = "transcript_id"
+#' )
 #' }
 ez_gene <- function(
   data,
@@ -597,6 +603,7 @@ ez_gene <- function(
   intron_color = "gray50",
   gene_id = "gene_id",
   gene_name = "gene_name",
+  y = "strand",
   label = NULL,
   label_size = 3,
   label_vjust = -2,
@@ -639,7 +646,7 @@ ez_gene <- function(
   # Create the plot
   p <- ggplot2::ggplot(gene_data) +
     geom_gene(
-      ggplot2::aes(xstart = xstart, xend = xend, y = strand, type = type),
+      ggplot2::aes(xstart = xstart, xend = xend, y = .data[[y]], type = type),
       exon_height = exon_height,
       intron_width = intron_width,
       exon_color = exon_color,
@@ -662,8 +669,8 @@ ez_gene <- function(
     # Calculate label positions (middle of gene)
     label_data$label_x <- (label_data$xstart + label_data$xend) / 2
 
-    # Use strand directly (it's already a factor that matches the y-axis)
-    label_data$label_y <- label_data$strand
+    # Use the specified y column (it's already a factor that matches the y-axis)
+    label_data$label_y <- label_data[[y]]
 
     # Calculate effective vjust accounting for exon height
     # vjust < 0 places text above the point; we need more negative values for taller exons
