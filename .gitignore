@@ -4,5 +4,3 @@
 .Ruserdata
 docs
 */.DS_Store
-/.quarto/
-.github/copilot-instructions.md

@@ -210,7 +210,7 @@ GeomGene <- ggplot2::ggproto(
       if ("strand" %in% names(data)) {
         # Create factor with numeric levels but character labels
         data$y <- factor(
-          ifelse(is.na(data$strand) | data$strand == ".",
+          ifelse(is.na(data$strand) | data$strand == "*",
             "Unknown",
             ifelse(data$strand == "+", "plus", "minus")
           ),
@@ -247,14 +247,18 @@ GeomGene <- ggplot2::ggproto(
       }
     }
 
-    # Use compute_data_size to properly handle discrete y-axis
-    # This is the same approach as GeomTile
-    data <- ggplot2:::compute_data_size(
-      data, params$height,
-      default = self$default_aes$height,
-      panels = "by", target = "height",
-      zero = FALSE, discrete = TRUE
-    )
+    # Convert y to numeric if it's a factor (discrete y-axis)
+    # and calculate height for proper positioning
+    if (is.factor(data$y)) {
+      data$y <- as.numeric(data$y)
+    }
+
+    # Set height from params, or use default of 1
+    if (!is.null(params$height)) {
+      data$height <- params$height
+    } else {
+      data$height <- 1
+    }
 
     # Compute ymin and ymax from y and height
     data$ymin <- data$y - data$height / 2
@@ -385,8 +389,7 @@ GeomGene <- ggplot2::ggproto(
     colour = "gray50",
     linewidth = 0.4,
     linetype = 1,
-    alpha = 1,
-    height = 1
+    alpha = 1
   ),
 
   # These aes columns are created by setup_data(). They need to be listed here so
