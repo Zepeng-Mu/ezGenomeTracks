@@ -596,7 +596,7 @@ ez_manhattan <- function(
 ez_gene <- function(
   data,
   region,
-  exon_height = 0.75,
+  exon_height = 0.4,
   intron_width = 0.4,
   exon_color = "gray50",
   exon_fill = "gray50",
@@ -605,7 +605,7 @@ ez_gene <- function(
   gene_name = "gene_name",
   y = "strand",
   label = NULL,
-  label_size = 3,
+  label_size = 8,
   label_vjust = -2,
   label_color = "black",
   ...
