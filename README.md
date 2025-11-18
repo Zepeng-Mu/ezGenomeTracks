@@ -6,6 +6,9 @@ Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) an
 
 <!-- badges: end -->
 
+> [!NOTE]
+> `ezGemoneTracks` is in early development, many functionalities may be missing or incomplete. Feedback and contributions are welcome!
+
 ## Installation
 
 ``` r
