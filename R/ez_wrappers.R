@@ -708,22 +708,10 @@ ez_gene <- function(
 #' Easy interaction track visualization
 #'
 #' This function creates an interaction track visualization from a BEDPE file or data frame.
-#' It is a wrapper around geom_arc that provides a simpler interface.
+#' It is a wrapper around geom_link that provides a simpler interface.
 #'
 #' @param data A BEDPE file path or data frame with interaction data
-#' Create an arc track for genomic interactions
-#'
-#' @description
-#' This function creates an arc track visualization for genomic interactions,
-#' such as those from Hi-C, ChIA-PET, or other interaction assays. It can
-#' read directly from BEDPE files or work with data frames containing
-#' interaction data.
-#'
-#' @param data Either:
-#'   - A file path to a BEDPE file containing interaction data
-#'   - A data frame with columns for interaction coordinates and scores
-#' @param region Genomic region to display in the format "chr:start-end".
-#'   Example: "chr1:1000000-2000000"
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param curvature Numeric value controlling the arc curvature (0-1).
 #'   Higher values create more pronounced curves. Default: 0.5
 #' @param color Color of the arcs. This is used when `use_score = FALSE`.
@@ -734,9 +722,9 @@ ez_gene <- function(
 #' @param use_score Logical indicating whether to use the 'score' column for
 #'   arc coloring. If TRUE, a color gradient will be applied based on the
 #'   interaction scores. Default: FALSE
-#' @param ... Additional arguments passed to `geom_arc()`
+#' @param ... Additional arguments passed to `geom_link()`
 #'
-#' @return A ggplot2 object representing the arc track.
+#' @return A ggplot2 object representing the link track.
 #'
 #' @details
 #' The function automatically handles different input types:
@@ -756,7 +744,7 @@ ez_gene <- function(
 #' @examples
 #' \dontrun{
 #' # From a BEDPE file with score-based coloring
-#' track1 <- ez_arc(
+#' track1 <- ez_link(
 #'   "interactions.bedpe",
 #'   "chr1:1000000-2000000",
 #'   use_score = TRUE,
@@ -774,7 +762,7 @@ ez_gene <- function(
 #'   end2 = c(9000, 8000, 10000),
 #'   score = c(5, 10, 15)
 #' )
-#' track2 <- ez_arc(
+#' track2 <- ez_link(
 #'   interactions,
 #'   "chr1:1-15000",
 #'   color = "darkblue",
@@ -782,7 +770,7 @@ ez_gene <- function(
 #'   alpha = 0.8
 #' )
 #' }
-ez_arc <- function(
+ez_link <- function(
   data,
   region,
   curvature = 0.5,
@@ -798,6 +786,65 @@ ez_arc <- function(
     return(interaction_track(
       data,
       region,
+      curvature = curvature,
+      color = color,
+      size = size,
+      alpha = alpha,
+      use_score = use_score,
+      ...
+    ))
+  } else if (is.data.frame(data)) {
+    # It's a data frame, create the plot directly
+    # We need to ensure it has the right columns for geom_link (start1, start2)
+    # If the input has bedpe style columns (chr1, start1, end1, chr2, start2, end2), we use start1 and start2
+    
+    # Create a copy to avoid modifying original
+    plot_data <- data
+    
+    # If score is requested but not present, warn and disable
+    if (use_score && !"score" %in% colnames(plot_data)) {
+      warning("Score column not found, disabling score-based coloring")
+      use_score <- FALSE
+    }
+    
+    if (use_score) {
+      p <- ggplot2::ggplot(plot_data) +
+        geom_link(
+          ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
+          curvature = curvature,
+          linewidth = size,
+          alpha = alpha,
+          ...
+        ) +
+        ggplot2::scale_color_gradient(low = "gray80", high = color)
+    } else {
+      p <- ggplot2::ggplot(plot_data) +
+        geom_link(
+          ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0),
+          curvature = curvature,
+          color = color,
+          linewidth = size,
+          alpha = alpha,
+          ...
+        )
+    }
+
+    # Apply the appropriate theme and scale
+    p <- p +
+      scale_x_genome_region(region) +
+      ez_theme() +
+      ggplot2::theme(
+        axis.text.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_blank(),
+        panel.grid.major.y = ggplot2::element_blank(),
+        panel.grid.minor.y = ggplot2::element_blank()
+      )
+
+    return(p)
+  } else {
+    stop("Data must be a file path or data frame")
+  }
+}
       curvature = curvature,
       color = color,
       size = size,
