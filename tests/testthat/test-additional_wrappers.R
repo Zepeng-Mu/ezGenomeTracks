@@ -70,7 +70,7 @@ test_that("ez_feature creates feature tracks from data frames", {
   expect_error(ez_feature("not_a_dataframe", "chr1:1000-4000"))
 })
 
-test_that("ez_arc creates interaction tracks from data frames", {
+test_that("ez_link creates interaction tracks from data frames", {
   # Create test interaction data
   test_data <- data.frame(
     seqnames1 = "chr1",
@@ -82,24 +82,24 @@ test_that("ez_arc creates interaction tracks from data frames", {
     score = c(0.5, 0.8, 0.3)
   )
 
-  # Test basic arc plot
-  p1 <- ez_arc(test_data, "chr1:1000-8000")
+  # Test basic link plot
+  p1 <- ez_link(test_data, "chr1:1000-8000")
   expect_s3_class(p1, "ggplot")
   expect_true(length(p1$layers) > 0)
 
   # Test with score coloring
-  p2 <- ez_arc(test_data, "chr1:1000-8000", use_score = TRUE)
+  p2 <- ez_link(test_data, "chr1:1000-8000", use_score = TRUE)
   expect_s3_class(p2, "ggplot")
   expect_true(length(p2$layers) > 0)
 
   # Test with custom parameters
-  p3 <- ez_arc(test_data, "chr1:1000-8000",
+  p3 <- ez_link(test_data, "chr1:1000-8000",
                curvature = 0.3, color = "red", size = 1, alpha = 0.8)
   expect_s3_class(p3, "ggplot")
   expect_true(length(p3$layers) > 0)
 
   # Test error handling
-  expect_error(ez_arc("not_a_dataframe", "chr1:1000-8000"))
+  expect_error(ez_link("not_a_dataframe", "chr1:1000-8000"))
 })
 
 test_that("ez_hic creates Hi-C tracks from data frames", {

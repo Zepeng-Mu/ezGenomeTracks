@@ -797,16 +797,16 @@ ez_link <- function(
     # It's a data frame, create the plot directly
     # We need to ensure it has the right columns for geom_link (start1, start2)
     # If the input has bedpe style columns (chr1, start1, end1, chr2, start2, end2), we use start1 and start2
-    
+
     # Create a copy to avoid modifying original
     plot_data <- data
-    
+
     # If score is requested but not present, warn and disable
     if (use_score && !"score" %in% colnames(plot_data)) {
       warning("Score column not found, disabling score-based coloring")
       use_score <- FALSE
     }
-    
+
     if (use_score) {
       p <- ggplot2::ggplot(plot_data) +
         geom_link(
@@ -839,86 +839,6 @@ ez_link <- function(
         panel.grid.major.y = ggplot2::element_blank(),
         panel.grid.minor.y = ggplot2::element_blank()
       )
-
-    return(p)
-  } else {
-    stop("Data must be a file path or data frame")
-  }
-}
-      curvature = curvature,
-      color = color,
-      size = size,
-      alpha = alpha,
-      use_score = use_score,
-      ...
-    ))
-  } else if (is.data.frame(data)) {
-    # It's a data frame, create the plot directly
-    if (use_score && "score" %in% colnames(data)) {
-      p <- ggplot2::ggplot(data) +
-        geom_arc(
-          ggplot2::aes(
-            x = start1,
-            y = 0,
-            xend = start2,
-            yend = 0,
-            color = score
-          ),
-          curvature = curvature,
-          size = size,
-          alpha = alpha,
-          ...
-        ) +
-        ggplot2::scale_color_gradient(low = "blue", high = "red")
-    } else {
-      p <- ggplot2::ggplot(data) +
-        geom_arc(
-          ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0),
-          curvature = curvature,
-          color = color,
-          size = size,
-          alpha = alpha,
-          ...
-        )
-    }
-
-    # Apply the appropriate theme and scale
-    p <- p +
-      ez_feature_theme() +
-      scale_x_genome_region(region) +
-      ggplot2::ylim(-0.5, 0.5) # Fixed y-axis for arcs
-
-    return(p)
-    return(hic_track(
-      data,
-      region,
-      resolution = resolution,
-      log_transform = log_transform,
-      low = low,
-      high = high,
-      ...
-    ))
-  } else if (is.data.frame(data)) {
-    # It's a data frame, create the plot directly
-    # Handle different column names for Hi-C data
-    if ("bin1" %in% colnames(data) && "bin2" %in% colnames(data)) {
-      # Convert bin coordinates to genomic positions
-      region_gr <- parse_region(region)
-      start_pos <- GenomicRanges::start(region_gr)
-      bin_size <- resolution
-      data$pos1 <- start_pos + (data$bin1 - 1) * bin_size
-      data$pos2 <- start_pos + (data$bin2 - 1) * bin_size
-    }
-
-    p <- ggplot2::ggplot(data, ggplot2::aes(x = pos1, y = pos2, fill = count)) +
-      geom_hic(low = low, high = high, ...) +
-      ggplot2::coord_fixed() # Ensure the plot is square
-
-    # Apply the appropriate theme and scale
-    p <- p +
-      ez_theme() +
-      scale_x_genome_region(region) +
-      scale_x_genome_region(region) # Same scale for y-axis
 
     return(p)
   } else {

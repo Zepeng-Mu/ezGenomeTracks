@@ -72,12 +72,12 @@ test_that("ez_gene handles TxDb objects", {
   expect_true(length(p$layers) > 0)
 })
 
-test_that("ez_arc creates an interaction track", {
+test_that("ez_link creates an interaction track", {
   # Load example data
   data(example_interactions)
 
   # Create an interaction track
-  p <- ez_arc(data = example_interactions, region = "chr1:1000000-1100000")
+  p <- ez_link(data = example_interactions, region = "chr1:1000000-1100000")
 
   # Check that it returns a ggplot object
   expect_s3_class(p, "ggplot")

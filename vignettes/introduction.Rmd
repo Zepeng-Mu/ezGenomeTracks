@@ -115,11 +115,11 @@ gene_track
 
 ### Interaction Track
 
-Interaction tracks are used to visualize genomic interactions, such as chromatin loops or other pairwise genomic relationships. The `ez_arc()` function creates an interaction track from a data frame or a BEDPE file.
+Interaction tracks are used to visualize genomic interactions, such as chromatin loops or other pairwise genomic relationships. The `ez_link()` function creates an interaction track from a data frame or a BEDPE file.
 
 ```{r}
 # Create an interaction track from the example data
-interaction_track <- ez_arc(
+interaction_track <- ez_link(
   data = example_interactions,
   color = "purple",
   alpha = 0.7
