@@ -15,6 +15,7 @@
 #' @export
 #' @importFrom ggplot2 GeomCurve layer aes ggproto Geom arrow unit
 #' @importFrom methods is
+#' @importFrom rlang .data
 #'
 #' @examples
 #' \dontrun{
@@ -99,7 +100,7 @@ GeomLink <- ggproto("GeomLink", Geom,
         # Use GeomCurve for the actual drawing
         GeomCurve$draw_panel(data, panel_params, coord, curvature = curvature, na.rm = na.rm)
     },
-    default_aes = aes(
+    default_aes = ggplot2::aes(
         colour = "gray50", linewidth = 0.5, linetype = 1,
         alpha = 0.7
     )
@@ -197,12 +198,12 @@ process_interaction_data <- function(gr, anchor1 = "anchor1", anchor2 = "anchor2
 interaction_track <- function(file, region, ...) {
   # Parse region
   region_gr <- parse_region(region)
-  
+
   # Import data
   # Note: rtracklayer::import might not support BEDPE natively with 'which' for all formats
   # But for standard BED/BEDPE it might work or we import all and filter
   # For simplicity, we try to import with 'which' if supported, otherwise import all
-  
+
   tryCatch({
     gr <- rtracklayer::import(file, which = region_gr)
   }, error = function(e) {
@@ -215,19 +216,18 @@ interaction_track <- function(file, region, ...) {
     # Ideally we should filter here.
     gr <- IRanges::subsetByOverlaps(gr, region_gr)
   })
-  
+
   # Process data
   df <- process_interaction_data(gr)
-  
+
   # Create plot using ez_link logic (but we can't call ez_link because ez_link calls us)
   # So we replicate the plotting logic or make ez_link handle the plotting and this function just return data?
   # But ez_link expects this function to return a plot.
-  
+
   # Let's make interaction_track return the plot.
   # We can reuse ez_link by passing the dataframe!
   # But ez_link calls interaction_track if input is char.
   # If we pass df to ez_link, it will use the dataframe logic.
-  
+
   return(ez_link(df, region, ...))
 }
-```
