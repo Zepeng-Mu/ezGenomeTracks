@@ -7,15 +7,16 @@
 ez_gene(
   data,
   region,
-  exon_height = 0.75,
+  exon_height = 0.4,
   intron_width = 0.4,
   exon_color = "gray50",
   exon_fill = "gray50",
   intron_color = "gray50",
   gene_id = "gene_id",
   gene_name = "gene_name",
+  y = "strand",
   label = NULL,
-  label_size = 3,
+  label_size = 8,
   label_vjust = -2,
   label_color = "black",
   ...
@@ -45,6 +46,8 @@ Example: "chr1:1000000-2000000"}
 \item{gene_id}{Column name for gene identifiers. Default: "gene_id"}
 
 \item{gene_name}{Column name for gene symbols/names. Default: "gene_name"}
+
+\item{y}{Column name for the y-axis grouping variable. Default: "strand"}
 
 \item{label}{Column name to use for text labels. If NULL (default), no labels
 are displayed. Set to a column name (e.g., "gene_name") to show labels.}
@@ -87,7 +90,7 @@ The visualization includes:
 \item Exons as filled rectangles
 \item Introns as connecting lines
 \item Strand information with arrowheads
-\item Automatic y-axis separation by strand
+\item Automatic y-axis separation by the specified y variable
 }
 }
 \examples{
@@ -123,6 +126,11 @@ track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
 track4 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
   label = "gene_name",
   label_size = 3
+)
+
+# With custom y-axis grouping by transcript
+track5 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
+  y = "transcript_id"
 )
 }
 }

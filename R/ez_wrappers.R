@@ -714,6 +714,10 @@ ez_gene <- function(
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param curvature Numeric value controlling the arc curvature (0-1).
 #'   Higher values create more pronounced curves. Default: 0.5
+#' @param height_factor Height of curves as proportion of genomic distance span.
+#'   Higher values create taller arcs. Default: 0.15
+#' @param direction Direction of curve arcs: "down" (negative y, default) or "up" (positive y).
+#'   Default: "down"
 #' @param color Color of the arcs. This is used when `use_score = FALSE`.
 #'   Default: "gray50"
 #' @param size Line width of the arcs. Default: 0.5
@@ -748,8 +752,7 @@ ez_gene <- function(
 #'   "interactions.bedpe",
 #'   "chr1:1000000-2000000",
 #'   use_score = TRUE,
-#'   high = "red",
-#'   low = "blue"
+#'   color = "red"
 #' )
 #'
 #' # From a data frame with uniform coloring
@@ -769,17 +772,29 @@ ez_gene <- function(
 #'   size = 1,
 #'   alpha = 0.8
 #' )
+#'
+#' # Upward curves with taller arcs
+#' track3 <- ez_link(
+#'   interactions,
+#'   "chr1:1-15000",
+#'   direction = "up",
+#'   height_factor = 0.2,
+#'   color = "purple"
+#' )
 #' }
 ez_link <- function(
   data,
   region,
   curvature = 0.5,
+  height_factor = 0.15,
+  direction = c("down", "up"),
   color = "gray50",
   size = 0.5,
   alpha = 0.7,
   use_score = FALSE,
   ...
 ) {
+  direction <- match.arg(direction)
   # Check if data is a file path or data frame
   if (is.character(data) && length(data) == 1) {
     # It's a file path, use interaction_track
@@ -787,6 +802,8 @@ ez_link <- function(
       data,
       region,
       curvature = curvature,
+      height_factor = height_factor,
+      direction = direction,
       color = color,
       size = size,
       alpha = alpha,
@@ -807,11 +824,16 @@ ez_link <- function(
       use_score <- FALSE
     }
 
+    # Calculate y-axis limits based on maximum curve height
+    y_limits <- calculate_link_ylim(plot_data, height_factor, direction)
+
     if (use_score) {
       p <- ggplot2::ggplot(plot_data) +
         geom_link(
           ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
           curvature = curvature,
+          height_factor = height_factor,
+          direction = direction,
           linewidth = size,
           alpha = alpha,
           ...
@@ -822,6 +844,8 @@ ez_link <- function(
         geom_link(
           ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0),
           curvature = curvature,
+          height_factor = height_factor,
+          direction = direction,
           color = color,
           linewidth = size,
           alpha = alpha,
@@ -829,9 +853,11 @@ ez_link <- function(
         )
     }
 
-    # Apply the appropriate theme and scale
+    # Apply the appropriate theme and scale with automatic clipping prevention
     p <- p +
       scale_x_genome_region(region) +
+      ggplot2::scale_y_continuous(limits = y_limits, expand = c(0, 0)) +
+      ggplot2::coord_cartesian(clip = "off") +
       ez_theme() +
       ggplot2::theme(
         axis.text.y = ggplot2::element_blank(),

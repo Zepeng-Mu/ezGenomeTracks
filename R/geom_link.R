@@ -5,6 +5,9 @@
 #'
 #' @inheritParams ggplot2::layer
 #' @param curvature Amount of curvature (default: 0.5)
+#' @param height_factor Height of curves as proportion of genomic distance span.
+#'   Higher values create taller arcs. Default: 0.15
+#' @param direction Direction of curve arcs: "down" (negative y, default) or "up" (positive y)
 #' @param arrow_length Length of directional arrows (default: 0)
 #' @param arrow_type Type of arrow (default: "closed")
 #' @param na.rm If `TRUE`, silently drop `NA` values.
@@ -15,7 +18,6 @@
 #' @export
 #' @importFrom ggplot2 GeomCurve layer aes ggproto Geom arrow unit
 #' @importFrom methods is
-#' @importFrom rlang .data
 #'
 #' @examples
 #' \dontrun{
@@ -28,82 +30,202 @@
 #'     score = c(0.8, 0.6, 0.9)
 #' )
 #'
-#' # Basic link plot
+#' # Basic link plot (curves extend downward by default)
 #' ggplot(df) +
-#'     geom_link(aes(x = start1, y = 0, xend = start2, yend = 0))
+#'     geom_link(aes(x = start1, y = 0, xend = start2, yend = 0)) +
+#'     coord_cartesian(clip = "off")
 #'
-#' # With curvature and arrows
+#' # Upward curves with custom height
+#' ggplot(df) +
+#'     geom_link(aes(x = start1, y = 0, xend = start2, yend = 0),
+#'         height_factor = 0.2, direction = "up") +
+#'     coord_cartesian(clip = "off")
+#'
+#' # With curvature, score coloring, and arrows
 #' ggplot(df) +
 #'     geom_link(aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
-#'         curvature = 0.8, arrow_length = 0.1
-#'     )
+#'         curvature = 0.8, height_factor = 0.15, arrow_length = 0.1
+#'     ) +
+#'     coord_cartesian(clip = "off")
 #' }
-geom_link <- function(mapping = NULL, data = NULL, stat = "identity",
-                      position = "identity", ..., curvature = 0.5,
-                      arrow_length = 0, arrow_type = "closed",
-                      na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
-    # Handle GInteractions objects directly in data
-    if (!is.null(data) && methods::is(data, "GInteractions")) {
-        data <- process_interaction_data(data)
-    }
+geom_link <- function(
+  mapping = NULL,
+  data = NULL,
+  stat = "identity",
+  position = "identity",
+  ...,
+  curvature = 0.15,
+  height_factor = 0.15,
+  direction = c("down", "up"),
+  arrow_length = 0,
+  arrow_type = "closed",
+  na.rm = TRUE,
+  show.legend = NA,
+  inherit.aes = TRUE
+) {
+  direction <- match.arg(direction)
+  # Handle GInteractions objects directly in data
+  if (!is.null(data) && methods::is(data, "GInteractions")) {
+    data <- process_interaction_data(data)
+  }
 
-    # Default mapping for links if not provided
-    # We can't easily guess column names if mapping is NULL and data is a generic DF,
-    # but if it came from process_interaction_data, it has start1/start2.
-    # However, the user requirement says input should be x, x_end, y, y_end.
-    # We will leave mapping as NULL if not provided, but we can provide a hint or default
-    # if the data looks like it has standard columns.
+  # Default mapping for links if not provided
+  # We can't easily guess column names if mapping is NULL and data is a generic DF,
+  # but if it came from process_interaction_data, it has start1/start2.
+  # However, the user requirement says input should be x, x_end, y, y_end.
+  # We will leave mapping as NULL if not provided, but we can provide a hint or default
+  # if the data looks like it has standard columns.
 
-    # If data came from our helper, it has start1, start2.
-    if (is.null(mapping) && !is.null(data) && all(c("start1", "start2") %in% names(data))) {
-        default_aes <- aes(x = .data$start1, y = 0, xend = .data$start2, yend = 0)
-        mapping <- default_aes
-    }
-
-    layer(
-        data = data,
-        mapping = mapping,
-        stat = stat,
-        geom = GeomLink,
-        position = position,
-        show.legend = show.legend,
-        inherit.aes = inherit.aes,
-        params = list(
-            curvature = curvature,
-            arrow_length = arrow_length,
-            arrow_type = arrow_type,
-            na.rm = na.rm,
-            ...
-        )
+  # If data came from our helper, it has start1, start2.
+  if (
+    is.null(mapping) &&
+      !is.null(data) &&
+      all(c("start1", "start2") %in% names(data))
+  ) {
+    default_aes <- aes(
+      x = .data$start1,
+      y = 0,
+      xend = .data$start2,
+      yend = 0
     )
+    mapping <- default_aes
+  }
+
+  layer(
+    data = data,
+    mapping = mapping,
+    stat = stat,
+    geom = GeomLink,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      curvature = curvature,
+      height_factor = height_factor,
+      direction = direction,
+      arrow_length = arrow_length,
+      arrow_type = arrow_type,
+      na.rm = na.rm,
+      ...
+    )
+  )
 }
 
 #' @rdname geom_link
 #' @format NULL
 #' @usage NULL
-GeomLink <- ggproto("GeomLink", Geom,
-    required_aes = c("x", "y", "xend", "yend"),
-    setup_params = function(data, params) {
-        # Set up arrow if requested
-        if (params$arrow_length > 0) {
-            params$arrow <- ggplot2::arrow(
-                type = params$arrow_type,
-                length = ggplot2::unit(params$arrow_length, "inches")
-            )
-        } else {
-            params$arrow <- NULL
-        }
-        params
-    },
-    draw_panel = function(data, panel_params, coord, curvature = 0.5,
-                          arrow_length = 0, arrow_type = "closed", na.rm = FALSE) {
-        # Use GeomCurve for the actual drawing
-        GeomCurve$draw_panel(data, panel_params, coord, curvature = curvature, na.rm = na.rm)
-    },
-    default_aes = ggplot2::aes(
-        colour = "gray50", linewidth = 0.5, linetype = 1,
-        alpha = 0.7
-    )
+GeomLink <- ggproto(
+  "GeomLink",
+  Geom,
+  required_aes = c("x", "y", "xend", "yend"),
+  setup_params = function(data, params) {
+    # Set up arrow if requested
+    if (params$arrow_length > 0) {
+      params$arrow <- ggplot2::arrow(
+        type = params$arrow_type,
+        length = ggplot2::unit(params$arrow_length, "inches")
+      )
+    } else {
+      params$arrow <- NULL
+    }
+    params
+  },
+  setup_data = function(data, params) {
+    # Calculate arc height for each link based on genomic distance
+    x_span <- abs(data$xend - data$x)
+    arc_height <- x_span * params$height_factor
+
+    # Set direction: down = negative y, up = positive y
+    if (is.null(params$direction)) {
+      params$direction <- "down"
+    }
+    direction_sign <- ifelse(params$direction == "up", 1, -1)
+
+    # Store arc height with direction
+    data$arc_height <- direction_sign * arc_height
+
+    data
+  },
+  draw_panel = function(
+    data,
+    panel_params,
+    coord,
+    curvature = 0.5,
+    height_factor = 0.15,
+    direction = "down",
+    arrow_length = 0,
+    arrow_type = "closed",
+    arrow = NULL,
+    na.rm = FALSE
+  ) {
+    if (nrow(data) == 0) return(grid::nullGrob())
+
+    # Keep arc_height in data coordinates before transform
+    arc_heights_data <- data$arc_height
+
+    # Transform start and end coordinates
+    coords <- coord$transform(data, panel_params)
+
+    # Now we need to transform arc_height from data coordinates to panel coordinates
+    # The panel y-scale determines this transformation
+    y_range_data <- panel_params$y.range
+    y_scale <- diff(y_range_data)
+
+    # Transform arc heights to npc coordinates
+    arc_heights_npc <- arc_heights_data / y_scale
+
+    # Create bezier curves for each link
+    grobs <- lapply(seq_len(nrow(coords)), function(i) {
+      row <- coords[i, ]
+
+      # Bezier control points for symmetric arch
+      x_start <- row$x
+      y_start <- row$y
+      x_end <- row$xend
+      y_end <- row$yend
+
+      # Arc height in npc coordinates
+      arc_h_npc <- arc_heights_npc[i]
+
+      # For bezier curve: 4 control points for cubic bezier
+      # P0 = start, P1 = first control, P2 = second control, P3 = end
+      x_mid <- (x_start + x_end) / 2
+
+      # Control points based on curvature parameter
+      ctrl_dist <- curvature
+
+      x_bezier <- c(
+        x_start,
+        x_start + (x_mid - x_start) * ctrl_dist,
+        x_end - (x_end - x_mid) * ctrl_dist,
+        x_end
+      )
+      y_bezier <- c(y_start, y_start + arc_h_npc, y_end + arc_h_npc, y_end)
+
+      # Create bezier grob
+      grid::bezierGrob(
+        x = grid::unit(x_bezier, "native"),
+        y = grid::unit(y_bezier, "native"),
+        gp = grid::gpar(
+          col = row$colour,
+          lwd = row$linewidth * .pt,
+          lty = row$linetype,
+          lineend = "butt",
+          alpha = row$alpha
+        ),
+        arrow = arrow
+      )
+    })
+
+    # Combine all grobs
+    grid::gTree(children = do.call(grid::gList, grobs))
+  },
+  default_aes = ggplot2::aes(
+    colour = "gray50",
+    linewidth = 0.5,
+    linetype = 1,
+    alpha = 0.7
+  )
 )
 
 #' Process interaction data for visualization
@@ -125,62 +247,68 @@ GeomLink <- ggproto("GeomLink", Geom,
 #' gr <- import("interactions.bedpe")
 #' interaction_data <- process_interaction_data(gr)
 #' }
-process_interaction_data <- function(gr, anchor1 = "anchor1", anchor2 = "anchor2",
-                                     score = "score") {
-    # Check if it's a GRanges object
-    if (methods::is(gr, "GRanges")) {
-        # Convert GRanges to data frame
-        gr_df <- granges_to_df(gr)
+process_interaction_data <- function(
+  gr,
+  anchor1 = "anchor1",
+  anchor2 = "anchor2",
+  score = "score"
+) {
+  # Check if it's a GRanges object
+  if (methods::is(gr, "GRanges")) {
+    # Convert GRanges to data frame
+    gr_df <- granges_to_df(gr)
 
-        # Check if required columns exist
-        if (!all(c(anchor1, anchor2) %in% colnames(gr_df))) {
-            stop("Required columns not found in the data")
-        }
+    # Check if required columns exist
+    if (!all(c(anchor1, anchor2) %in% colnames(gr_df))) {
+      stop("Required columns not found in the data")
+    }
 
-        # Extract interaction information
-        result <- data.frame(
-            start1 = gr_df[[paste0(anchor1, "_start")]],
-            end1 = gr_df[[paste0(anchor1, "_end")]],
-            start2 = gr_df[[paste0(anchor2, "_start")]],
-            end2 = gr_df[[paste0(anchor2, "_end")]]
-        )
+    # Extract interaction information
+    result <- data.frame(
+      start1 = gr_df[[paste0(anchor1, "_start")]],
+      end1 = gr_df[[paste0(anchor1, "_end")]],
+      start2 = gr_df[[paste0(anchor2, "_start")]],
+      end2 = gr_df[[paste0(anchor2, "_end")]]
+    )
 
-        # Add score if available
-        if (score %in% colnames(gr_df)) {
-            result$score <- gr_df[[score]]
-        }
+    # Add score if available
+    if (score %in% colnames(gr_df)) {
+      result$score <- gr_df[[score]]
+    }
 
-        return(result)
-    } else if (methods::is(gr, "GInteractions")) {
-        # Handle GInteractions objects
-        # We need to check if GInteractions class is available/loaded, but methods::is should handle it safely if object is passed
+    return(result)
+  } else if (methods::is(gr, "GInteractions")) {
+    # Handle GInteractions objects
+    # We need to check if GInteractions class is available/loaded, but methods::is should handle it safely if object is passed
 
-        # Accessors for GInteractions might need package loading or direct slot access if S4
-        # Usually anchor1(gr) and anchor2(gr) return GRanges
-        # But to be safe and avoid extra deps if not loaded, we try to use S4 accessors if available or slots
+    # Accessors for GInteractions might need package loading or direct slot access if S4
+    # Usually anchor1(gr) and anchor2(gr) return GRanges
+    # But to be safe and avoid extra deps if not loaded, we try to use S4 accessors if available or slots
 
-        if (requireNamespace("InteractionSet", quietly = TRUE)) {
-            a1 <- InteractionSet::anchors(gr, type = "first")
-            a2 <- InteractionSet::anchors(gr, type = "second")
+    if (requireNamespace("InteractionSet", quietly = TRUE)) {
+      a1 <- InteractionSet::anchors(gr, type = "first")
+      a2 <- InteractionSet::anchors(gr, type = "second")
 
-            result <- data.frame(
-                start1 = GenomicRanges::start(a1),
-                end1 = GenomicRanges::end(a1),
-                start2 = GenomicRanges::start(a2),
-                end2 = GenomicRanges::end(a2)
-            )
+      result <- data.frame(
+        start1 = GenomicRanges::start(a1),
+        end1 = GenomicRanges::end(a1),
+        start2 = GenomicRanges::start(a2),
+        end2 = GenomicRanges::end(a2)
+      )
 
-            if (score %in% colnames(S4Vectors::mcols(gr))) {
-                result$score <- S4Vectors::mcols(gr)[[score]]
-            }
-            return(result)
-        } else {
-            # Fallback if InteractionSet is not loaded but object is GInteractions (unlikely but possible)
-            # Try direct slot access if possible, or error
-            stop("InteractionSet package is required to process GInteractions objects")
-        }
+      if (score %in% colnames(S4Vectors::mcols(gr))) {
+        result$score <- S4Vectors::mcols(gr)[[score]]
+      }
+      return(result)
     } else {
-        stop("Input must be a GRanges or GInteractions object")
+      # Fallback if InteractionSet is not loaded but object is GInteractions (unlikely but possible)
+      # Try direct slot access if possible, or error
+      stop(
+        "InteractionSet package is required to process GInteractions objects"
+      )
+    }
+  } else {
+    stop("Input must be a GRanges or GInteractions object")
   }
 }
 
@@ -204,18 +332,21 @@ interaction_track <- function(file, region, ...) {
   # But for standard BED/BEDPE it might work or we import all and filter
   # For simplicity, we try to import with 'which' if supported, otherwise import all
 
-  tryCatch({
-    gr <- rtracklayer::import(file, which = region_gr)
-  }, error = function(e) {
-    # Fallback: import all and filter
-    gr <- rtracklayer::import(file)
-    # TODO: Filter by region manually if needed, but process_interaction_data might handle it
-    # or we rely on the plot limits.
-    # For interactions, filtering is tricky (both anchors in region? or any?)
-    # For now, we assume the user provides a file that rtracklayer handles or small enough.
-    # Ideally we should filter here.
-    gr <- IRanges::subsetByOverlaps(gr, region_gr)
-  })
+  tryCatch(
+    {
+      gr <- rtracklayer::import(file, which = region_gr)
+    },
+    error = function(e) {
+      # Fallback: import all and filter
+      gr <- rtracklayer::import(file)
+      # TODO: Filter by region manually if needed, but process_interaction_data might handle it
+      # or we rely on the plot limits.
+      # For interactions, filtering is tricky (both anchors in region? or any?)
+      # For now, we assume the user provides a file that rtracklayer handles or small enough.
+      # Ideally we should filter here.
+      gr <- IRanges::subsetByOverlaps(gr, region_gr)
+    }
+  )
 
   # Process data
   df <- process_interaction_data(gr)

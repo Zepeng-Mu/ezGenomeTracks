@@ -329,3 +329,47 @@ parse_region <- function(region) {
 
   return(gr)
 }
+
+#' Calculate y-axis limits for link tracks
+#'
+#' This function calculates appropriate y-axis limits for link/arc tracks based on
+#' the maximum genomic distance span and height factor. This ensures curves are not
+#' clipped and provides consistent spacing for multi-track plots.
+#'
+#' @param data A data frame with link/interaction data containing start1 and start2 columns
+#' @param height_factor Height of curves as proportion of genomic distance span
+#' @param direction Direction of curves: "down" (negative y) or "up" (positive y)
+#' @return A numeric vector of length 2 with y-axis limits c(ymin, ymax)
+#' @export
+#' @examples
+#' \dontrun{
+#' df <- data.frame(
+#'   start1 = c(1000, 2000, 3000),
+#'   start2 = c(5000, 6000, 7000)
+#' )
+#' ylim <- calculate_link_ylim(df, height_factor = 0.15, direction = "down")
+#' }
+calculate_link_ylim <- function(data, height_factor = 0.15, direction = "down") {
+  # Calculate maximum span across all links
+  if (!all(c("start1", "start2") %in% colnames(data))) {
+    stop("Data must contain 'start1' and 'start2' columns")
+  }
+  
+  max_span <- max(abs(data$start2 - data$start1), na.rm = TRUE)
+  max_height <- max_span * height_factor
+  
+  # Add 20% padding for visual spacing
+  padding <- max_height * 0.2
+  
+  # Set limits based on direction
+  # Curves start at y=0 and extend up or down
+  if (direction == "down") {
+    # Curves extend downward (negative y)
+    # Y-axis needs to go from negative (bottom) to slightly positive (top)
+    return(c(-(max_height + padding), padding))
+  } else {
+    # Curves extend upward (positive y)
+    # Y-axis needs to go from slightly negative (bottom) to positive (top)
+    return(c(-padding, max_height + padding))
+  }
+}
