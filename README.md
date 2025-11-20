@@ -2,9 +2,10 @@
 
 Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) and easy wrappers (`ez_*`) to plot common genomics data (coverage, genes, features/peaks, interactions/arcs, Hi-C, Manhattan) and compose them vertically with a shared genomic x-axis via `genome_plot()`.
 
-<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub last commit](https://img.shields.io/github/last-commit/Zepeng-Mu/ezGenomeTracks)](https://github.com/Zepeng-Mu/ezGenomeTracks/commits/main)
 
-<!-- badges: end -->
 
 > [!NOTE]
 > `ezGemoneTracks` is in early development, many functionalities may be missing or incomplete. Feedback and contributions are welcome!
