@@ -23,30 +23,31 @@
 #' \dontrun{
 #' library(ggplot2)
 #' df <- data.frame(
-#'     start1 = c(1000, 2000, 3000),
-#'     end1 = c(1100, 2100, 3100),
-#'     start2 = c(5000, 6000, 7000),
-#'     end2 = c(5100, 6100, 7100),
-#'     score = c(0.8, 0.6, 0.9)
+#'   start1 = c(1000, 2000, 3000),
+#'   end1 = c(1100, 2100, 3100),
+#'   start2 = c(5000, 6000, 7000),
+#'   end2 = c(5100, 6100, 7100),
+#'   score = c(0.8, 0.6, 0.9)
 #' )
 #'
 #' # Basic link plot (curves extend downward by default)
 #' ggplot(df) +
-#'     geom_link(aes(x = start1, y = 0, xend = start2, yend = 0)) +
-#'     coord_cartesian(clip = "off")
+#'   geom_link(aes(x = start1, y = 0, xend = start2, yend = 0)) +
+#'   coord_cartesian(clip = "off")
 #'
 #' # Upward curves with custom height
 #' ggplot(df) +
-#'     geom_link(aes(x = start1, y = 0, xend = start2, yend = 0),
-#'         height_factor = 0.2, direction = "up") +
-#'     coord_cartesian(clip = "off")
+#'   geom_link(aes(x = start1, y = 0, xend = start2, yend = 0),
+#'     height_factor = 0.2, direction = "up"
+#'   ) +
+#'   coord_cartesian(clip = "off")
 #'
 #' # With curvature, score coloring, and arrows
 #' ggplot(df) +
-#'     geom_link(aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
-#'         curvature = 0.8, height_factor = 0.15, arrow_length = 0.1
-#'     ) +
-#'     coord_cartesian(clip = "off")
+#'   geom_link(aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
+#'     curvature = 0.8, height_factor = 0.15, arrow_length = 0.1
+#'   ) +
+#'   coord_cartesian(clip = "off")
 #' }
 geom_link <- function(
   mapping = NULL,
@@ -158,7 +159,9 @@ GeomLink <- ggproto(
     arrow = NULL,
     na.rm = FALSE
   ) {
-    if (nrow(data) == 0) return(grid::nullGrob())
+    if (nrow(data) == 0) {
+      return(grid::nullGrob())
+    }
 
     # Keep arc_height in data coordinates before transform
     arc_heights_data <- data$arc_height
