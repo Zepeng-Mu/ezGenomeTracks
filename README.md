@@ -4,7 +4,6 @@ Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) an
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub last commit](https://img.shields.io/github/last-commit/Zepeng-Mu/ezGenomeTracks)](https://github.com/Zepeng-Mu/ezGenomeTracks/commits/main)
 
 
 > [!NOTE]
