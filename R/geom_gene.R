@@ -113,7 +113,7 @@ geom_gene <- function(
   position = "identity",
   ...,
   height = NULL,
-  exon_height = 0.75,
+  exon_height = 0.4,
   intron_width = 0.4,
   arrow_length = 0,
   arrow_type = "open",
@@ -210,7 +210,8 @@ GeomGene <- ggplot2::ggproto(
       if ("strand" %in% names(data)) {
         # Create factor with numeric levels but character labels
         data$y <- factor(
-          ifelse(is.na(data$strand) | data$strand == "*",
+          ifelse(
+            is.na(data$strand) | data$strand == "*",
             "Unknown",
             ifelse(data$strand == "+", "plus", "minus")
           ),
@@ -232,10 +233,18 @@ GeomGene <- ggplot2::ggproto(
 
       # Clip exon coordinates if present
       if ("exon_start" %in% names(data)) {
-        data$exon_start <- pmax(data$exon_start, params$clip_to_region[1], na.rm = TRUE)
+        data$exon_start <- pmax(
+          data$exon_start,
+          params$clip_to_region[1],
+          na.rm = TRUE
+        )
       }
       if ("exon_end" %in% names(data)) {
-        data$exon_end <- pmin(data$exon_end, params$clip_to_region[2], na.rm = TRUE)
+        data$exon_end <- pmin(
+          data$exon_end,
+          params$clip_to_region[2],
+          na.rm = TRUE
+        )
       }
 
       # Remove features that are completely outside the region (where xstart >= xend after clipping)
@@ -315,7 +324,9 @@ GeomGene <- ggplot2::ggproto(
         # Handle exon fill: use mapped fill, or colour aesthetic, or exon_fill parameter
         if ("fill" %in% names(exon_data) && !is.na(exon_data$fill[1])) {
           exons$fill <- exon_data$fill
-        } else if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
+        } else if (
+          "colour" %in% names(exon_data) && !is.na(exon_data$colour[1])
+        ) {
           exons$fill <- exon_data$colour
         } else if (!is.null(exon_fill)) {
           exons$fill <- exon_fill
@@ -343,7 +354,9 @@ GeomGene <- ggplot2::ggproto(
         # Handle exon fill: use mapped fill, or colour aesthetic, or exon_fill parameter
         if ("fill" %in% names(exon_data) && !is.na(exon_data$fill[1])) {
           exons$fill <- exon_data$fill
-        } else if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
+        } else if (
+          "colour" %in% names(exon_data) && !is.na(exon_data$colour[1])
+        ) {
           exons$fill <- exon_data$colour
         } else if (!is.null(exon_fill)) {
           exons$fill <- exon_fill
@@ -545,7 +558,7 @@ process_gene_data <- function(
 #' region_gr <- parse_region("chr1:1000000-2000000")
 #' gene_data <- extract_txdb_data(txdb, region_gr)
 #' }
-extract_txdb_data <- function(txdb, region_gr) {
+extract_txdb_data <- function(txdb, org.Hs.eg.db, region_gr) {
   # Check dependencies
   if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
     stop(
@@ -559,6 +572,7 @@ extract_txdb_data <- function(txdb, region_gr) {
   }
 
   # 1. Extract genes in region
+  seqlevels(txdb) <- seqlevels(region_gr)
   all_genes <- GenomicFeatures::genes(txdb)
   region_genes <- subsetByOverlaps(all_genes, region_gr)
 
@@ -571,13 +585,13 @@ extract_txdb_data <- function(txdb, region_gr) {
   gene_symbols <- tryCatch(
     {
       gene_info <- AnnotationDbi::select(
-        txdb,
+        org.Hs.eg.db,
         keys = gene_ids,
-        columns = c("GENEID", "SYMBOL"),
-        keytype = "GENEID"
+        columns = "SYMBOL",
+        keytype = "ENTREZID"
       )
       # Create lookup: gene_id -> gene_symbol
-      setNames(gene_info$SYMBOL, gene_info$GENEID)
+      setNames(gene_info$SYMBOL, gene_info$ENTREZID)
     },
     error = function(e) {
       # Fallback: use gene_id if symbols not available
