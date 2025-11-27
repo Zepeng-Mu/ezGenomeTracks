@@ -64,7 +64,13 @@ granges_to_df <- function(gr, keep.mcols = TRUE) {
 #' )
 #' gr <- df_to_granges(df)
 #' }
-df_to_granges <- function(df, seqnames = "seqnames", start = "start", end = "end", strand = "strand") {
+df_to_granges <- function(
+  df,
+  seqnames = "seqnames",
+  start = "start",
+  end = "end",
+  strand = "strand"
+) {
   if (!all(c(seqnames, start, end) %in% colnames(df))) {
     stop("Data frame must contain columns for seqnames, start, and end")
   }
@@ -158,9 +164,11 @@ get_single_signal <- function(input, region, name = NULL) {
   if (is(input, "data.frame")) {
     # Single track, data frame
     track_data <- input %>%
-      dplyr::filter(seqnames == as.character(region_gr@seqnames),
-                    start >= region_gr@start,
-                    end <= region_gr@end) %>%
+      dplyr::filter(
+        seqnames == as.character(region_gr@seqnames),
+        start >= region_gr@start,
+        end <= region_gr@end
+      ) %>%
       dplyr::mutate(name = name)
   } else if (is(input, "character")) {
     # Single track, file name
@@ -203,18 +211,22 @@ process_signal_input <- function(input, region, track_labels = NULL) {
     # Validate required columns
     required_cols <- c("seqnames", "start", "end", "score")
     if (!all(required_cols %in% colnames(input))) {
-      stop("Data frame must contain columns: ", paste(required_cols, collapse = ", "))
+      stop(
+        "Data frame must contain columns: ",
+        paste(required_cols, collapse = ", ")
+      )
     }
 
     # Filter by region if needed
     region_gr <- parse_region(region)
     filtered_data <- input %>%
-      dplyr::filter(seqnames == as.character(region_gr@seqnames),
-                    start >= region_gr@start,
-                    end <= region_gr@end)
+      dplyr::filter(
+        seqnames == as.character(region_gr@seqnames),
+        start >= region_gr@start,
+        end <= region_gr@end
+      )
 
     return(filtered_data)
-
   } else if (is.character(input)) {
     # Case 2: Character vector input (file paths)
     if (length(input) == 1) {
@@ -225,14 +237,17 @@ process_signal_input <- function(input, region, track_labels = NULL) {
       # Multiple files
       track_data_list <- list()
       for (i in seq_along(input)) {
-        track_name <- ifelse(is.null(track_labels), paste0("Track ", i), track_labels[i])
+        track_name <- ifelse(
+          is.null(track_labels),
+          paste0("Track ", i),
+          track_labels[i]
+        )
         track_data <- get_single_signal(input[i], region, name = track_name)
         track_data$group <- track_name
         track_data_list[[i]] <- track_data
       }
       return(dplyr::bind_rows(track_data_list))
     }
-
   } else if (is.list(input)) {
     # Case 3: List input
     if (is.null(names(input)) && is.null(track_labels)) {
@@ -251,17 +266,24 @@ process_signal_input <- function(input, region, track_labels = NULL) {
         processed_data <- process_signal_input(track_element, region)
         processed_data$track <- track_name
         track_data_list[[i]] <- processed_data
-
       } else if (is.character(track_element)) {
         # Character vector element (multiple files for this track)
         if (length(track_element) == 1) {
           # Single file
-          processed_data <- get_single_signal(track_element, region, name = track_name)
+          processed_data <- get_single_signal(
+            track_element,
+            region,
+            name = track_name
+          )
         } else {
           # Multiple files within this track
           file_data_list <- list()
           for (j in seq_along(track_element)) {
-            file_data <- get_single_signal(track_element[j], region, name = paste0(track_name, "_", j))
+            file_data <- get_single_signal(
+              track_element[j],
+              region,
+              name = paste0(track_name, "_", j)
+            )
             file_data$track <- track_name
             file_data$group <- paste0(track_name, "_", j)
             file_data_list[[j]] <- file_data
@@ -270,7 +292,6 @@ process_signal_input <- function(input, region, track_labels = NULL) {
         }
         processed_data$track <- track_name
         track_data_list[[i]] <- processed_data
-
       } else {
         stop("List elements must be data frames or character vectors")
       }
@@ -278,7 +299,6 @@ process_signal_input <- function(input, region, track_labels = NULL) {
 
     names(track_data_list) <- names(input)
     return(dplyr::bind_rows(track_data_list))
-
   } else {
     stop("Input must be a data frame, character vector, or named list")
   }
@@ -306,7 +326,9 @@ parse_region <- function(region) {
   # Match pattern: chromosome followed by any separator (: _ -) then start and end positions
   matches <- regexpr("^(.+?)[:_-](\\d+)[:_-](\\d+)$", region, perl = TRUE)
   if (matches == -1) {
-    stop("Region must be in the format 'chr*start*end' where * can be :, _, or -")
+    stop(
+      "Region must be in the format 'chr*start*end' where * can be :, _, or -"
+    )
   }
 
   # Extract the matched groups
@@ -349,18 +371,22 @@ parse_region <- function(region) {
 #' )
 #' ylim <- calculate_link_ylim(df, height_factor = 0.15, direction = "down")
 #' }
-calculate_link_ylim <- function(data, height_factor = 0.15, direction = "down") {
+calculate_link_ylim <- function(
+  data,
+  height_factor = 0.15,
+  direction = "down"
+) {
   # Calculate maximum span across all links
   if (!all(c("start1", "start2") %in% colnames(data))) {
     stop("Data must contain 'start1' and 'start2' columns")
   }
-  
+
   max_span <- max(abs(data$start2 - data$start1), na.rm = TRUE)
   max_height <- max_span * height_factor
-  
+
   # Add 20% padding for visual spacing
   padding <- max_height * 0.2
-  
+
   # Set limits based on direction
   # Curves start at y=0 and extend up or down
   if (direction == "down") {

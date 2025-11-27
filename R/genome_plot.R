@@ -6,11 +6,9 @@
 #' @param ... ggplot2 objects representing genome tracks
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param heights Relative heights of the tracks (default: NULL, equal heights)
-#' @param ncol Number of columns for the legend (default: 1)
-#' @param align_tracks Align tracks by x-axis (default: TRUE)
 #' @return A composite plot with stacked tracks
 #' @export
-#' @importFrom aplot plot_list
+#' @importFrom aplot insert_bottom
 #' @examples
 #' \dontrun{
 #' track1 <- ez_coverage("signal.bw", "chr1:1000000-2000000")
@@ -18,13 +16,24 @@
 #' track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
 #' p <- genome_plot(track1, track2, track3, region = "chr1:1000000-2000000")
 #' }
-genome_plot <- function(..., region = NULL, heights = NULL, ncol = 1, align_tracks = TRUE) {
+genome_plot <- function(..., region = NULL, heights = NULL) {
   # Collect the tracks
   tracks <- list(...)
 
   # Check if we have any tracks
   if (length(tracks) == 0) {
     stop("No tracks provided")
+  }
+
+  # Validate that all tracks are ggplot objects
+  for (i in seq_along(tracks)) {
+    if (!inherits(tracks[[i]], "gg") && !inherits(tracks[[i]], "ggplot")) {
+      stop(sprintf(
+        "Track %d is not a valid ggplot object. Got class: %s",
+        i,
+        paste(class(tracks[[i]]), collapse = ", ")
+      ))
+    }
   }
 
   # If region is provided, apply it to all tracks
@@ -34,28 +43,29 @@ genome_plot <- function(..., region = NULL, heights = NULL, ncol = 1, align_trac
     })
   }
 
-  # Stack the tracks using aplot
-  if (align_tracks) {
-    p <- aplot::plot_list(
-      plotlist = tracks,
-      heights = heights,
-      ncol = 1,
-      guides = "collect",
-      legend_ncol = ncol
-    )
-  } else {
-    # If not aligning tracks, just use aplot::plot_list without alignment
-    p <- aplot::plot_list(
-      plotlist = tracks,
-      heights = heights,
-      ncol = 1,
-      guides = "collect",
-      legend_ncol = ncol,
-      align = "none"
-    )
+  # Set default heights if not provided
+  if (is.null(heights)) {
+    heights <- rep(1, length(tracks) - 1)
+  } else if (length(heights) != length(tracks) - 1) {
+    stop("Length of heights must be one less than the number of tracks")
   }
 
-  return(p)
+  # Stack tracks recursively using insert_bottom
+  # Start with the first track
+  combined_plot <- tracks[[1]]
+
+  # Add remaining tracks from bottom to top
+  if (length(tracks) > 1) {
+    for (i in 2:length(tracks)) {
+      combined_plot <- aplot::insert_bottom(
+        combined_plot,
+        tracks[[i]],
+        height = heights[i - 1]
+      )
+    }
+  }
+
+  return(combined_plot)
 }
 
 #' Add a vertical line to a genome track

@@ -605,7 +605,7 @@ ez_gene <- function(
   gene_name = "gene_name",
   y = "strand",
   label = NULL,
-  label_size = 8,
+  label_size = 10,
   label_vjust = -2,
   label_color = "black",
   ...
@@ -685,10 +685,9 @@ ez_gene <- function(
           y = .data$label_y,
           label = .data[[label]]
         ),
-        size = label_size,
+        size = label_size / .pt,
         vjust = effective_vjust,
-        color = label_color,
-        inherit.aes = FALSE
+        fontface = "italic"
       )
   }
 
