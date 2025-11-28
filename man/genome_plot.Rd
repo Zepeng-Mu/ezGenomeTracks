@@ -4,7 +4,7 @@
 \alias{genome_plot}
 \title{Stack multiple genome tracks}
 \usage{
-genome_plot(..., region = NULL, heights = NULL, ncol = 1, align_tracks = TRUE)
+genome_plot(..., region = NULL, heights = NULL)
 }
 \arguments{
 \item{...}{ggplot2 objects representing genome tracks}
@@ -12,10 +12,6 @@ genome_plot(..., region = NULL, heights = NULL, ncol = 1, align_tracks = TRUE)
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
 
 \item{heights}{Relative heights of the tracks (default: NULL, equal heights)}
-
-\item{ncol}{Number of columns for the legend (default: 1)}
-
-\item{align_tracks}{Align tracks by x-axis (default: TRUE)}
 }
 \value{
 A composite plot with stacked tracks

@@ -17,6 +17,7 @@ ez_coverage(
   y_range = NULL,
   alpha = 0.5,
   bin_width = NULL,
+  facet_label_position = c("top", "left"),
   ...
 )
 }
@@ -44,6 +45,8 @@ ez_coverage(
 \item{alpha}{Transparency (default: 0.5)}
 
 \item{bin_width}{Width of bins in base pairs (default: NULL)}
+
+\item{facet_label_position}{Position of facet labels: "top" or "left" (default: "top")}
 
 \item{...}{Additional arguments passed to geom_coverage}
 }

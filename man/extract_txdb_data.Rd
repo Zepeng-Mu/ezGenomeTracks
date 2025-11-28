@@ -4,7 +4,7 @@
 \alias{extract_txdb_data}
 \title{Extract gene data from TxDb object}
 \usage{
-extract_txdb_data(txdb, region_gr)
+extract_txdb_data(txdb, org.Hs.eg.db, region_gr)
 }
 \arguments{
 \item{txdb}{A TxDb object (e.g., TxDb.Hsapiens.UCSC.hg19.knownGene)}

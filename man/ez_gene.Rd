@@ -16,7 +16,7 @@ ez_gene(
   gene_name = "gene_name",
   y = "strand",
   label = NULL,
-  label_size = 8,
+  label_size = 10,
   label_vjust = -2,
   label_color = "black",
   ...

@@ -13,7 +13,7 @@ geom_gene(
   position = "identity",
   ...,
   height = NULL,
-  exon_height = 0.75,
+  exon_height = 0.4,
   intron_width = 0.4,
   arrow_length = 0,
   arrow_type = "open",
