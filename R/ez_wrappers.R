@@ -15,10 +15,11 @@
 #' @param y_range Y-axis range limits (default: NULL)
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
+#' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
 #' @param ... Additional arguments passed to geom_coverage
 #' @return A ggplot2 object
 #' @export
-#' @importFrom ggplot2 ggplot aes scale_y_continuous coord_cartesian labs facet_wrap scale_color_manual scale_fill_manual
+#' @importFrom ggplot2 ggplot aes scale_y_continuous coord_cartesian labs facet_wrap scale_color_manual scale_fill_manual theme element_text
 #' @importFrom dplyr filter mutate bind_rows
 #' @examples
 #' \dontrun{
@@ -55,12 +56,14 @@ ez_coverage <- function(
   y_range = NULL,
   alpha = 0.5,
   bin_width = NULL,
+  facet_label_position = c("top", "left"),
   ...
 ) {
   # Validate inputs
   type <- match.arg(type)
   y_axis_style <- match.arg(y_axis_style)
   color_by <- match.arg(color_by)
+  facet_label_position <- match.arg(facet_label_position)
 
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
@@ -199,7 +202,16 @@ ez_coverage <- function(
 
   # Add faceting if multiple tracks
   if (has_track) {
-    p <- p + ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
+    if (facet_label_position == "left") {
+      p <- p +
+        ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y", strip.position = "left") +
+        ggplot2::theme(
+          strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
+          strip.placement = "outside"
+        )
+    } else {
+      p <- p + ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
+    }
   }
 
   # Apply binning if requested
