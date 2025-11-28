@@ -366,14 +366,15 @@ ez_feature <- function(
 #' Easy Manhattan plot visualization
 #'
 #' This function creates a Manhattan plot for GWAS results.
-#' It is a wrapper around geom_manhattan that provides a simpler interface.
+#' It is a wrapper around geom_manhattan that provides a flexible interface
+#' with support for grouping and multiple tracks.
 #'
 #' @description
 #' This function creates a Manhattan plot from GWAS (Genome-Wide Association Study)
 #' data, which is a standard way to visualize p-values across the genome.
 #'
-#' @param data A data frame containing GWAS results with columns for chromosome,
-#'   position, p-values, and optionally SNP names.
+#' @param input A data frame or named list of data frames containing GWAS results
+#'   with columns for chromosome, position, p-values, and optionally SNP names.
 #' @param chr Character string specifying the column name for chromosome numbers.
 #'   Default: "CHR".
 #' @param bp Character string specifying the column name for base pair positions.
@@ -382,6 +383,12 @@ ez_feature <- function(
 #'   Default: "P".
 #' @param snp Character string specifying the column name for SNP identifiers.
 #'   Default: "SNP".
+#' @param track_labels Optional vector of track labels (used for unnamed list input).
+#'   Default: NULL.
+#' @param group_var Column name for grouping data within a single data frame.
+#'   Default: NULL.
+#' @param color_by Whether colors distinguish "group" or "track".
+#'   Default: "group".
 #' @param logp Logical indicating whether to plot -log10(p-values).
 #'   Default: TRUE.
 #' @param size Numeric value for point size in the plot.
@@ -391,8 +398,9 @@ ez_feature <- function(
 #' @param r2 Numeric vector of r² values for coloring points by linkage
 #'   disequilibrium (LD) with lead variant. Must be same length as number of
 #'   rows in data. Default: NULL.
-#' @param colors Character vector of length 2 specifying colors for
-#'   alternating chromosomes. Default: c("grey", "skyblue").
+#' @param colors Character vector specifying colors. For multi-track or grouped plots,
+#'   this can be a vector of colors. For standard plots, a vector of length 2
+#'   for alternating chromosomes. Default: c("grey", "skyblue").
 #' @param highlight_snps Character vector of SNP IDs to highlight.
 #'   Default: NULL.
 #' @param highlight_color Color for highlighting significant or lead SNPs.
@@ -406,6 +414,7 @@ ez_feature <- function(
 #' @param colorBy Character string specifying the variable to use for coloring points.
 #'   Must be a column name in the data. Default: "chr".
 #' @param y_axis_label Label for the y-axis. Default: `expression(paste("-log"[10], "(P)"))`.
+#' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
 #' @param ... Additional arguments passed to `geom_manhattan()`.
 #'
 #' @return A ggplot2 object containing the Manhattan plot.
@@ -415,15 +424,18 @@ ez_feature <- function(
 #' -log10(p-values) on the y-axis. Points are colored by chromosome and can be
 #' highlighted based on significance or LD with lead variants.
 #'
+#' For multiple tracks (via named list), plots are stacked vertically using facets.
+#' For grouped data (via group_var), colors distinguish different groups within tracks.
+#'
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_point scale_color_manual scale_x_continuous
-#'   scale_y_continuous geom_hline labs theme_minimal theme element_blank
+#'   scale_y_continuous geom_hline labs theme_minimal theme element_blank facet_wrap element_text
 #' @importFrom dplyr mutate arrange group_by ungroup
 #' @importFrom rlang .data
 #'
 #' @examples
 #' \dontrun{
-#' # Basic Manhattan plot
+#' # Basic Manhattan plot from data frame
 #' data(gwas_data)  # Example GWAS data
 #' ez_manhattan(
 #'   gwas_data,
@@ -446,13 +458,35 @@ ez_feature <- function(
 #'   threshold_p = 5e-8,
 #'   threshold_color = "red"
 #' )
+#'
+#' # Single data frame with grouping
+#' df <- data.frame(
+#'   CHR = rep(1:5, each = 20),
+#'   BP = rep(1:20, 5),
+#'   P = runif(100),
+#'   SNP = paste0("rs", 1:100),
+#'   study = rep(c("Study1", "Study2"), 50)
+#' )
+#' ez_manhattan(df, group_var = "study")
+#'
+#' # Named list for stacked tracks
+#' ez_manhattan(
+#'   list(
+#'     "GWAS 1" = gwas_data1,
+#'     "GWAS 2" = gwas_data2,
+#'     "Meta-analysis" = gwas_meta
+#'   )
+#' )
 #' }
 ez_manhattan <- function(
-  data,
+  input,
   chr = "CHR",
   bp = "BP",
   p = "P",
   snp = "SNP",
+  track_labels = NULL,
+  group_var = NULL,
+  color_by = c("group", "track"),
   logp = TRUE,
   size = 0.5,
   lead.snp = NULL,
@@ -465,37 +499,166 @@ ez_manhattan <- function(
   threshold_linetype = 2,
   colorBy = "chr",
   y_axis_label = expression(paste("-log"[10], "(P)")),
+  facet_label_position = c("top", "left"),
   ...
 ) {
-  if (!is.data.frame(data)) {
-    stop("Input 'data' must be a data.frame.")
+  # Validate inputs
+  color_by <- match.arg(color_by)
+  facet_label_position <- match.arg(facet_label_position)
+
+  # Store the p-value column name to avoid confusion with plot variable
+  p_col <- p
+
+  # Default color palette function (same as ez_coverage)
+  get_default_colors <- function(n) {
+    if (n <= 9) {
+      return(c(
+        "#1f4e79",
+        "#d35400",
+        "#27ae60",
+        "#8e44ad",
+        "#f1c40f",
+        "#16a085",
+        "#e74c3c",
+        "#8b4513",
+        "#5d6d7e"
+      )[1:n])
+    } else {
+      return(rainbow(n))
+    }
   }
 
-  # Create the plot with minimal aesthetics
-  p <- ggplot2::ggplot(data) +
-    geom_manhattan(
-      data = data,
+  # Process input using helper function
+  if (is.data.frame(input)) {
+    plotDt <- input
+  } else {
+    plotDt <- process_manhattan_input(
+      input,
       chr = chr,
       bp = bp,
-      p = p,
+      p = p_col,
       snp = snp,
-      logp = logp,
-      size = size,
-      lead.snp = lead.snp,
-      r2 = r2,
-      colors = colors,
-      highlight_snps = highlight_snps,
-      highlight_color = highlight_color,
-      threshold_p = threshold_p,
-      threshold_color = threshold_color,
-      threshold_linetype = threshold_linetype,
-      colorBy = colorBy,
-      y_axis_label = y_axis_label,
-      ...
-    ) +
-    ez_theme()
+      track_labels = track_labels
+    )
+  }
 
-  return(p)
+  # Determine plotting strategy
+  has_track <- "track" %in% colnames(plotDt)
+  has_group <- !is.null(group_var) && group_var %in% colnames(plotDt)
+
+  # Create base plot based on grouping/tracking
+  if (has_group || has_track) {
+    # When we have grouping or multiple tracks, we need to modify the colorBy approach
+    # Note: r2 coloring and group/track coloring are mutually exclusive
+    if (!is.null(r2)) {
+      warning("r2 coloring is not supported with group_var or multiple tracks. Ignoring r2 parameter.")
+      r2 <- NULL
+    }
+
+    # Determine which variable to use for coloring
+    if (has_group && has_track) {
+      # Both track and group exist
+      if (color_by == "group") {
+        color_var <- group_var
+        color_values <- unique(plotDt[[group_var]])
+      } else {
+        color_var <- "track"
+        color_values <- unique(plotDt$track)
+      }
+    } else if (has_group) {
+      # Only group
+      color_var <- group_var
+      color_values <- unique(plotDt[[group_var]])
+    } else {
+      # Only track
+      color_var <- "track"
+      color_values <- unique(plotDt$track)
+    }
+
+    # Get colors for groups/tracks
+    n_colors <- length(color_values)
+    if (length(colors) >= n_colors && !all(colors == c("grey", "skyblue"))) {
+      # User provided custom colors
+      plot_colors <- colors[1:n_colors]
+    } else {
+      # Use default palette
+      plot_colors <- get_default_colors(n_colors)
+    }
+    names(plot_colors) <- color_values
+
+    # For each group/track, create a Manhattan plot layer
+    # We'll use geom_manhattan but need to handle coloring differently
+    plot_obj <- ggplot2::ggplot(plotDt)
+
+    # Add Manhattan layers for each color group
+    for (i in seq_along(color_values)) {
+      val <- color_values[i]
+      subset_data <- plotDt[plotDt[[color_var]] == val, ]
+
+      plot_obj <- plot_obj + geom_manhattan(
+        data = subset_data,
+        chr = chr,
+        bp = bp,
+        p = p_col,
+        snp = snp,
+        logp = logp,
+        size = size,
+        lead.snp = lead.snp,
+        r2 = NULL,  # r2 is disabled for grouped plots
+        colors = rep(plot_colors[val], 2),  # Use single color for this group
+        highlight_snps = highlight_snps,
+        highlight_color = highlight_color,
+        threshold_p = threshold_p,
+        threshold_color = threshold_color,
+        threshold_linetype = threshold_linetype,
+        colorBy = colorBy,
+        y_axis_label = y_axis_label,
+        ...
+      )
+    }
+
+    # Add faceting if multiple tracks
+    if (has_track) {
+      if (facet_label_position == "left") {
+        plot_obj <- plot_obj +
+          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y", strip.position = "left") +
+          ggplot2::theme(
+            strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
+            strip.placement = "outside"
+          )
+      } else {
+        plot_obj <- plot_obj + ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
+      }
+    }
+
+    plot_obj <- plot_obj + ez_theme()
+  } else {
+    # Standard single-track Manhattan plot without grouping
+    plot_obj <- ggplot2::ggplot(plotDt) +
+      geom_manhattan(
+        data = plotDt,
+        chr = chr,
+        bp = bp,
+        p = p_col,
+        snp = snp,
+        logp = logp,
+        size = size,
+        lead.snp = lead.snp,
+        r2 = r2,
+        colors = colors,
+        highlight_snps = highlight_snps,
+        highlight_color = highlight_color,
+        threshold_p = threshold_p,
+        threshold_color = threshold_color,
+        threshold_linetype = threshold_linetype,
+        colorBy = colorBy,
+        y_axis_label = y_axis_label,
+        ...
+      ) +
+      ez_theme()
+  }
+
+  return(plot_obj)
 }
 
 #' Easy gene track visualization

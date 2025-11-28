@@ -304,6 +304,92 @@ process_signal_input <- function(input, region, track_labels = NULL) {
   }
 }
 
+#' Process Manhattan plot input into standardized data frame
+#'
+#' This function converts any input type (data.frame or named list) into a
+#' standardized data frame with consistent columns for Manhattan plot visualization.
+#'
+#' @param input Either a data frame or named list of data frames
+#' @param chr Column name for chromosome (default: "CHR")
+#' @param bp Column name for base pair position (default: "BP")
+#' @param p Column name for p-value (default: "P")
+#' @param snp Column name for SNP identifier (default: "SNP")
+#' @param track_labels Optional vector of track labels (used for unnamed list input)
+#' @return A data frame with standardized columns and optionally track column
+#' @export
+#' @importFrom dplyr bind_rows mutate
+#' @examples
+#' \dontrun{
+#' # Data frame input
+#' df <- data.frame(CHR = 1, BP = 1:100, P = runif(100), SNP = paste0("rs", 1:100))
+#' process_manhattan_input(df)
+#'
+#' # List input
+#' data_list <- list("GWAS1" = df1, "GWAS2" = df2)
+#' process_manhattan_input(data_list)
+#' }
+process_manhattan_input <- function(
+  input,
+  chr = "CHR",
+  bp = "BP",
+  p = "P",
+  snp = "SNP",
+  track_labels = NULL
+) {
+  if (is.data.frame(input)) {
+    # Case 1: Data frame input
+    # Validate required columns
+    if (!chr %in% colnames(input)) {
+      stop("Data frame must contain chromosome column: ", chr)
+    }
+    if (!bp %in% colnames(input)) {
+      stop("Data frame must contain position column: ", bp)
+    }
+    if (!p %in% colnames(input)) {
+      stop("Data frame must contain p-value column: ", p)
+    }
+
+    return(input)
+  } else if (is.list(input)) {
+    # Case 2: List input (named or unnamed)
+    if (is.null(names(input)) && is.null(track_labels)) {
+      names(input) <- paste0("Track ", seq_along(input))
+    } else if (is.null(names(input)) && !is.null(track_labels)) {
+      names(input) <- track_labels
+    }
+
+    track_data_list <- list()
+    for (i in seq_along(input)) {
+      track_name <- names(input)[i]
+      track_element <- input[[i]]
+
+      if (is.data.frame(track_element)) {
+        # Validate required columns
+        if (!chr %in% colnames(track_element)) {
+          stop("Data frame in track '", track_name, "' must contain chromosome column: ", chr)
+        }
+        if (!bp %in% colnames(track_element)) {
+          stop("Data frame in track '", track_name, "' must contain position column: ", bp)
+        }
+        if (!p %in% colnames(track_element)) {
+          stop("Data frame in track '", track_name, "' must contain p-value column: ", p)
+        }
+
+        # Add track column
+        track_element$track <- track_name
+        track_data_list[[i]] <- track_element
+      } else {
+        stop("List elements must be data frames")
+      }
+    }
+
+    names(track_data_list) <- names(input)
+    return(dplyr::bind_rows(track_data_list))
+  } else {
+    stop("Input must be a data frame or named list of data frames")
+  }
+}
+
 #' Parse a genomic region string into a GRanges object
 #'
 #' This function parses a genomic region string in the format "chr:start-end" into a GRanges object.
