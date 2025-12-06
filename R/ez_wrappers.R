@@ -204,7 +204,12 @@ ez_coverage <- function(
   if (has_track) {
     if (facet_label_position == "left") {
       p <- p +
-        ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y", strip.position = "left") +
+        ggplot2::facet_wrap(
+          ~track,
+          ncol = 1,
+          scales = "free_y",
+          strip.position = "left"
+        ) +
         ggplot2::theme(
           strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
           strip.placement = "outside"
@@ -551,7 +556,9 @@ ez_manhattan <- function(
     # When we have grouping or multiple tracks, we need to modify the colorBy approach
     # Note: r2 coloring and group/track coloring are mutually exclusive
     if (!is.null(r2)) {
-      warning("r2 coloring is not supported with group_var or multiple tracks. Ignoring r2 parameter.")
+      warning(
+        "r2 coloring is not supported with group_var or multiple tracks. Ignoring r2 parameter."
+      )
       r2 <- NULL
     }
 
@@ -595,39 +602,46 @@ ez_manhattan <- function(
       val <- color_values[i]
       subset_data <- plotDt[plotDt[[color_var]] == val, ]
 
-      plot_obj <- plot_obj + geom_manhattan(
-        data = subset_data,
-        chr = chr,
-        bp = bp,
-        p = p_col,
-        snp = snp,
-        logp = logp,
-        size = size,
-        lead.snp = lead.snp,
-        r2 = NULL,  # r2 is disabled for grouped plots
-        colors = rep(plot_colors[val], 2),  # Use single color for this group
-        highlight_snps = highlight_snps,
-        highlight_color = highlight_color,
-        threshold_p = threshold_p,
-        threshold_color = threshold_color,
-        threshold_linetype = threshold_linetype,
-        colorBy = colorBy,
-        y_axis_label = y_axis_label,
-        ...
-      )
+      plot_obj <- plot_obj +
+        geom_manhattan(
+          data = subset_data,
+          chr = chr,
+          bp = bp,
+          p = p_col,
+          snp = snp,
+          logp = logp,
+          size = size,
+          lead.snp = lead.snp,
+          r2 = NULL, # r2 is disabled for grouped plots
+          colors = rep(plot_colors[val], 2), # Use single color for this group
+          highlight_snps = highlight_snps,
+          highlight_color = highlight_color,
+          threshold_p = threshold_p,
+          threshold_color = threshold_color,
+          threshold_linetype = threshold_linetype,
+          colorBy = colorBy,
+          y_axis_label = y_axis_label,
+          ...
+        )
     }
 
     # Add faceting if multiple tracks
     if (has_track) {
       if (facet_label_position == "left") {
         plot_obj <- plot_obj +
-          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y", strip.position = "left") +
+          ggplot2::facet_wrap(
+            ~track,
+            ncol = 1,
+            scales = "free_y",
+            strip.position = "left"
+          ) +
           ggplot2::theme(
             strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
             strip.placement = "outside"
           )
       } else {
-        plot_obj <- plot_obj + ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
+        plot_obj <- plot_obj +
+          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
       }
     }
 
@@ -1004,7 +1018,13 @@ ez_link <- function(
     if (use_score) {
       p <- ggplot2::ggplot(plot_data) +
         geom_link(
-          ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
+          ggplot2::aes(
+            x = start1,
+            y = 0,
+            xend = start2,
+            yend = 0,
+            color = score
+          ),
           curvature = curvature,
           height_factor = height_factor,
           direction = direction,
