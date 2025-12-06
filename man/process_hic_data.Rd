@@ -5,33 +5,57 @@
 \title{Process Hi-C data for visualization}
 \usage{
 process_hic_data(
-  file,
-  region,
+  data,
+  region = NULL,
   resolution = 10000,
-  log_transform = TRUE,
-  pseudo_count = 1
+  upper_triangle = FALSE,
+  symmetric = TRUE
 )
 }
 \arguments{
-\item{file}{Path to the Hi-C contact matrix file}
+\item{data}{Input data. Can be:
+\itemize{
+\item A matrix: Dense contact matrix where rows and columns represent bins
+\item A data frame with columns (bin1, bin2, score) or (pos1, pos2, score): Sparse format
+\item A file path: Tab-delimited matrix file with row/column headers
+}}
 
-\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000"). Required for
+file input, optional for data frame/matrix if coordinates are already genomic.}
 
-\item{resolution}{Resolution of the Hi-C data in base pairs (default: 10000)}
+\item{resolution}{Resolution of the Hi-C data in base pairs (default: 10000).
+Used to convert bin indices to genomic coordinates for matrix input.}
 
-\item{log_transform}{Apply log transformation to the values (default: TRUE)}
+\item{upper_triangle}{Logical. If TRUE, only return upper triangle (pos1 <= pos2).
+Useful for triangle visualization. Default: FALSE}
 
-\item{pseudo_count}{Pseudo-count to add before log transformation (default: 1)}
+\item{symmetric}{Logical. If TRUE and data is a matrix, assume it's symmetric and
+extract upper triangle. Default: TRUE}
 }
 \value{
-A data frame with Hi-C contact information
+A data frame with columns:
+\itemize{
+\item pos1: Genomic position of first bin
+\item pos2: Genomic position of second bin
+\item score: Contact frequency/count
+}
 }
 \description{
-This function processes Hi-C data for visualization with geom_hic.
-It formats the data for use with ggplot2.
+This function processes Hi-C data from various input formats for visualization
+with geom_hic or geom_hic_triangle. It handles dense matrices, sparse data frames,
+and file paths.
 }
 \examples{
 \dontrun{
-hic_data <- process_hic_data("contacts.matrix", "chr1:1000000-2000000", resolution = 10000)
+# From a matrix
+mat <- matrix(runif(100), nrow = 10)
+hic_df <- process_hic_data(mat, "chr1:1000000-1100000", resolution = 10000)
+
+# From a sparse data frame
+sparse_df <- data.frame(pos1 = c(1e6, 1e6), pos2 = c(1e6, 1.01e6), score = c(100, 50))
+hic_df <- process_hic_data(sparse_df)
+
+# From a file
+hic_df <- process_hic_data("contacts.matrix", "chr1:1000000-2000000")
 }
 }

@@ -5,11 +5,14 @@
 \title{Easy Manhattan plot visualization}
 \usage{
 ez_manhattan(
-  data,
+  input,
   chr = "CHR",
   bp = "BP",
   p = "P",
   snp = "SNP",
+  track_labels = NULL,
+  group_var = NULL,
+  color_by = c("group", "track"),
   logp = TRUE,
   size = 0.5,
   lead.snp = NULL,
@@ -22,12 +25,13 @@ ez_manhattan(
   threshold_linetype = 2,
   colorBy = "chr",
   y_axis_label = expression(paste("-log"[10], "(P)")),
+  facet_label_position = c("top", "left"),
   ...
 )
 }
 \arguments{
-\item{data}{A data frame containing GWAS results with columns for chromosome,
-position, p-values, and optionally SNP names.}
+\item{input}{A data frame or named list of data frames containing GWAS results
+with columns for chromosome, position, p-values, and optionally SNP names.}
 
 \item{chr}{Character string specifying the column name for chromosome numbers.
 Default: "CHR".}
@@ -40,6 +44,15 @@ Default: "P".}
 
 \item{snp}{Character string specifying the column name for SNP identifiers.
 Default: "SNP".}
+
+\item{track_labels}{Optional vector of track labels (used for unnamed list input).
+Default: NULL.}
+
+\item{group_var}{Column name for grouping data within a single data frame.
+Default: NULL.}
+
+\item{color_by}{Whether colors distinguish "group" or "track".
+Default: "group".}
 
 \item{logp}{Logical indicating whether to plot -log10(p-values).
 Default: TRUE.}
@@ -54,8 +67,9 @@ Default: NULL.}
 disequilibrium (LD) with lead variant. Must be same length as number of
 rows in data. Default: NULL.}
 
-\item{colors}{Character vector of length 2 specifying colors for
-alternating chromosomes. Default: c("grey", "skyblue").}
+\item{colors}{Character vector specifying colors. For multi-track or grouped plots,
+this can be a vector of colors. For standard plots, a vector of length 2
+for alternating chromosomes. Default: c("grey", "skyblue").}
 
 \item{highlight_snps}{Character vector of SNP IDs to highlight.
 Default: NULL.}
@@ -77,6 +91,8 @@ Must be a column name in the data. Default: "chr".}
 
 \item{y_axis_label}{Label for the y-axis. Default: \code{expression(paste("-log"[10], "(P)"))}.}
 
+\item{facet_label_position}{Position of facet labels: "top" or "left" (default: "top")}
+
 \item{...}{Additional arguments passed to \code{geom_manhattan()}.}
 }
 \value{
@@ -88,15 +104,19 @@ data, which is a standard way to visualize p-values across the genome.
 }
 \details{
 This function creates a Manhattan plot for GWAS results.
-It is a wrapper around geom_manhattan that provides a simpler interface.
+It is a wrapper around geom_manhattan that provides a flexible interface
+with support for grouping and multiple tracks.
 
 The function creates a Manhattan plot with chromosomes on the x-axis and
 -log10(p-values) on the y-axis. Points are colored by chromosome and can be
 highlighted based on significance or LD with lead variants.
+
+For multiple tracks (via named list), plots are stacked vertically using facets.
+For grouped data (via group_var), colors distinguish different groups within tracks.
 }
 \examples{
 \dontrun{
-# Basic Manhattan plot
+# Basic Manhattan plot from data frame
 data(gwas_data)  # Example GWAS data
 ez_manhattan(
   gwas_data,
@@ -118,6 +138,25 @@ ez_manhattan(
   highlight_color = "red",
   threshold_p = 5e-8,
   threshold_color = "red"
+)
+
+# Single data frame with grouping
+df <- data.frame(
+  CHR = rep(1:5, each = 20),
+  BP = rep(1:20, 5),
+  P = runif(100),
+  SNP = paste0("rs", 1:100),
+  study = rep(c("Study1", "Study2"), 50)
+)
+ez_manhattan(df, group_var = "study")
+
+# Named list for stacked tracks
+ez_manhattan(
+  list(
+    "GWAS 1" = gwas_data1,
+    "GWAS 2" = gwas_data2,
+    "Meta-analysis" = gwas_meta
+  )
 )
 }
 }
