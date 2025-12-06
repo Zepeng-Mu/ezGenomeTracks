@@ -24,12 +24,27 @@
 #' p <- ggplot(feature_data) +
 #'   geom_feature(aes(xmin = start, xmax = end, fill = score))
 #' }
-geom_feature <- function(mapping = NULL, data = NULL, stat = "identity",
-                         position = "identity", ..., height = 0.8,
-                         color = "#05b1d3", fill = "#05b1d3", alpha = 0.7,
-                         na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
+geom_feature <- function(
+  mapping = NULL,
+  data = NULL,
+  stat = "identity",
+  position = "identity",
+  ...,
+  height = 0.8,
+  color = "#05b1d3",
+  fill = "#05b1d3",
+  alpha = 0.7,
+  na.rm = TRUE,
+  show.legend = NA,
+  inherit.aes = TRUE
+) {
   # Default mapping for features
-  default_aes <- aes(xmin = .data$start, xmax = .data$end, ymin = 0, ymax = height)
+  default_aes <- aes(
+    xmin = .data$start,
+    xmax = .data$end,
+    ymin = 0,
+    ymax = height
+  )
 
   if (is.null(mapping)) {
     mapping <- default_aes
@@ -57,7 +72,9 @@ geom_feature <- function(mapping = NULL, data = NULL, stat = "identity",
 #' @rdname geom_feature
 #' @format NULL
 #' @usage NULL
-GeomFeature <- ggproto("GeomFeature", GeomRect,
+GeomFeature <- ggproto(
+  "GeomFeature",
+  GeomRect,
   required_aes = c("xmin", "xmax"),
   setup_data = function(data, params) {
     # If ymin and ymax are not provided, set them based on height
@@ -68,7 +85,10 @@ GeomFeature <- ggproto("GeomFeature", GeomRect,
     data
   },
   default_aes = aes(
-    colour = "#05b1d3", fill = "#05b1d3",
-    linewidth = 0.5, linetype = 1, alpha = 0.7
+    colour = "#05b1d3",
+    fill = "#05b1d3",
+    linewidth = 0.5,
+    linetype = 1,
+    alpha = 0.7
   )
 )

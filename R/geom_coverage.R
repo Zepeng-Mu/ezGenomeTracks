@@ -40,18 +40,39 @@
 #'   geom_coverage(type = "heatmap") +
 #'   scale_fill_viridis_c()
 #' }
-geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
-                          position = "identity", type = "area", ...,
-                          na.rm = TRUE, show.legend = NA, inherit.aes = TRUE) {
+geom_coverage <- function(
+  mapping = NULL,
+  data = NULL,
+  stat = "identity",
+  position = "identity",
+  type = "area",
+  ...,
+  na.rm = TRUE,
+  show.legend = NA,
+  inherit.aes = TRUE
+) {
   type <- match.arg(type, c("area", "line", "heatmap"))
   if (type == "area") {
-    default_aes <- aes(xmin = .data$start, xmax = .data$end,
-                       ymin = 0, ymax = .data$score)
+    default_aes <- aes(
+      xmin = .data$start,
+      xmax = .data$end,
+      ymin = 0,
+      ymax = .data$score
+    )
   } else if (type == "line") {
-    default_aes <- aes(xmin = .data$start, xmax = .data$end,
-                       ymin = .data$score, ymax = .data$score)
+    default_aes <- aes(
+      xmin = .data$start,
+      xmax = .data$end,
+      ymin = .data$score,
+      ymax = .data$score
+    )
   } else if (type == "heatmap") {
-    default_aes <- aes(x = (.data$start + .data$end) / 2, fill = .data$score, y = 1, height = 1)
+    default_aes <- aes(
+      x = (.data$start + .data$end) / 2,
+      fill = .data$score,
+      y = 1,
+      height = 1
+    )
   }
 
   if (is.null(mapping)) {
@@ -65,13 +86,13 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
   dots <- list(...)
   dots$color <- NULL
   dots$colour <- NULL
-  
+
   # Explicitly set colour to NA in params
   params_list <- utils::modifyList(
     list(
       type = type,
       na.rm = na.rm,
-      colour = NA  # Force no border
+      colour = NA # Force no border
     ),
     dots
   )
@@ -91,13 +112,21 @@ geom_coverage <- function(mapping = NULL, data = NULL, stat = "identity",
 #' @rdname geom_coverage
 #' @format NULL
 #' @usage NULL
-GeomCoverage <- ggproto("GeomCoverage", Geom,
+GeomCoverage <- ggproto(
+  "GeomCoverage",
+  Geom,
   required_aes = c("xmin", "xmax", "ymin", "ymax"),
   setup_params = function(data, params) {
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params
   },
-  draw_panel = function(data, panel_params, coord, type = "area", na.rm = FALSE) {
+  draw_panel = function(
+    data,
+    panel_params,
+    coord,
+    type = "area",
+    na.rm = FALSE
+  ) {
     if (type == "heatmap") {
       # For heatmap, transform xmin/xmax to x and keep y/height
       data$x <- (data$xmin + data$xmax) / 2
@@ -110,7 +139,10 @@ GeomCoverage <- ggproto("GeomCoverage", Geom,
     }
   },
   default_aes = aes(
-    colour = NA, fill = "purple2", linewidth = 0.5, linetype = 1,
+    colour = NA,
+    fill = "purple2",
+    linewidth = 0.5,
+    linetype = 1,
     alpha = 0.7
   )
 )
@@ -133,14 +165,28 @@ GeomCoverage <- ggproto("GeomCoverage", Geom,
 #' p <- ggplot(signal_data, aes(x = start, y = score)) +
 #'   stat_bin_signal(binwidth = 1000)
 #' }
-stat_bin_signal <- function(mapping = NULL, data = NULL, geom = "line",
-                            position = "identity", ..., binwidth = NULL,
-                            bins = 30, summary_fun = mean,
-                            show.legend = NA, inherit.aes = TRUE) {
+stat_bin_signal <- function(
+  mapping = NULL,
+  data = NULL,
+  geom = "line",
+  position = "identity",
+  ...,
+  binwidth = NULL,
+  bins = 30,
+  summary_fun = mean,
+  show.legend = NA,
+  inherit.aes = TRUE
+) {
   ggplot2::stat_summary_bin(
-    mapping = mapping, data = data, geom = geom,
-    position = position, fun = summary_fun, ...,
-    binwidth = binwidth, bins = bins,
-    show.legend = show.legend, inherit.aes = inherit.aes
+    mapping = mapping,
+    data = data,
+    geom = geom,
+    position = position,
+    fun = summary_fun,
+    ...,
+    binwidth = binwidth,
+    bins = bins,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes
   )
 }

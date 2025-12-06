@@ -87,14 +87,21 @@ genome_plot <- function(..., region = NULL, heights = NULL) {
 #' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_vline(track, 1500000)
 #' }
-add_vline <- function(plot, position, color = "red", linewidth = 0.5,
-                      linetype = "dashed", alpha = 0.7) {
-  plot + ggplot2::geom_vline(
-    xintercept = position,
-    linewidth = linewidth,
-    linetype = linetype,
-    alpha = alpha
-  )
+add_vline <- function(
+  plot,
+  position,
+  color = "red",
+  linewidth = 0.5,
+  linetype = "dashed",
+  alpha = 0.7
+) {
+  plot +
+    ggplot2::geom_vline(
+      xintercept = position,
+      linewidth = linewidth,
+      linetype = linetype,
+      alpha = alpha
+    )
 }
 
 #' Add a horizontal line to a genome track
@@ -116,15 +123,22 @@ add_vline <- function(plot, position, color = "red", linewidth = 0.5,
 #' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_hline(track, 10)
 #' }
-add_hline <- function(plot, y, color = "blue", size = 0.5,
-                      linetype = "dashed", alpha = 0.7) {
-  plot + ggplot2::geom_hline(
-    yintercept = y,
-    color = color,
-    size = size,
-    linetype = linetype,
-    alpha = alpha
-  )
+add_hline <- function(
+  plot,
+  y,
+  color = "blue",
+  size = 0.5,
+  linetype = "dashed",
+  alpha = 0.7
+) {
+  plot +
+    ggplot2::geom_hline(
+      yintercept = y,
+      color = color,
+      size = size,
+      linetype = linetype,
+      alpha = alpha
+    )
 }
 
 #' Add a rectangle to a genome track
@@ -148,17 +162,26 @@ add_hline <- function(plot, y, color = "blue", size = 0.5,
 #' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_rect(track, 1200000, 1400000)
 #' }
-add_rect <- function(plot, xmin, xmax, ymin = -Inf, ymax = Inf,
-                      fill = "yellow", alpha = 0.2, color = NA) {
-  plot + ggplot2::geom_rect(
-    xmin = xmin,
-    xmax = xmax,
-    ymin = ymin,
-    ymax = ymax,
-    fill = fill,
-    alpha = alpha,
-    color = color
-  )
+add_rect <- function(
+  plot,
+  xmin,
+  xmax,
+  ymin = -Inf,
+  ymax = Inf,
+  fill = "yellow",
+  alpha = 0.2,
+  color = NA
+) {
+  plot +
+    ggplot2::geom_rect(
+      xmin = xmin,
+      xmax = xmax,
+      ymin = ymin,
+      ymax = ymax,
+      fill = fill,
+      alpha = alpha,
+      color = color
+    )
 }
 
 #' Add text annotation to a genome track
@@ -183,16 +206,26 @@ add_rect <- function(plot, xmin, xmax, ymin = -Inf, ymax = Inf,
 #' track <- ez_coverage("signal.bw", "chr1:1000000-2000000")
 #' track <- add_text(track, 1500000, 20, "Peak")
 #' }
-add_text <- function(plot, x, y, label, color = "black", size = 3,
-                      angle = 0, hjust = 0.5, vjust = 0.5) {
-  plot + ggplot2::geom_text(
-    x = x,
-    y = y,
-    label = label,
-    color = color,
-    size = size,
-    angle = angle,
-    hjust = hjust,
-    vjust = vjust
-  )
+add_text <- function(
+  plot,
+  x,
+  y,
+  label,
+  color = "black",
+  size = 3,
+  angle = 0,
+  hjust = 0.5,
+  vjust = 0.5
+) {
+  plot +
+    ggplot2::geom_text(
+      x = x,
+      y = y,
+      label = label,
+      color = color,
+      size = size,
+      angle = angle,
+      hjust = hjust,
+      vjust = vjust
+    )
 }
