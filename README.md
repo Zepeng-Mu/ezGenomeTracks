@@ -144,10 +144,6 @@ Each `ez_*` can take: - Data frame (as above) - File path (e.g. BED, bedGraph, G
 
 ## Customization
 
-``` r
-track_cov + ez_theme(y_axis_style = "simple")
-```
-
 Control theme variants (`ez_theme()`, track-specific themes), y-axis visibility (`none`, `simple`, `full`), colors (standard ggplot2 scales or custom palettes), and relative track heights in `genome_plot()`.
 
 ## Data Conventions Summary
