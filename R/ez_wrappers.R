@@ -677,39 +677,15 @@ ez_manhattan <- function(
 
 #' Easy gene track visualization
 #'
-#' This function creates a gene track visualization from a GTF/GFF file, TxDb object, or data frame.
-#' It is a wrapper around geom_gene that provides a simpler interface.
-#'
-#' @param data A GTF/GFF file path, TxDb object, or data frame with gene data
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
-#' @param exon_height Height of exons (default: 0.75)
-#' @param intron_width Width of introns (default: 0.4)
-#' @param color Color for both exons and introns (default: "gray50")
-#' @param gene_id Column name for gene ID (default: "gene_id")
-#' @param gene_name Column name for gene name (default: "gene_name")
-#' @param y Column name for the y-axis grouping variable. Default: "strand"
-#' @param ... Additional arguments passed to geom_gene
-#' @return A ggplot2 object
-#' @export
-#' @importFrom ggplot2 ggplot aes
-#' @importFrom methods is
-#' @examples
-#' \dontrun{
-#' # Using a GTF file
-#' track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
-#'
-#' # Using a TxDb object
-#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-#' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-#' track2 <- ez_gene(txdb, "chr1:1000000-2000000")
-#' }
-#' Create a gene track from genomic annotations
-#'
 #' @description
 #' This function creates a gene track visualization from genomic annotations,
 #' supporting various input formats including GTF/GFF files, TxDb objects, and
 #' data frames. It automatically handles gene structure visualization with
 #' exons, introns, and strand information.
+#'
+#' By default, when `y = "strand"`, genes are colored by strand: plus strand
+#' uses `"darkgreen"` and minus strand uses `"orange2"`. To use uniform colors
+#' instead, explicitly set `exon_color`, `exon_fill`, and `intron_color`.
 #'
 #' @param data Input data source, which can be:
 #'   - A file path to a GTF/GFF file
@@ -717,19 +693,25 @@ ez_manhattan <- function(
 #'   - A data frame with gene annotation data
 #' @param region Genomic region to display in the format "chr:start-end".
 #'   Example: "chr1:1000000-2000000"
-#' @param exon_height Relative height of exons (0 to 1). Default: 0.75
+#' @param exon_height Relative height of exons (0 to 1). Default: 0.4
 #' @param intron_width Line width for introns. Default: 0.4
-#' @param exon_color Border color for exons. Default: "gray50"
-#' @param exon_fill Fill color for exons. Default: "gray50"
-#' @param intron_color Color for intron lines. Default: "gray50"
+#' @param exon_color Border color for exons. Default: NULL (uses strand-based colors
+#'   when `y = "strand"`, otherwise "gray50")
+#' @param exon_fill Fill color for exons. Default: NULL (uses strand-based colors
+#'   when `y = "strand"`, otherwise "gray50")
+#' @param intron_color Color for intron lines. Default: NULL (uses strand-based colors
+#'   when `y = "strand"`, otherwise "gray50")
 #' @param gene_id Column name for gene identifiers. Default: "gene_id"
 #' @param gene_name Column name for gene symbols/names. Default: "gene_name"
+#' @param y Column name for the y-axis grouping variable. Default: "strand"
 #' @param label Column name to use for text labels. If NULL (default), no labels
 #'   are displayed. Set to a column name (e.g., "gene_name") to show labels.
 #' @param label_size Size of text labels. Default: 3
-#' @param label_color Color of text labels. If NULL (default), uses exon_fill color
-#'   to match the gene coloring.
-#' @param ... Additional arguments passed to `geom_gene()`
+#' @param label_color Color of text labels. If NULL (default), uses strand-based
+#'   colors when `y = "strand"`, otherwise uses exon_fill color.
+#' @param ... Additional arguments passed to `geom_gene()`. Note that `color`
+#'   and `colour` arguments are ignored; use `exon_color`, `exon_fill`, and
+#'   `intron_color` instead.
 #'
 #' @return A ggplot2 object representing the gene track.
 #'
@@ -746,6 +728,7 @@ ez_manhattan <- function(
 #' - Automatic y-axis separation by the specified y variable
 #'
 #' @export
+#' @importFrom ggplot2 ggplot aes scale_colour_identity scale_fill_identity
 #' @importFrom GenomicFeatures exonsBy transcriptsBy
 #' @importFrom IRanges IRanges
 #' @importFrom GenomicRanges GRanges
@@ -754,7 +737,7 @@ ez_manhattan <- function(
 #'
 #' @examples
 #' \dontrun{
-#' # From a GTF file
+#' # From a GTF file (default strand-based coloring)
 #' track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
 #'
 #' # From a TxDb object
@@ -762,7 +745,7 @@ ez_manhattan <- function(
 #' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 #' track2 <- ez_gene(txdb, "chr1:1000000-2000000")
 #'
-#' # With custom styling
+#' # With custom uniform styling (overrides strand-based colors)
 #' track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
 #'   exon_fill = "steelblue",
 #'   exon_color = "navy",
@@ -776,7 +759,7 @@ ez_manhattan <- function(
 #'   label_size = 3
 #' )
 #'
-#' # With custom y-axis grouping by transcript
+#' # With custom y-axis grouping by transcript (uses gray50 uniform color)
 #' track5 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
 #'   y = "transcript_id"
 #' )
@@ -786,9 +769,9 @@ ez_gene <- function(
   region,
   exon_height = 0.4,
   intron_width = 0.4,
-  exon_color = "gray50",
-  exon_fill = "gray50",
-  intron_color = "gray50",
+  exon_color = NULL,
+  exon_fill = NULL,
+  intron_color = NULL,
   gene_id = "gene_id",
   gene_name = "gene_name",
   y = "strand",
@@ -797,6 +780,33 @@ ez_gene <- function(
   label_color = NULL,
   ...
 ) {
+  # Filter out 'color' and 'colour' from ... to prevent them from overriding
+
+  # exon_color, exon_fill, and intron_color
+
+  dots <- list(...)
+  dots <- dots[!names(dots) %in% c("color", "colour")]
+
+  # Determine if we should use strand-based coloring
+
+  # This is the default when y = "strand" and no explicit colors are provided
+
+  use_strand_colors <- y == "strand" &&
+    is.null(exon_color) &&
+    is.null(exon_fill) &&
+    is.null(intron_color)
+
+  # Define strand color palette
+  strand_colors <- c("+" = "green4", "-" = "orange2", "Unknown" = "gray50")
+
+  # Set default colors if not using strand-based coloring
+
+  if (!use_strand_colors) {
+    if (is.null(exon_color)) exon_color <- "gray50"
+    if (is.null(exon_fill)) exon_fill <- "gray50"
+    if (is.null(intron_color)) intron_color <- "gray50"
+  }
+
   # Parse the region
   region_gr <- parse_region(region)
 
@@ -870,18 +880,75 @@ ez_gene <- function(
     gene_data$xend[gene_idx] <- pmin(gene_data$xend[gene_idx], region_limits[2])
   }
 
-  # Create the plot
-  p <- ggplot2::ggplot(gene_data) +
-    geom_gene(
-      ggplot2::aes(xstart = xstart, xend = xend, y = .data[[y]], type = type),
-      exon_height = exon_height,
-      intron_width = intron_width,
-      exon_color = exon_color,
-      exon_fill = exon_fill,
-      intron_color = intron_color,
-      clip_to_region = region_limits,
-      ...
+  # Create the plot with strand-based coloring or uniform colors
+
+  if (use_strand_colors) {
+    # Ensure strand column exists and has proper factor levels
+
+    if (!"strand" %in% names(gene_data)) {
+      stop("Strand column not found in gene data. Cannot use strand-based coloring.")
+    }
+
+    # Add resolved color values directly to the data based on strand
+    # This bypasses ggplot2's scale system for more reliable color application
+    gene_data$strand_color <- ifelse(
+      gene_data$strand == "+", strand_colors["+"],
+      ifelse(gene_data$strand == "-", strand_colors["-"], strand_colors["Unknown"])
     )
+
+    # Build geom_gene call with aes mapping to the resolved color values
+
+    geom_call <- do.call(
+      geom_gene,
+      c(
+        list(
+          mapping = ggplot2::aes(
+            xstart = xstart,
+            xend = xend,
+            y = .data[[y]],
+            type = type,
+            colour = strand_color,
+            fill = strand_color
+          ),
+          exon_height = exon_height,
+          intron_width = intron_width,
+          clip_to_region = region_limits
+        ),
+        dots
+      )
+    )
+
+    p <- ggplot2::ggplot(gene_data) +
+      geom_call +
+      ggplot2::scale_colour_identity() +
+      ggplot2::scale_fill_identity()
+  } else {
+    # Uniform coloring
+
+    geom_call <- do.call(
+      geom_gene,
+      c(
+        list(
+          mapping = ggplot2::aes(
+            xstart = xstart,
+            xend = xend,
+            y = .data[[y]],
+            type = type
+          ),
+          exon_height = exon_height,
+          intron_width = intron_width,
+          exon_color = exon_color,
+          exon_fill = exon_fill,
+          intron_color = intron_color,
+          clip_to_region = region_limits
+        ),
+        dots
+      )
+    )
+
+    p <- ggplot2::ggplot(gene_data) +
+      geom_call
+  }
 
   # Add labels if requested
   if (!is.null(label) && label %in% names(gene_data)) {
@@ -911,22 +978,62 @@ ez_gene <- function(
     # Add a small offset (0.05) to create spacing between exon and label
     label_data$label_y <- label_data$label_y_num + (exon_height / 2) + 0.05
 
-    # Use exon_fill for label color if not specified
-    effective_label_color <- if (is.null(label_color)) exon_fill else label_color
+    # Handle label color: use explicit label_color, or strand-based colors, or exon_fill
 
-    p <- p +
-      ggplot2::geom_text(
-        data = label_data,
-        ggplot2::aes(
-          x = .data$label_x,
-          y = .data$label_y,
-          label = .data[[label]]
-        ),
-        size = label_size,
-        vjust = 0,
-        color = effective_label_color,
-        fontface = "italic"
+    if (!is.null(label_color)) {
+      # Explicit label color provided
+
+      p <- p +
+        ggplot2::geom_text(
+          data = label_data,
+          ggplot2::aes(
+            x = .data$label_x,
+            y = .data$label_y,
+            label = .data[[label]]
+          ),
+          size = label_size,
+          vjust = 0,
+          color = label_color,
+          fontface = "italic"
+        )
+    } else if (use_strand_colors) {
+      # Use strand-based colors for labels
+
+      label_data$strand_color <- ifelse(
+        label_data$strand == "+", strand_colors["+"],
+        ifelse(label_data$strand == "-", strand_colors["-"], strand_colors["Unknown"])
       )
+      p <- p +
+        ggplot2::geom_text(
+          data = label_data,
+          ggplot2::aes(
+            x = .data$label_x,
+            y = .data$label_y,
+            label = .data[[label]],
+            colour = strand_color
+          ),
+          size = label_size,
+          vjust = 0,
+          fontface = "italic"
+        ) +
+        ggplot2::scale_colour_identity()
+    } else {
+      # Use exon_fill for label color
+
+      p <- p +
+        ggplot2::geom_text(
+          data = label_data,
+          ggplot2::aes(
+            x = .data$label_x,
+            y = .data$label_y,
+            label = .data[[label]]
+          ),
+          size = label_size,
+          vjust = 0,
+          color = exon_fill,
+          fontface = "italic"
+        )
+    }
   }
 
   # Apply theme and scale
@@ -1132,5 +1239,8 @@ utils::globalVariables(c(
   "count",
   "track",
   "start",
-  "end"
+  "end",
+  "strand_color",
+  "xstart",
+  "xend"
 ))

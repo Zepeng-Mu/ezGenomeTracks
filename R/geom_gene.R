@@ -598,13 +598,13 @@ extract_txdb_data <- function(txdb, org.Hs.eg.db, region_gr) {
   gene_symbols <- tryCatch(
     {
       gene_info <- AnnotationDbi::select(
-        txdb,
+        org.Hs.eg.db,
         keys = gene_ids,
-        columns = c("GENEID", "SYMBOL"),
-        keytype = "GENEID"
+        columns = "SYMBOL",
+        keytype = "ENTREZID"
       )
       # Create lookup: gene_id -> gene_symbol
-      setNames(gene_info$SYMBOL, gene_info$GENEID)
+      setNames(gene_info$SYMBOL, gene_info$ENTREZID)
     },
     error = function(e) {
       # Fallback: use gene_id if symbols not available

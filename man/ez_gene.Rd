@@ -9,16 +9,15 @@ ez_gene(
   region,
   exon_height = 0.4,
   intron_width = 0.4,
-  exon_color = "gray50",
-  exon_fill = "gray50",
-  intron_color = "gray50",
+  exon_color = NULL,
+  exon_fill = NULL,
+  intron_color = NULL,
   gene_id = "gene_id",
   gene_name = "gene_name",
   y = "strand",
   label = NULL,
-  label_size = 10,
-  label_vjust = -2,
-  label_color = "black",
+  label_size = 3,
+  label_color = NULL,
   ...
 )
 }
@@ -33,15 +32,18 @@ ez_gene(
 \item{region}{Genomic region to display in the format "chr:start-end".
 Example: "chr1:1000000-2000000"}
 
-\item{exon_height}{Relative height of exons (0 to 1). Default: 0.75}
+\item{exon_height}{Relative height of exons (0 to 1). Default: 0.4}
 
 \item{intron_width}{Line width for introns. Default: 0.4}
 
-\item{exon_color}{Border color for exons. Default: "gray50"}
+\item{exon_color}{Border color for exons. Default: NULL (uses strand-based colors
+when \code{y = "strand"}, otherwise "gray50")}
 
-\item{exon_fill}{Fill color for exons. Default: "gray50"}
+\item{exon_fill}{Fill color for exons. Default: NULL (uses strand-based colors
+when \code{y = "strand"}, otherwise "gray50")}
 
-\item{intron_color}{Color for intron lines. Default: "gray50"}
+\item{intron_color}{Color for intron lines. Default: NULL (uses strand-based colors
+when \code{y = "strand"}, otherwise "gray50")}
 
 \item{gene_id}{Column name for gene identifiers. Default: "gene_id"}
 
@@ -54,18 +56,14 @@ are displayed. Set to a column name (e.g., "gene_name") to show labels.}
 
 \item{label_size}{Size of text labels. Default: 3}
 
-\item{label_vjust}{Vertical adjustment for labels. Negative values place labels
-above genes. Default: -1.5. Automatically adjusted based on exon_height.}
+\item{label_color}{Color of text labels. If NULL (default), uses strand-based
+colors when \code{y = "strand"}, otherwise uses exon_fill color.}
 
-\item{label_color}{Color of text labels. Default: "black"}
-
-\item{...}{Additional arguments passed to \code{geom_gene()}}
-
-\item{color}{Color for both exons and introns (default: "gray50")}
+\item{...}{Additional arguments passed to \code{geom_gene()}. Note that \code{color}
+and \code{colour} arguments are ignored; use \code{exon_color}, \code{exon_fill}, and
+\code{intron_color} instead.}
 }
 \value{
-A ggplot2 object
-
 A ggplot2 object representing the gene track.
 }
 \description{
@@ -73,11 +71,12 @@ This function creates a gene track visualization from genomic annotations,
 supporting various input formats including GTF/GFF files, TxDb objects, and
 data frames. It automatically handles gene structure visualization with
 exons, introns, and strand information.
+
+By default, when \code{y = "strand"}, genes are colored by strand: plus strand
+uses \code{"darkgreen"} and minus strand uses \code{"orange2"}. To use uniform colors
+instead, explicitly set \code{exon_color}, \code{exon_fill}, and \code{intron_color}.
 }
 \details{
-This function creates a gene track visualization from a GTF/GFF file, TxDb object, or data frame.
-It is a wrapper around geom_gene that provides a simpler interface.
-
 The function automatically processes different input types:
 \itemize{
 \item For GTF/GFF files: Uses rtracklayer to import and process the data
@@ -95,18 +94,7 @@ The visualization includes:
 }
 \examples{
 \dontrun{
-# Using a GTF file
-track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
-
-# Using a TxDb object
-library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-track2 <- ez_gene(txdb, "chr1:1000000-2000000")
-}
-Create a gene track from genomic annotations
-
-\dontrun{
-# From a GTF file
+# From a GTF file (default strand-based coloring)
 track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
 
 # From a TxDb object
@@ -114,7 +102,7 @@ library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 track2 <- ez_gene(txdb, "chr1:1000000-2000000")
 
-# With custom styling
+# With custom uniform styling (overrides strand-based colors)
 track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
   exon_fill = "steelblue",
   exon_color = "navy",
@@ -128,7 +116,7 @@ track4 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
   label_size = 3
 )
 
-# With custom y-axis grouping by transcript
+# With custom y-axis grouping by transcript (uses gray50 uniform color)
 track5 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
   y = "transcript_id"
 )
