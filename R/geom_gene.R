@@ -524,14 +524,27 @@ process_gene_data <- function(
     names(exons)[names(exons) == "start"] <- "exon_start"
     names(exons)[names(exons) == "end"] <- "exon_end"
     exons$type <- "exon"
-    result <- merge(
-      genes,
+
+    # Create exon rows with gene coordinates
+    exon_rows <- merge(
+      genes[, c(gene_id, gene_name, "strand", "start", "end")],
       exons,
       by = c(gene_id, gene_name, "strand"),
-      all.x = TRUE
+      all.y = TRUE
     )
-    result$xstart <- result$start
-    result$xend <- result$end
+    exon_rows$type <- "exon"
+    exon_rows$xstart <- exon_rows$start
+    exon_rows$xend <- exon_rows$end
+
+    # Keep gene body rows separate (type = "gene", no exon coordinates)
+    gene_rows <- genes
+    gene_rows$exon_start <- NA
+    gene_rows$exon_end <- NA
+    gene_rows$xstart <- gene_rows$start
+    gene_rows$xend <- gene_rows$end
+
+    # Combine gene body rows and exon rows
+    result <- rbind(gene_rows, exon_rows)
     return(result)
   } else {
     genes$xstart <- genes$start
@@ -585,13 +598,13 @@ extract_txdb_data <- function(txdb, org.Hs.eg.db, region_gr) {
   gene_symbols <- tryCatch(
     {
       gene_info <- AnnotationDbi::select(
-        org.Hs.eg.db,
+        txdb,
         keys = gene_ids,
-        columns = "SYMBOL",
-        keytype = "ENTREZID"
+        columns = c("GENEID", "SYMBOL"),
+        keytype = "GENEID"
       )
       # Create lookup: gene_id -> gene_symbol
-      setNames(gene_info$SYMBOL, gene_info$ENTREZID)
+      setNames(gene_info$SYMBOL, gene_info$GENEID)
     },
     error = function(e) {
       # Fallback: use gene_id if symbols not available

@@ -727,9 +727,8 @@ ez_manhattan <- function(
 #' @param label Column name to use for text labels. If NULL (default), no labels
 #'   are displayed. Set to a column name (e.g., "gene_name") to show labels.
 #' @param label_size Size of text labels. Default: 3
-#' @param label_vjust Vertical adjustment for labels. Negative values place labels
-#'   above genes. Default: -1.5. Automatically adjusted based on exon_height.
-#' @param label_color Color of text labels. Default: "black"
+#' @param label_color Color of text labels. If NULL (default), uses exon_fill color
+#'   to match the gene coloring.
 #' @param ... Additional arguments passed to `geom_gene()`
 #'
 #' @return A ggplot2 object representing the gene track.
@@ -794,9 +793,8 @@ ez_gene <- function(
   gene_name = "gene_name",
   y = "strand",
   label = NULL,
-  label_size = 10,
-  label_vjust = -2,
-  label_color = "black",
+  label_size = 3,
+  label_color = NULL,
   ...
 ) {
   # Parse the region
@@ -832,6 +830,46 @@ ez_gene <- function(
     stop("Data must be a file path, TxDb object, or data frame")
   }
 
+  # Ensure gene body rows exist for each gene
+
+  # This is critical for partial gene overlaps where the intron line must be drawn
+  gene_rows <- gene_data[gene_data$type == "gene", ]
+  exon_rows <- gene_data[gene_data$type == "exon", ]
+
+  if (nrow(gene_rows) == 0 && nrow(exon_rows) > 0) {
+    # No gene body rows - create them from exon data
+    # Group by gene_id (or other identifier) and create gene body spanning all exons
+    gene_bodies <- do.call(rbind, lapply(
+      split(exon_rows, exon_rows[[gene_id]]),
+      function(g) {
+        # Get the min/max coordinates across all exon-related columns
+        x_min <- min(c(g$xstart, g$exon_start), na.rm = TRUE)
+        x_max <- max(c(g$xend, g$exon_end), na.rm = TRUE)
+
+        # Create a single gene body row
+        body_row <- g[1, , drop = FALSE]
+        body_row$type <- "gene"
+        body_row$xstart <- x_min
+        body_row$xend <- x_max
+        body_row$start <- x_min
+        body_row$end <- x_max
+        # Clear exon-specific columns for gene body
+        if ("exon_start" %in% names(body_row)) body_row$exon_start <- NA
+        if ("exon_end" %in% names(body_row)) body_row$exon_end <- NA
+        body_row
+      }
+    ))
+    gene_data <- rbind(gene_bodies, gene_data)
+  }
+
+  # Clip gene body coordinates to region limits
+  # This ensures intron lines span the visible region for partial overlaps
+  gene_idx <- gene_data$type == "gene"
+  if (any(gene_idx)) {
+    gene_data$xstart[gene_idx] <- pmax(gene_data$xstart[gene_idx], region_limits[1])
+    gene_data$xend[gene_idx] <- pmin(gene_data$xend[gene_idx], region_limits[2])
+  }
+
   # Create the plot
   p <- ggplot2::ggplot(gene_data) +
     geom_gene(
@@ -858,13 +896,23 @@ ez_gene <- function(
     # Calculate label positions (middle of gene)
     label_data$label_x <- (label_data$xstart + label_data$xend) / 2
 
-    # Use the specified y column (it's already a factor that matches the y-axis)
-    label_data$label_y <- label_data[[y]]
+    # Convert y to numeric for offset calculation
+    # The discrete y-axis maps factor levels to integers (1, 2, 3, ...)
+    y_values <- label_data[[y]]
+    if (is.factor(y_values)) {
+      label_data$label_y_num <- as.numeric(y_values)
+    } else {
+      label_data$label_y_num <- as.numeric(as.factor(y_values))
+    }
 
-    # Calculate effective vjust accounting for exon height
-    # vjust < 0 places text above the point; we need more negative values for taller exons
-    # Adjust by the exon height to ensure labels clear the top of exons
-    effective_vjust <- label_vjust - exon_height
+    # Position label directly above the top of exons
+    # Exons are centered on the y-position with height = exon_height * track_height
+    # Track height is 1 in the coordinate system, so top of exon is at y + exon_height/2
+    # Add a small offset (0.05) to create spacing between exon and label
+    label_data$label_y <- label_data$label_y_num + (exon_height / 2) + 0.05
+
+    # Use exon_fill for label color if not specified
+    effective_label_color <- if (is.null(label_color)) exon_fill else label_color
 
     p <- p +
       ggplot2::geom_text(
@@ -874,8 +922,9 @@ ez_gene <- function(
           y = .data$label_y,
           label = .data[[label]]
         ),
-        size = label_size / .pt,
-        vjust = effective_vjust,
+        size = label_size,
+        vjust = 0,
+        color = effective_label_color,
         fontface = "italic"
       )
   }
