@@ -158,3 +158,55 @@ ez_feature_theme <- function(...) {
       axis.ticks.y = ggplot2::element_blank()
     )
 }
+
+#' A theme for sashimi plots
+#'
+#' This function creates a theme specifically for sashimi plots that combine
+#' coverage tracks with junction arcs. It provides extra vertical margin for
+#' arc labels and handles y-axis display options.
+#'
+#' @param y_axis_style Style of the y-axis. Options are "none", "simple", and "full".
+#'   Default: "none"
+#' @param ... Additional arguments passed to ez_theme
+#' @return A ggplot2 theme object
+#' @export
+#' @importFrom ggplot2 theme element_blank margin
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' p <- ggplot(data, aes(x = start, y = score)) +
+#'   geom_area() +
+#'   ez_sashimi_theme()
+#' }
+ez_sashimi_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
+  y_axis_style <- match.arg(y_axis_style)
+
+  if (y_axis_style == "none") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_blank(),
+        axis.line.y = ggplot2::element_blank(),
+        axis.text.y = ggplot2::element_blank(),
+        # Extra margins for arc labels
+        plot.margin = ggplot2::margin(10, 5, 10, 5)
+      )
+  } else if (y_axis_style == "simple") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_blank(),
+        axis.line.y = ggplot2::element_blank(),
+        axis.text.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(10, 5, 10, 5)
+      )
+  } else if (y_axis_style == "full") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(10, 5, 10, 5)
+      )
+  }
+
+  return(theme)
+}

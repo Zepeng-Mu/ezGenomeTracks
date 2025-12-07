@@ -67,17 +67,17 @@ for (i in 1:gene_count) {
     gene_id = gene_id[i],
     gene_name = gene_name[i]
   )
-  
+
   # Create 2-5 exons per gene
   exon_count <- sample(2:5, 1)
   exon_width <- sample(100:500, exon_count, replace = TRUE)
-  
+
   # Distribute exons along the gene
   gene_length <- gene_end[i] - gene_start[i]
   exon_positions <- sort(sample(seq(0, gene_length - max(exon_width)), exon_count))
   exon_start <- gene_start[i] + exon_positions
   exon_end <- exon_start + exon_width
-  
+
   # Create exon features
   exon_rows <- data.frame(
     seqnames = chrom,
@@ -88,7 +88,7 @@ for (i in 1:gene_count) {
     gene_id = gene_id[i],
     gene_name = gene_name[i]
   )
-  
+
   # Combine gene and exon features
   example_genes <- rbind(example_genes, gene_row, exon_rows)
 }
@@ -155,12 +155,31 @@ example_hic <- data.frame(
   count = count
 )
 
+# Create example junction data for sashimi plots
+# Junctions represent splice sites with start = donor site, end = acceptor site
+# Score represents the number of reads supporting the junction
+junction_count <- 8
+
+# Create junctions that correspond to the gene exon structure
+# These junctions connect exons within the genes defined above
+junction_start <- c(1011500, 1025000, 1038500, 1052000, 1065500, 1078000, 1090000, 1095000)
+junction_end <- c(1013000, 1027500, 1041000, 1055000, 1068000, 1081500, 1093500, 1098500)
+junction_score <- c(45, 120, 78, 95, 210, 65, 150, 35)
+
+example_junctions <- data.frame(
+  seqnames = chrom,
+  start = junction_start,
+  end = junction_end,
+  score = junction_score
+)
+
 # Save the example datasets using usethis
 usethis::use_data(example_signal, overwrite = TRUE)
 usethis::use_data(example_peaks, overwrite = TRUE)
 usethis::use_data(example_genes, overwrite = TRUE)
 usethis::use_data(example_interactions, overwrite = TRUE)
 usethis::use_data(example_hic, overwrite = TRUE)
+usethis::use_data(example_junctions, overwrite = TRUE)
 
 # Also save some example files in inst/extdata for demonstration
 
@@ -223,6 +242,16 @@ write.table(
   quote = FALSE
 )
 
+# Save example junction data for sashimi plots
+write.table(
+  example_junctions[, c("seqnames", "start", "end", "score")],
+  file = "inst/extdata/example_junctions.bed",
+  sep = "\t",
+  row.names = FALSE,
+  col.names = FALSE,
+  quote = FALSE
+)
+
 # Create a README file for the example data
 readme_content <- "# Example Data for ezGenomeTracks
 
@@ -233,6 +262,7 @@ This directory contains example data files for demonstrating the ezGenomeTracks 
 - example_genes.gtf: A GTF-like file containing gene annotations
 - example_interactions.bedpe: A BEDPE-like file containing genomic interactions
 - example_hic.matrix: A matrix file containing Hi-C contact data
+- example_junctions.bed: A BED-like file containing splice junctions for sashimi plots
 
 These files are used in the package vignettes and examples.
 "

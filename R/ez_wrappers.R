@@ -1222,6 +1222,258 @@ ez_link <- function(
   }
 }
 
+#' Easy sashimi plot visualization
+#'
+#' This function creates a sashimi plot combining coverage tracks with splice junction arcs.
+#' It is commonly used for RNA-seq data to visualize both read coverage and splicing events.
+#'
+#' @param coverage_data Coverage input: a data frame with seqnames, start, end, score columns,
+#'   or a file path to a bedGraph/bigWig file
+#' @param junction_data Junction input: a data frame with seqnames, start, end, score columns,
+#'   or a file path to a BED file. start/end represent the splice junction donor/acceptor sites.
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param coverage_fill Fill color for coverage area. Default: "steelblue"
+#' @param junction_direction Direction of junction arcs: "alternate" (default, odd junctions up,
+#'   even down), "up" (all arcs above coverage), or "down" (all arcs below zero line)
+#' @param junction_curvature Curvature of junction arcs (0-1). Higher values create more
+#'   pronounced curves. Default: 0.5
+#' @param height_factor Height of arcs as proportion of genomic distance span.
+#'   Higher values create taller arcs. Default: 0.15
+#' @param junction_color Color for junction arcs. Default: "gray50"
+#' @param alpha Transparency for both coverage and junction arcs (0-1). Default: 0.5
+#' @param score_transform Transformation for junction scores when mapping to line width:
+#'   "identity" (no transformation), "log10", or "sqrt". Default: "identity"
+#' @param linewidth_range Range of line widths for junction arcs, mapped from score.
+#'   Default: c(0.5, 3)
+#' @param show_labels Logical, whether to show score labels at arc centers. Default: TRUE
+#' @param label_size Font size for score labels. Default: 3
+#' @param label_color Color for score labels. Default: "black"
+#' @param y_axis_style Y-axis style: "none", "simple", or "full". Default: "none"
+#' @param ... Additional arguments passed to geom_coverage
+#'
+#' @return A ggplot2 object representing the sashimi plot
+#'
+#' @details
+#' Sashimi plots combine two visual elements:
+#' \itemize{
+#'   \item Coverage track: Shows read depth across the region as a filled area
+#'   \item Junction arcs: Connect splice donor and acceptor sites, with line width
+#'     proportional to the number of supporting reads (score)
+#' }
+#'
+#' For "up" direction, arc endpoints are positioned at the coverage height at those
+#' positions. For "down" direction, arcs extend below the zero line. The "alternate"
+#' mode assigns alternating directions to junctions sorted by start position, which
+#' helps reduce visual overlap.
+#'
+#' Junction scores are mapped to line width using the specified transformation.
+#' Use "log10" or "sqrt" for data with wide score ranges to prevent very thick lines.
+#'
+#' @export
+#' @importFrom ggplot2 ggplot aes geom_text scale_linewidth_continuous coord_cartesian labs
+#' @importFrom dplyr mutate
+#'
+#' @examples
+#' \dontrun{
+#' # Basic sashimi plot
+#' coverage <- data.frame(
+#'   seqnames = "chr1", start = 1:100, end = 2:101, score = c(runif(30, 5, 10),
+#'     rep(0, 20), runif(50, 5, 10))
+#' )
+#' junctions <- data.frame(
+#'   seqnames = "chr1", start = c(30), end = c(50), score = c(15)
+#' )
+#' ez_sashimi(coverage, junctions, "chr1:1-100")
+#'
+#' # With log-transformed scores and custom colors
+#' ez_sashimi(
+#'   coverage, junctions, "chr1:1-100",
+#'   coverage_fill = "darkblue",
+#'   junction_color = "red",
+#'   score_transform = "log10",
+#'   junction_direction = "up"
+#' )
+#'
+#' # From files
+#' ez_sashimi(
+#'   "coverage.bedgraph",
+#'   "junctions.bed",
+#'   "chr1:1000000-2000000",
+#'   show_labels = TRUE
+#' )
+#' }
+ez_sashimi <- function(
+  coverage_data,
+  junction_data,
+  region,
+  coverage_fill = "steelblue",
+  junction_direction = c("alternate", "up", "down"),
+  junction_curvature = 0.5,
+  height_factor = 0.15,
+  junction_color = "gray50",
+  alpha = 0.5,
+  score_transform = c("identity", "log10", "sqrt"),
+  linewidth_range = c(0.5, 3),
+  show_labels = TRUE,
+  label_size = 3,
+  label_color = "black",
+  y_axis_style = c("none", "simple", "full"),
+  ...
+) {
+  # Validate inputs
+  junction_direction <- match.arg(junction_direction)
+  score_transform <- match.arg(score_transform)
+  y_axis_style <- match.arg(y_axis_style)
+
+  stopifnot(
+    "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
+    "region must be provided" = !missing(region),
+    "linewidth_range must be a numeric vector of length 2" = is.numeric(linewidth_range) && length(linewidth_range) == 2
+  )
+
+  chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
+
+  # Process data using helper function
+  processed <- process_sashimi_data(
+    coverage_data = coverage_data,
+    junction_data = junction_data,
+    region = region,
+    junction_direction = junction_direction
+  )
+
+  coverage_df <- processed$coverage_df
+  junction_df <- processed$junction_df
+
+  # Apply score transformation for linewidth mapping
+  if (nrow(junction_df) > 0) {
+    junction_df <- junction_df %>%
+      dplyr::mutate(
+        score_transformed = switch(
+          score_transform,
+          "identity" = score,
+          "log10" = log10(score + 1),
+          "sqrt" = sqrt(score)
+        )
+      )
+  }
+
+  # Start building the plot with coverage layer
+  p <- ggplot2::ggplot() +
+    geom_coverage(
+      data = coverage_df,
+      ggplot2::aes(xmin = start, xmax = end, ymin = 0, ymax = score),
+      fill = coverage_fill,
+      alpha = alpha,
+      ...
+    )
+
+  # Add junction arcs if there are any
+  if (nrow(junction_df) > 0) {
+    # Split junctions by direction for proper arc rendering
+    junctions_up <- junction_df[junction_df$arc_direction == "up", ]
+    junctions_down <- junction_df[junction_df$arc_direction == "down", ]
+
+    # Add upward arcs
+    if (nrow(junctions_up) > 0) {
+      p <- p +
+        geom_link(
+          data = junctions_up,
+          ggplot2::aes(
+            x = start1,
+            y = y_start,
+            xend = start2,
+            yend = y_end,
+            linewidth = score_transformed
+          ),
+          curvature = junction_curvature,
+          height_factor = height_factor,
+          direction = "up",
+          color = junction_color,
+          alpha = alpha
+        )
+    }
+
+    # Add downward arcs
+    if (nrow(junctions_down) > 0) {
+      p <- p +
+        geom_link(
+          data = junctions_down,
+          ggplot2::aes(
+            x = start1,
+            y = y_start,
+            xend = start2,
+            yend = y_end,
+            linewidth = score_transformed
+          ),
+          curvature = junction_curvature,
+          height_factor = height_factor,
+          direction = "down",
+          color = junction_color,
+          alpha = alpha
+        )
+    }
+
+    # Add linewidth scale
+    p <- p +
+      ggplot2::scale_linewidth_continuous(
+        range = linewidth_range,
+        name = if (score_transform == "identity") "Junction\nReads" else paste0("Junction\nReads\n(", score_transform, ")")
+      )
+
+    # Add score labels at arc centers if requested
+    if (show_labels) {
+      # Calculate label positions at arc centers
+      junction_df <- junction_df %>%
+        dplyr::mutate(
+          label_x = (start1 + start2) / 2,
+          # For label y-position, estimate arc peak height
+          # Arc height is proportional to span * height_factor
+          arc_span = abs(start2 - start1),
+          arc_peak = arc_span * height_factor,
+          label_y = ifelse(
+            arc_direction == "up",
+            (y_start + y_end) / 2 + arc_peak,
+            -arc_peak
+          ),
+          # Adjust vjust based on direction for better label placement
+          label_vjust = ifelse(arc_direction == "up", -0.3, 1.3)
+        )
+
+      p <- p +
+        ggplot2::geom_text(
+          data = junction_df,
+          ggplot2::aes(x = label_x, y = label_y, label = score),
+          color = label_color,
+          size = label_size,
+          vjust = junction_df$label_vjust
+        )
+    }
+  }
+
+  # Calculate y-axis limits to accommodate both coverage and arcs
+  max_coverage <- max(coverage_df$score, na.rm = TRUE)
+  if (nrow(junction_df) > 0) {
+    max_arc_height <- max(abs(junction_df$start2 - junction_df$start1) * height_factor, na.rm = TRUE)
+    has_up_arcs <- any(junction_df$arc_direction == "up")
+    has_down_arcs <- any(junction_df$arc_direction == "down")
+
+    y_upper <- max_coverage + if (has_up_arcs) max_arc_height * 1.5 else max_coverage * 0.1
+    y_lower <- if (has_down_arcs) -(max_arc_height * 1.5) else 0
+  } else {
+    y_upper <- max_coverage * 1.1
+    y_lower <- 0
+  }
+
+  # Apply theme and scales
+  p <- p +
+    ez_sashimi_theme(y_axis_style = y_axis_style) +
+    scale_x_genome_region(region) +
+    ggplot2::coord_cartesian(ylim = c(y_lower, y_upper), clip = "off") +
+    ggplot2::labs(x = paste0("Chr", chr))
+
+  return(p)
+}
+
 # Declare global variables used in aes() mappings to avoid R CMD check notes
 utils::globalVariables(c(
   "type",
@@ -1230,6 +1482,13 @@ utils::globalVariables(c(
   "start1",
   "start2",
   "score",
+  "score_transformed",
+  "y_start",
+  "y_end",
+  "arc_direction",
+  "arc_span",
+  "arc_peak",
+  "label_vjust",
   "resolution",
   "log_transform",
   "low",

@@ -76,3 +76,19 @@
 #' }
 #' @source Simulated data
 "example_hic" <- NULL
+
+#' Example splice junction data for sashimi plots
+#'
+#' A small example dataset containing splice junctions for RNA-seq sashimi plot
+#' visualization. Each row represents a splice junction with donor and acceptor
+#' sites and the number of supporting reads.
+#'
+#' @format A data frame with 8 rows and 4 variables:
+#' \describe{
+#'   \item{seqnames}{Chromosome name}
+#'   \item{start}{Splice donor site position (5' end of intron)}
+#'   \item{end}{Splice acceptor site position (3' end of intron)}
+#'   \item{score}{Number of reads supporting the junction}
+#' }
+#' @source Simulated data
+"example_junctions" <- NULL
