@@ -49,8 +49,8 @@ geom_manhattan <- function(
   }
 
   # Prepare data
-  plot_data <- data %>%
-    dplyr::select(CHR = .data[[chr]], BP = .data[[bp]], P = .data[[p]]) %>%
+  plot_data <- data |>
+    dplyr::select(CHR = .data[[chr]], BP = .data[[bp]], P = .data[[p]]) |>
     dplyr::arrange(CHR, BP)
 
   if (!is.null(data[[snp]])) {
@@ -65,29 +65,29 @@ geom_manhattan <- function(
   }
 
   if (logp) {
-    plot_data <- plot_data %>% dplyr::mutate(logp = -log10(.data$P))
+    plot_data <- plot_data |> dplyr::mutate(logp = -log10(.data$P))
   } else {
-    plot_data <- plot_data %>% dplyr::mutate(logp = .data$P)
+    plot_data <- plot_data |> dplyr::mutate(logp = .data$P)
   }
 
   if (length(unique(plot_data$CHR)) > 1) {
     # https://danielroelfs.com/posts/how-i-create-manhattan-plots-using-ggplot
-    data_cum <- plot_data %>%
-      dplyr::group_by(CHR) %>%
-      dplyr::summarise(max_BP = max(BP)) %>%
-      dplyr::mutate(BP_add = dplyr::lag(cumsum(max_BP), default = 0)) %>%
+    data_cum <- plot_data |>
+      dplyr::group_by(CHR) |>
+      dplyr::summarise(max_BP = max(BP)) |>
+      dplyr::mutate(BP_add = dplyr::lag(cumsum(max_BP), default = 0)) |>
       dplyr::select(CHR, BP_add)
 
-    plot_data <- plot_data %>%
-      dplyr::inner_join(data_cum, by = "CHR") %>%
+    plot_data <- plot_data |>
+      dplyr::inner_join(data_cum, by = "CHR") |>
       dplyr::mutate(BP = BP + BP_add)
 
     # Calculate chromosome midpoints for x-axis labels
-    axis_df <- plot_data %>%
-      dplyr::group_by(CHR) %>%
+    axis_df <- plot_data |>
+      dplyr::group_by(CHR) |>
       dplyr::summarize(center = mean(BP))
   } else {
-    axis_df <- plot_data %>%
+    axis_df <- plot_data |>
       dplyr::mutate(center = .data$BP)
   }
 
@@ -198,7 +198,7 @@ geom_manhattan <- function(
 
   # Add highlighted points in a more efficient way
   if (!is.null(lead.snp) && !is.null(plot_data$SNP)) {
-    highlight_data <- plot_data %>% dplyr::filter(.data$SNP %in% lead.snp)
+    highlight_data <- plot_data |> dplyr::filter(.data$SNP %in% lead.snp)
     if (nrow(highlight_data) > 0) {
       layer_list$lead_snps <- ggplot2::geom_point(
         data = highlight_data,
@@ -212,10 +212,10 @@ geom_manhattan <- function(
 
   # Add additional highlight SNPs
   if (!is.null(highlight_snps)) {
-    highlight_data <- highlight_snps %>%
-      dplyr::select(CHR = .data[[chr]], BP = .data[[bp]], P = .data[[p]]) %>%
-      dplyr::mutate(logp = -log10(.data$P)) %>%
-      dplyr::inner_join(plot_data %>% dplyr::select(CHR, BP), by = c("CHR", "BP"))
+    highlight_data <- highlight_snps |>
+      dplyr::select(CHR = .data[[chr]], BP = .data[[bp]], P = .data[[p]]) |>
+      dplyr::mutate(logp = -log10(.data$P)) |>
+      dplyr::inner_join(plot_data |> dplyr::select(CHR, BP), by = c("CHR", "BP"))
 
     if (nrow(highlight_data) > 0) {
       layer_list$highlight_snps <- ggplot2::geom_point(

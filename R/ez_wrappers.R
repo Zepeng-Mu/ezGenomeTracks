@@ -1349,7 +1349,7 @@ ez_sashimi <- function(
 
   # Apply score transformation for linewidth mapping
   if (nrow(junction_df) > 0) {
-    junction_df <- junction_df %>%
+    junction_df <- junction_df |>
       dplyr::mutate(
         score_transformed = switch(
           score_transform,
@@ -1430,7 +1430,7 @@ ez_sashimi <- function(
     # Add score labels at arc centers if requested
     if (show_labels) {
       # Calculate label positions at arc centers
-      junction_df <- junction_df %>%
+      junction_df <- junction_df |>
         dplyr::mutate(
           label_x = (start1 + start2) / 2,
           # For label y-position, estimate arc peak height

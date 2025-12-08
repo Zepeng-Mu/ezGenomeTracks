@@ -163,16 +163,16 @@ get_single_signal <- function(input, region, name = NULL) {
   region_gr <- parse_region(region = region)
   if (is(input, "data.frame")) {
     # Single track, data frame
-    track_data <- input %>%
+    track_data <- input |>
       dplyr::filter(
         seqnames == as.character(region_gr@seqnames),
         start >= region_gr@start,
         end <= region_gr@end
-      ) %>%
+      ) |>
       dplyr::mutate(name = name)
   } else if (is(input, "character")) {
     # Single track, file name
-    track_data <- import_genomic_data(input, which = region_gr) %>%
+    track_data <- import_genomic_data(input, which = region_gr) |>
       dplyr::mutate(name = name)
   }
 
@@ -219,7 +219,7 @@ process_signal_input <- function(input, region, track_labels = NULL) {
 
     # Filter by region if needed
     region_gr <- parse_region(region)
-    filtered_data <- input %>%
+    filtered_data <- input |>
       dplyr::filter(
         seqnames == as.character(region_gr@seqnames),
         start >= region_gr@start,
@@ -483,7 +483,7 @@ process_sashimi_data <- function(
     if (!all(required_cols %in% colnames(coverage_data))) {
       stop("Coverage data frame must contain columns: ", paste(required_cols, collapse = ", "))
     }
-    coverage_df <- coverage_data %>%
+    coverage_df <- coverage_data |>
       dplyr::filter(
         seqnames == as.character(region_gr@seqnames),
         end >= GenomicRanges::start(region_gr),
@@ -501,7 +501,7 @@ process_sashimi_data <- function(
     if (!all(required_cols %in% colnames(junction_data))) {
       stop("Junction data frame must contain columns: ", paste(required_cols, collapse = ", "))
     }
-    junction_df <- junction_data %>%
+    junction_df <- junction_data |>
       dplyr::filter(
         seqnames == as.character(region_gr@seqnames),
         end >= GenomicRanges::start(region_gr),
@@ -523,8 +523,8 @@ if (nrow(junction_df) == 0) {
   }
 
   # Sort junctions by start position and assign direction
-  junction_df <- junction_df %>%
-    dplyr::arrange(start) %>%
+  junction_df <- junction_df |>
+    dplyr::arrange(start) |>
     dplyr::mutate(
       arc_direction = if (junction_direction == "alternate") {
         ifelse(dplyr::row_number() %% 2 == 1, "up", "down")
@@ -545,7 +545,7 @@ if (nrow(junction_df) == 0) {
   }
 
   # Calculate y-positions for arc endpoints
-  junction_df <- junction_df %>%
+  junction_df <- junction_df |>
     dplyr::mutate(
       y_start = ifelse(
         arc_direction == "up",
