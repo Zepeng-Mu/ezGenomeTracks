@@ -1306,14 +1306,14 @@ ez_sashimi <- function(
   coverage_data,
   junction_data,
   region,
-  coverage_fill = "steelblue",
+  coverage_fill = "purple3",
   junction_direction = c("alternate", "up", "down"),
-  junction_curvature = 0.5,
-  height_factor = 0.15,
-  junction_color = "gray50",
-  alpha = 0.5,
+  junction_curvature = 0.05,
+  height_factor = 0.05,
+  junction_color = "purple3",
+  alpha = 1,
   score_transform = c("identity", "log10", "sqrt"),
-  linewidth_range = c(0.5, 3),
+  linewidth_range = c(0.1, 1.5),
   show_labels = TRUE,
   label_size = 3,
   label_color = "black",
@@ -1328,7 +1328,10 @@ ez_sashimi <- function(
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
     "region must be provided" = !missing(region),
-    "linewidth_range must be a numeric vector of length 2" = is.numeric(linewidth_range) && length(linewidth_range) == 2
+    "linewidth_range must be a numeric vector of length 2" = is.numeric(
+      linewidth_range
+    ) &&
+      length(linewidth_range) == 2
   )
 
   chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
@@ -1417,7 +1420,11 @@ ez_sashimi <- function(
     p <- p +
       ggplot2::scale_linewidth_continuous(
         range = linewidth_range,
-        name = if (score_transform == "identity") "Junction\nReads" else paste0("Junction\nReads\n(", score_transform, ")")
+        name = if (score_transform == "identity") {
+          "Junction\nReads"
+        } else {
+          paste0("Junction\nReads\n(", score_transform, ")")
+        }
       )
 
     # Add score labels at arc centers if requested
@@ -1453,11 +1460,15 @@ ez_sashimi <- function(
   # Calculate y-axis limits to accommodate both coverage and arcs
   max_coverage <- max(coverage_df$score, na.rm = TRUE)
   if (nrow(junction_df) > 0) {
-    max_arc_height <- max(abs(junction_df$start2 - junction_df$start1) * height_factor, na.rm = TRUE)
+    max_arc_height <- max(
+      abs(junction_df$start2 - junction_df$start1) * height_factor,
+      na.rm = TRUE
+    )
     has_up_arcs <- any(junction_df$arc_direction == "up")
     has_down_arcs <- any(junction_df$arc_direction == "down")
 
-    y_upper <- max_coverage + if (has_up_arcs) max_arc_height * 1.5 else max_coverage * 0.1
+    y_upper <- max_coverage +
+      if (has_up_arcs) max_arc_height * 1.5 else max_coverage * 0.1
     y_lower <- if (has_down_arcs) -(max_arc_height * 1.5) else 0
   } else {
     y_upper <- max_coverage * 1.1
