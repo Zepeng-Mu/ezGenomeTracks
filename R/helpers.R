@@ -181,18 +181,25 @@ get_single_signal <- function(input, region, name = NULL) {
 
 #' Process signal input into standardized data frame
 #'
-#' This function converts any input type (data.frame, character vector, or list)
+#' This function converts any input type (GRanges, data.frame, character vector, or list)
 #' into a standardized data frame with consistent columns for signal visualization.
 #'
-#' @param input Either a data frame, character vector of file paths, or named list
+#' @param input A GRanges object, data frame, character vector of file paths, or named list.
+#'   GRanges objects are automatically converted to data frames.
 #' @param region A genomic region string in the format "chr:start-end"
 #' @param track_labels Optional vector of track labels (used for character vector input)
 #' @return A data frame with standardized columns: seqnames, start, end, score,
 #'   and optionally track and group columns
 #' @export
 #' @importFrom dplyr bind_rows mutate filter
+#' @importFrom methods is
 #' @examples
 #' \dontrun{
+#' # GRanges input
+#' library(GenomicRanges)
+#' gr <- GRanges(seqnames = "chr1", ranges = IRanges(1:100, 1:100), score = rnorm(100))
+#' process_signal_input(gr, "chr1:1-100")
+#'
 #' # Data frame input
 #' df <- data.frame(seqnames = "chr1", start = 1:100, end = 1:100, score = rnorm(100))
 #' process_signal_input(df, "chr1:1-100")
@@ -206,6 +213,11 @@ get_single_signal <- function(input, region, name = NULL) {
 #' process_signal_input(data_list, "chr1:1-100")
 #' }
 process_signal_input <- function(input, region, track_labels = NULL) {
+  if (methods::is(input, "GRanges")) {
+    # Case 0: GRanges input - convert to data frame and process
+    input <- granges_to_df(input)
+  }
+
   if (is.data.frame(input)) {
     # Case 1: Data frame input
     # Validate required columns

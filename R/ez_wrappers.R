@@ -3,7 +3,7 @@
 #' This function creates a coverage track visualization from various input types.
 #' It provides a flexible interface with support for grouping and multiple tracks.
 #'
-#' @param input A data frame, character vector of file paths, or named list of data sources
+#' @param input A GRanges object, data frame, character vector of file paths, or named list of data sources.
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param track_labels Optional vector of track labels (used for character vector input)
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
@@ -23,6 +23,15 @@
 #' @importFrom dplyr filter mutate bind_rows
 #' @examples
 #' \dontrun{
+#' # From a GRanges object
+#' library(GenomicRanges)
+#' gr <- GRanges(
+#'   seqnames = "chr1",
+#'   ranges = IRanges(start = 1:100, end = 1:100),
+#'   score = rnorm(100)
+#' )
+#' ez_coverage(gr, "chr1:1-100")
+#'
 #' # Single data frame with grouping
 #' df <- data.frame(
 #'   seqnames = "chr1", start = 1:100, end = 1:100,
@@ -93,12 +102,8 @@ ez_coverage <- function(
     }
   }
 
-  # Process input using helper function
-  if (is.data.frame(input)) {
-    plotDt <- input
-  } else {
-    plotDt <- process_signal_input(input, region, track_labels)
-  }
+  # Process input using helper function (handles GRanges, data.frame, character, list)
+  plotDt <- process_signal_input(input, region, track_labels)
 
   # Determine plotting strategy
   has_track <- "track" %in% colnames(plotDt)
