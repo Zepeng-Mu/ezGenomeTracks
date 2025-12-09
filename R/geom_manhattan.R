@@ -29,7 +29,7 @@
 #' @param snp Name of the SNP identifier column in `data` (default: "SNP" or "snp").
 #' @param logp Logical. If TRUE (default), -log10() transformation is applied to p-values.
 #' @param size Point size (default: 0.5).
-#' @param color Default point color for regional mode when colorBy is not "r2" (default: "grey50").
+#' @param color Default point color for regional mode when color_by is not "r2" (default: "grey50").
 #' @param lead_snp Vector of SNP IDs to highlight (also accepts lead.snp for backward compatibility).
 #' @param r2 Vector of R-squared values for linkage disequilibrium (LD) coloring. Should be in same order as data rows.
 #' @param colors Vector of colors to use for alternating chromosome colors in genome-wide mode (default: c("grey", "skyblue")).
@@ -39,7 +39,7 @@
 #' @param threshold_p A numeric value for the p-value threshold to draw a horizontal line (e.g., 5e-8).
 #' @param threshold_color Color for the threshold line (default: "red").
 #' @param threshold_linetype Linetype for the threshold line (default: 2).
-#' @param colorBy Character string indicating how points should be colored. Options:
+#' @param color_by Character string indicating how points should be colored. Options:
 #'   - "chr": Alternating chromosome colors (genome-wide mode only, ignored in regional mode)
 #'   - "r2": Continuous color based on R-squared values (requires r2 parameter)
 #'   - "none": Single color specified by `color` parameter
@@ -61,11 +61,11 @@ geom_manhattan <- function(
     lead_snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
     highlight_snps = NULL, highlight_color = "purple", highlight_shape = 18,
     threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
-    colorBy = c("auto", "chr", "r2", "none"),
+    color_by = c("auto", "chr", "r2", "none"),
     x_axis_label = NULL, y_axis_label = NULL, ...
 ) {
   mode <- match.arg(mode)
-  colorBy <- match.arg(colorBy)
+  color_by <- match.arg(color_by)
 
   # Validate input data
   if (is.null(data)) stop("Data cannot be NULL.")
@@ -158,21 +158,21 @@ geom_manhattan <- function(
     is_regional <- mode == "regional"
   }
 
-  # Handle colorBy for regional mode
+  # Handle color_by for regional mode
 
-  if (colorBy == "auto") {
+  if (color_by == "auto") {
     if (is_regional) {
-      colorBy <- if (!is.null(r2)) "r2" else "none"
+      color_by <- if (!is.null(r2)) "r2" else "none"
     } else {
-      colorBy <- "chr"
+      color_by <- "chr"
     }
   }
 
   # Warn if chr coloring requested in regional mode
 
-  if (is_regional && colorBy == "chr" && n_chr == 1) {
-    message("colorBy='chr' is ignored in regional mode (single chromosome). Using 'none'.")
-    colorBy <- "none"
+  if (is_regional && color_by == "chr" && n_chr == 1) {
+    message("color_by='chr' is ignored in regional mode (single chromosome). Using 'none'.")
+    color_by <- "none"
   }
 
   # Process based on mode
@@ -201,23 +201,23 @@ geom_manhattan <- function(
   # Default mapping
  default_mapping <- aes(x = .data$BP, y = .data$logp)
 
-  # Create mapping based on colorBy option
+  # Create mapping based on color_by option
   if (!is.null(mapping) && inherits(mapping, "uneval")) {
     user_mapping <- mapping
   } else {
     user_mapping <- aes()
   }
 
-  # Apply color mapping based on colorBy option
-  if (colorBy == "chr" && !is_regional) {
+  # Apply color mapping based on color_by option
+  if (color_by == "chr" && !is_regional) {
     color_mapping <- aes(color = .data$color_group)
-  } else if (colorBy == "r2") {
+  } else if (color_by == "r2") {
     if (is.null(plot_data$r2_value)) {
-      stop("r2 values must be provided in 'data' or via the 'r2' parameter when colorBy is 'r2'.")
+      stop("r2 values must be provided in 'data' or via the 'r2' parameter when color_by is 'r2'.")
     }
     color_mapping <- aes(color = .data$r2_value)
   } else {
-    # colorBy == "none" or regional without r2
+    # color_by == "none" or regional without r2
     color_mapping <- NULL
   }
 
@@ -239,7 +239,7 @@ geom_manhattan <- function(
 
   # Main points layer
   point_params <- list(na.rm = na.rm, size = size, ...)
-  if (colorBy == "none" || (is_regional && is.null(color_mapping))) {
+  if (color_by == "none" || (is_regional && is.null(color_mapping))) {
     point_params$color <- color
   }
 
@@ -254,10 +254,10 @@ geom_manhattan <- function(
     params = point_params
   )
 
-  # Add color scales based on colorBy
-  if (colorBy == "chr" && !is_regional) {
+  # Add color scales based on color_by
+  if (color_by == "chr" && !is_regional) {
     layer_list$color_scale <- ggplot2::scale_color_manual(values = colors, guide = "none")
-  } else if (colorBy == "r2") {
+  } else if (color_by == "r2") {
     layer_list$color_scale <- ggplot2::scale_color_gradientn(
       colors = c("blue2", "skyblue", "green", "orange", "red2"),
       values = scales::rescale(c(0, 0.2, 0.4, 0.6, 0.8, 1)),

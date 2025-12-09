@@ -404,13 +404,11 @@ ez_feature <- function(
 #'   Default: NULL.
 #' @param group_var Column name for grouping data within a single data frame.
 #'   Default: NULL.
-#' @param color_by Whether colors distinguish "group" or "track".
-#'   Default: "group".
 #' @param logp Logical indicating whether to plot -log10(p-values).
 #'   Default: TRUE.
 #' @param size Numeric value for point size in the plot.
 #'   Default: 0.5.
-#' @param color Default point color for regional mode when colorBy is not "r2".
+#' @param color Default point color for regional mode when color_by is not "r2".
 #'   Default: "grey50".
 #' @param lead_snp Character string or vector of SNP IDs to highlight as the lead variant(s).
 #'   Default: NULL.
@@ -430,7 +428,7 @@ ez_feature <- function(
 #'   Default: "red".
 #' @param threshold_linetype Linetype for the significance threshold line.
 #'   Default: 2 (dashed).
-#' @param colorBy Character string specifying how points should be colored:
+#' @param color_by Character string specifying how points should be colored:
 #'   - "auto": Auto-detect (chr for genome-wide, r2 if available for regional, else none)
 #'   - "chr": Alternating chromosome colors (genome-wide mode only)
 #'   - "r2": Continuous color based on R² values (requires r2 parameter)
@@ -459,7 +457,7 @@ ez_feature <- function(
 #'   cumulative positions.
 #'
 #' For LD-based coloring (LocusZoom style), provide `r2` values and set
-#' `colorBy = "r2"`.
+#' `color_by = "r2"`.
 #'
 #' For multiple tracks (via named list), plots are stacked vertically using facets.
 #' For grouped data (via group_var), colors distinguish different groups within tracks.
@@ -488,7 +486,7 @@ ez_feature <- function(
 #'   gwas_data,
 #'   region = "chr1:1000000-2000000",
 #'   r2 = gwas_data$r2,  # LD values
-#'   colorBy = "r2",
+#'   color_by = "r2",
 #'   lead_snp = "rs123456"
 #' )
 #'
@@ -533,7 +531,6 @@ ez_manhattan <- function(
   snp = NULL,
   track_labels = NULL,
   group_var = NULL,
-  color_by = c("group", "track"),
   logp = TRUE,
   size = 0.5,
   color = "grey50",
@@ -545,7 +542,7 @@ ez_manhattan <- function(
   threshold_p = NULL,
   threshold_color = "red",
   threshold_linetype = 2,
-  colorBy = c("auto", "chr", "r2", "none"),
+  color_by = c("auto", "chr", "r2", "none"),
   y_axis_style = c("none", "simple", "full"),
   y_axis_label = expression(paste("-log"[10], "(P)")),
   facet_label_position = c("top", "left"),
@@ -553,11 +550,6 @@ ez_manhattan <- function(
 ) {
   # Validate inputs
   color_by <- match.arg(color_by)
-  # Note: colorBy has choices defined in function signature, validated separately
-  colorBy <- match.arg(colorBy)
-  if (!colorBy %in% c("auto", "chr", "r2", "none")) {
-    stop("colorBy must be one of: 'auto', 'chr', 'r2', 'none'")
-  }
   y_axis_style <- match.arg(y_axis_style)
   facet_label_position <- match.arg(facet_label_position)
 
@@ -652,7 +644,7 @@ ez_manhattan <- function(
 
   # Create base plot based on grouping/tracking
   if (has_group || has_track) {
-    # When we have grouping or multiple tracks, we need to modify the colorBy approach
+    # When we have grouping or multiple tracks, we need to modify the color_by approach
     # Note: r2 coloring and group/track coloring are mutually exclusive
     if (!is.null(r2)) {
       warning(
@@ -662,17 +654,8 @@ ez_manhattan <- function(
     }
 
     # Determine which variable to use for coloring
-    if (has_group && has_track) {
-      # Both track and group exist
-      if (color_by == "group") {
-        color_var <- group_var
-        color_values <- unique(plotDt[[group_var]])
-      } else {
-        color_var <- "track"
-        color_values <- unique(plotDt$track)
-      }
-    } else if (has_group) {
-      # Only group
+    # Priority: group_var if present, otherwise track
+    if (has_group) {
       color_var <- group_var
       color_values <- unique(plotDt[[group_var]])
     } else {
@@ -720,7 +703,7 @@ ez_manhattan <- function(
           threshold_p = threshold_p,
           threshold_color = threshold_color,
           threshold_linetype = threshold_linetype,
-          colorBy = if (colorBy == "auto") "none" else colorBy,
+          color_by = if (color_by == "auto") "none" else color_by,
           y_axis_label = y_axis_label,
           ...
         )
@@ -773,7 +756,7 @@ ez_manhattan <- function(
         threshold_p = threshold_p,
         threshold_color = threshold_color,
         threshold_linetype = threshold_linetype,
-        colorBy = colorBy,
+        color_by = color_by,
         y_axis_label = y_axis_label,
         ...
       )
