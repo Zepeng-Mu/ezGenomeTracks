@@ -554,6 +554,7 @@ ez_manhattan <- function(
   # Validate inputs
   color_by <- match.arg(color_by)
   # Note: colorBy has choices defined in function signature, validated separately
+  colorBy <- match.arg(colorBy)
   if (!colorBy %in% c("auto", "chr", "r2", "none")) {
     stop("colorBy must be one of: 'auto', 'chr', 'r2', 'none'")
   }
