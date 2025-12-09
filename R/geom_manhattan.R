@@ -259,7 +259,7 @@ geom_manhattan <- function(
     layer_list$color_scale <- ggplot2::scale_color_manual(values = colors, guide = "none")
   } else if (color_by == "r2") {
     layer_list$color_scale <- ggplot2::scale_color_gradientn(
-      colors = c("blue2", "skyblue", "green", "orange", "red2"),
+      colors = c("blue3", "skyblue", "green2", "orange", "red3"),
       values = scales::rescale(c(0, 0.2, 0.4, 0.6, 0.8, 1)),
       limits = c(0, 1),
       na.value = "grey50",
