@@ -159,6 +159,57 @@ ez_feature_theme <- function(...) {
     )
 }
 
+#' A theme for Manhattan plots
+#'
+#' This function creates a theme specifically for regional Manhattan plots.
+#' It provides consistent styling with other track types for use with `genome_plot()`.
+#'
+#' @param y_axis_style Style of the y-axis. Options are "none", "simple", and "full".
+#'   - "none": Removes all y-axis elements
+#'   - "simple": Shows y-axis text only (no title, ticks, or line)
+#'   - "full": Shows y-axis text and ticks
+#'   Default: "none"
+#' @param ... Additional arguments passed to ez_theme
+#' @return A ggplot2 theme object
+#' @export
+#' @importFrom ggplot2 theme element_blank margin
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' p <- ggplot(data, aes(x = pos, y = -log10(pvalue))) +
+#'   geom_point() +
+#'   ez_manhattan_theme()
+#' }
+ez_manhattan_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
+  y_axis_style <- match.arg(y_axis_style)
+
+  if (y_axis_style == "none") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_blank(),
+        axis.line.y = ggplot2::element_blank(),
+        axis.text.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(5, 5, 5, 5)
+      )
+  } else if (y_axis_style == "simple") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_blank(),
+        axis.line.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(5, 5, 5, 5)
+      )
+  } else if (y_axis_style == "full") {
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        plot.margin = ggplot2::margin(5, 5, 5, 5)
+      )
+  }
+
+  return(theme)
+}
+
 #' A theme for sashimi plots
 #'
 #' This function creates a theme specifically for sashimi plots that combine

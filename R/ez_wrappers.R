@@ -382,17 +382,24 @@ ez_feature <- function(
 #' @description
 #' This function creates a Manhattan plot from GWAS (Genome-Wide Association Study)
 #' data, which is a standard way to visualize p-values across the genome.
+#' Supports both genome-wide and regional (LocusZoom-style) modes with automatic
+#' detection based on data content or explicit region specification.
 #'
 #' @param input A data frame or named list of data frames containing GWAS results
 #'   with columns for chromosome, position, p-values, and optionally SNP names.
+#'   Supports both GWAS-style (CHR, BP, P) and GRanges-style (seqnames, start, pvalue)
+#'   column naming conventions.
+#' @param region Optional genomic region string (e.g., "chr1:1000000-2000000") to
+#'   force regional mode. When provided, data is filtered to this region and the
+#'   plot uses coordinate-based x-axis consistent with `ez_coverage` and `ez_gene`.
 #' @param chr Character string specifying the column name for chromosome numbers.
-#'   Default: "CHR".
+#'   Default: "CHR". Also accepts "seqnames", "chrom", etc.
 #' @param bp Character string specifying the column name for base pair positions.
-#'   Default: "BP".
+#'   Default: "BP". Also accepts "start", "pos", "position", etc.
 #' @param p Character string specifying the column name for p-values.
-#'   Default: "P".
+#'   Default: "P". Also accepts "pvalue", "p.value", etc.
 #' @param snp Character string specifying the column name for SNP identifiers.
-#'   Default: "SNP".
+#'   Default: "SNP". Also accepts "rsid", "variant_id", etc.
 #' @param track_labels Optional vector of track labels (used for unnamed list input).
 #'   Default: NULL.
 #' @param group_var Column name for grouping data within a single data frame.
@@ -403,7 +410,9 @@ ez_feature <- function(
 #'   Default: TRUE.
 #' @param size Numeric value for point size in the plot.
 #'   Default: 0.5.
-#' @param lead.snp Character string of SNP ID to highlight as the lead variant.
+#' @param color Default point color for regional mode when colorBy is not "r2".
+#'   Default: "grey50".
+#' @param lead_snp Character string or vector of SNP IDs to highlight as the lead variant(s).
 #'   Default: NULL.
 #' @param r2 Numeric vector of r² values for coloring points by linkage
 #'   disequilibrium (LD) with lead variant. Must be same length as number of
@@ -421,8 +430,14 @@ ez_feature <- function(
 #'   Default: "red".
 #' @param threshold_linetype Linetype for the significance threshold line.
 #'   Default: 2 (dashed).
-#' @param colorBy Character string specifying the variable to use for coloring points.
-#'   Must be a column name in the data. Default: "chr".
+#' @param colorBy Character string specifying how points should be colored:
+#'   - "auto": Auto-detect (chr for genome-wide, r2 if available for regional, else none)
+#'   - "chr": Alternating chromosome colors (genome-wide mode only)
+#'   - "r2": Continuous color based on R² values (requires r2 parameter)
+#'   - "none": Single color specified by `color` parameter
+#'   Default: "auto".
+#' @param y_axis_style Y-axis style: "none", "simple", or "full" (default: "none").
+#'   Only applies in regional mode.
 #' @param y_axis_label Label for the y-axis. Default: `expression(paste("-log"[10], "(P)"))`.
 #' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
 #' @param ... Additional arguments passed to `geom_manhattan()`.
@@ -431,8 +446,20 @@ ez_feature <- function(
 #'
 #' @details
 #' The function creates a Manhattan plot with chromosomes on the x-axis and
-#' -log10(p-values) on the y-axis. Points are colored by chromosome and can be
-#' highlighted based on significance or LD with lead variants.
+#' -log10(p-values) on the y-axis. The plot mode is automatically determined:
+#'
+#' - **Regional mode**: When `region` is provided OR when data contains only one
+#'   chromosome, the plot uses genomic coordinate formatting consistent with
+#'   `ez_coverage` and `ez_gene`, making it suitable for stacking with other
+#'   tracks via `genome_plot()`. This is ideal for LocusZoom-style regional
+#'   association plots.
+#'
+#' - **Genome-wide mode**: When data contains multiple chromosomes and no region
+#'   is specified, chromosomes are displayed with alternating colors and
+#'   cumulative positions.
+#'
+#' For LD-based coloring (LocusZoom style), provide `r2` values and set
+#' `colorBy = "r2"`.
 #'
 #' For multiple tracks (via named list), plots are stacked vertically using facets.
 #' For grouped data (via group_var), colors distinguish different groups within tracks.
@@ -440,12 +467,12 @@ ez_feature <- function(
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_point scale_color_manual scale_x_continuous
 #'   scale_y_continuous geom_hline labs theme_minimal theme element_blank facet_wrap element_text
-#' @importFrom dplyr mutate arrange group_by ungroup
+#' @importFrom dplyr mutate arrange group_by ungroup filter
 #' @importFrom rlang .data
 #'
 #' @examples
 #' \dontrun{
-#' # Basic Manhattan plot from data frame
+#' # Basic genome-wide Manhattan plot from data frame
 #' data(gwas_data)  # Example GWAS data
 #' ez_manhattan(
 #'   gwas_data,
@@ -456,6 +483,15 @@ ez_feature <- function(
 #'   colors = c("dodgerblue", "darkblue")
 #' )
 #'
+#' # Regional Manhattan plot (LocusZoom-style)
+#' ez_manhattan(
+#'   gwas_data,
+#'   region = "chr1:1000000-2000000",
+#'   r2 = gwas_data$r2,  # LD values
+#'   colorBy = "r2",
+#'   lead_snp = "rs123456"
+#' )
+#'
 #' # With highlighted lead SNP and threshold line
 #' ez_manhattan(
 #'   gwas_data,
@@ -463,7 +499,7 @@ ez_feature <- function(
 #'   bp = "BP",
 #'   p = "P",
 #'   snp = "SNP",
-#'   lead.snp = "rs123456",
+#'   lead_snp = "rs123456",
 #'   highlight_color = "red",
 #'   threshold_p = 5e-8,
 #'   threshold_color = "red"
@@ -490,16 +526,18 @@ ez_feature <- function(
 #' }
 ez_manhattan <- function(
   input,
-  chr = "CHR",
-  bp = "BP",
-  p = "P",
-  snp = "SNP",
+  region = NULL,
+  chr = NULL,
+  bp = NULL,
+  p = NULL,
+  snp = NULL,
   track_labels = NULL,
   group_var = NULL,
   color_by = c("group", "track"),
   logp = TRUE,
   size = 0.5,
-  lead.snp = NULL,
+  color = "grey50",
+  lead_snp = NULL,
   r2 = NULL,
   colors = c("grey", "skyblue"),
   highlight_snps = NULL,
@@ -507,17 +545,29 @@ ez_manhattan <- function(
   threshold_p = NULL,
   threshold_color = "red",
   threshold_linetype = 2,
-  colorBy = "chr",
+  colorBy = c("auto", "chr", "r2", "none"),
+  y_axis_style = c("none", "simple", "full"),
   y_axis_label = expression(paste("-log"[10], "(P)")),
   facet_label_position = c("top", "left"),
   ...
 ) {
   # Validate inputs
   color_by <- match.arg(color_by)
+  colorBy <- match.arg(colorBy)
+  y_axis_style <- match.arg(y_axis_style)
   facet_label_position <- match.arg(facet_label_position)
 
-  # Store the p-value column name to avoid confusion with plot variable
-  p_col <- p
+  # Auto-detect column names helper
+  detect_column <- function(data, candidates, param_name, required = TRUE) {
+    for (col in candidates) {
+      if (col %in% colnames(data)) return(col)
+    }
+    if (required) {
+      stop(paste0("Could not find ", param_name, " column. Expected one of: ",
+                  paste(candidates, collapse = ", ")))
+    }
+    return(NULL)
+  }
 
   # Default color palette function (same as ez_coverage)
   get_default_colors <- function(n) {
@@ -546,15 +596,55 @@ ez_manhattan <- function(
       input,
       chr = chr,
       bp = bp,
-      p = p_col,
+      p = p,
       snp = snp,
       track_labels = track_labels
     )
   }
 
+  # Auto-detect column names if not provided
+  if (is.null(chr)) {
+    chr <- detect_column(plotDt, c("CHR", "chr", "seqnames", "chrom", "chromosome"), "chromosome")
+  }
+  if (is.null(bp)) {
+    bp <- detect_column(plotDt, c("BP", "bp", "start", "pos", "position", "POS"), "position")
+  }
+  if (is.null(p)) {
+    p <- detect_column(plotDt, c("P", "p", "pvalue", "p.value", "pval", "P.value"), "p-value")
+  }
+  if (is.null(snp)) {
+    snp <- detect_column(plotDt, c("SNP", "snp", "rsid", "id", "variant_id", "marker"), "SNP", required = FALSE)
+  }
+
+  # Filter data to region if provided
+  if (!is.null(region)) {
+    region_gr <- parse_region(region)
+    region_chr <- as.character(GenomicRanges::seqnames(region_gr))
+    region_start <- GenomicRanges::start(region_gr)
+    region_end <- GenomicRanges::end(region_gr)
+
+    # Normalize chromosome names for comparison (handle chr prefix)
+    region_chr_normalized <- gsub("^chr", "", region_chr, ignore.case = TRUE)
+
+    plotDt <- plotDt |>
+      dplyr::filter(
+        gsub("^chr", "", as.character(.data[[chr]]), ignore.case = TRUE) == region_chr_normalized,
+        .data[[bp]] >= region_start,
+        .data[[bp]] <= region_end
+      )
+
+    if (nrow(plotDt) == 0) {
+      warning("No data points found in the specified region.")
+    }
+  }
+
   # Determine plotting strategy
   has_track <- "track" %in% colnames(plotDt)
   has_group <- !is.null(group_var) && group_var %in% colnames(plotDt)
+
+  # Determine if regional mode (for theme application)
+  n_chr <- length(unique(plotDt[[chr]]))
+  is_regional <- !is.null(region) || n_chr == 1
 
   # Create base plot based on grouping/tracking
   if (has_group || has_track) {
@@ -610,13 +700,15 @@ ez_manhattan <- function(
       plot_obj <- plot_obj +
         geom_manhattan(
           data = subset_data,
+          region = region,
           chr = chr,
           bp = bp,
-          p = p_col,
+          p = p,
           snp = snp,
           logp = logp,
           size = size,
-          lead.snp = lead.snp,
+          color = plot_colors[val],
+          lead_snp = lead_snp,
           r2 = NULL, # r2 is disabled for grouped plots
           colors = rep(plot_colors[val], 2), # Use single color for this group
           highlight_snps = highlight_snps,
@@ -624,7 +716,7 @@ ez_manhattan <- function(
           threshold_p = threshold_p,
           threshold_color = threshold_color,
           threshold_linetype = threshold_linetype,
-          colorBy = colorBy,
+          colorBy = if (colorBy == "auto") "none" else colorBy,
           y_axis_label = y_axis_label,
           ...
         )
@@ -650,19 +742,26 @@ ez_manhattan <- function(
       }
     }
 
-    plot_obj <- plot_obj + ez_theme()
+    # Apply appropriate theme based on mode
+    if (is_regional) {
+      plot_obj <- plot_obj + ez_manhattan_theme(y_axis_style = y_axis_style)
+    } else {
+      plot_obj <- plot_obj + ez_theme()
+    }
   } else {
     # Standard single-track Manhattan plot without grouping
     plot_obj <- ggplot2::ggplot(plotDt) +
       geom_manhattan(
         data = plotDt,
+        region = region,
         chr = chr,
         bp = bp,
-        p = p_col,
+        p = p,
         snp = snp,
         logp = logp,
         size = size,
-        lead.snp = lead.snp,
+        color = color,
+        lead_snp = lead_snp,
         r2 = r2,
         colors = colors,
         highlight_snps = highlight_snps,
@@ -673,8 +772,14 @@ ez_manhattan <- function(
         colorBy = colorBy,
         y_axis_label = y_axis_label,
         ...
-      ) +
-      ez_theme()
+      )
+
+    # Apply appropriate theme based on mode
+    if (is_regional) {
+      plot_obj <- plot_obj + ez_manhattan_theme(y_axis_style = y_axis_style)
+    } else {
+      plot_obj <- plot_obj + ez_theme()
+    }
   }
 
   return(plot_obj)
