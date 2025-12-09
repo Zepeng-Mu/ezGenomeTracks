@@ -113,21 +113,34 @@ geom_manhattan <- function(
   }
 
   # Prepare data with standardized column names
-
-  plot_data <- data |>
-    dplyr::select(CHR = .data[[chr]], BP = .data[[bp]], P = .data[[p]]) |>
-    dplyr::arrange(.data$CHR, .data$BP)
-
-  if (!is.null(snp) && snp %in% colnames(data)) {
-    plot_data$SNP <- data[[snp]]
-  }
-
+  # First, add r2 values to original data BEFORE arranging to preserve correspondence
   if (!is.null(r2)) {
     if (length(r2) != nrow(data)) {
       stop("Length of r2 vector must match the number of rows in data.")
     }
-    plot_data$r2_value <- r2
+    data$r2_value <- r2
   }
+
+  # Build list of columns to select
+  optional_cols <- "r2_value"
+  if (!is.null(snp) && snp %in% colnames(data)) {
+    optional_cols <- c(optional_cols, snp)
+  }
+
+  plot_data <- data |>
+    dplyr::select(
+      CHR = .data[[chr]],
+      BP = .data[[bp]],
+      P = .data[[p]],
+      dplyr::any_of(optional_cols)
+    )
+
+  # Rename SNP column to standardized name if it exists and isn't already named SNP
+  if (!is.null(snp) && snp %in% colnames(plot_data) && snp != "SNP") {
+    names(plot_data)[names(plot_data) == snp] <- "SNP"
+  }
+
+  plot_data <- plot_data |> dplyr::arrange(.data$CHR, .data$BP)
 
   # Apply log transformation
   if (logp) {

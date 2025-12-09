@@ -553,7 +553,10 @@ ez_manhattan <- function(
 ) {
   # Validate inputs
   color_by <- match.arg(color_by)
-  colorBy <- match.arg(colorBy)
+  # Note: colorBy has choices defined in function signature, validated separately
+  if (!colorBy %in% c("auto", "chr", "r2", "none")) {
+    stop("colorBy must be one of: 'auto', 'chr', 'r2', 'none'")
+  }
   y_axis_style <- match.arg(y_axis_style)
   facet_label_position <- match.arg(facet_label_position)
 
