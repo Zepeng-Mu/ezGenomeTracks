@@ -415,9 +415,11 @@ ez_feature <- function(
 #' @param r2 Numeric vector of r² values for coloring points by linkage
 #'   disequilibrium (LD) with lead variant. Must be same length as number of
 #'   rows in data. Default: NULL.
-#' @param colors Character vector specifying colors. For multi-track or grouped plots,
-#'   this can be a vector of colors. For standard plots, a vector of length 2
-#'   for alternating chromosomes. Default: c("grey", "skyblue").
+#' @param colors Vector of colors for coloring points. Usage depends on `color_by`:
+#'   - For discrete columns: colors are recycled/mapped to factor levels
+#'   - For continuous columns: colors define a gradient (default: viridis-like palette)
+#'   - For multi-track or grouped plots: colors for each track/group
+#'   Default: NULL (appropriate defaults are chosen automatically).
 #' @param highlight_snps Character vector of SNP IDs to highlight.
 #'   Default: NULL.
 #' @param highlight_color Color for highlighting significant or lead SNPs.
@@ -428,12 +430,14 @@ ez_feature <- function(
 #'   Default: "red".
 #' @param threshold_linetype Linetype for the significance threshold line.
 #'   Default: 2 (dashed).
-#' @param color_by Character string specifying how points should be colored:
-#'   - "auto": Auto-detect (chr for genome-wide, r2 if available for regional, else none)
-#'   - "chr": Alternating chromosome colors (genome-wide mode only)
-#'   - "r2": Continuous color based on R² values (requires r2 parameter)
+#' @param color_by How points should be colored. Can be:
+#'   - A column name in the data (e.g., "CHR", "gene", "maf"): Colors by that column.
+#'     Use `colors` to specify a custom palette. For chromosome coloring, use
+#'     `color_by = "CHR"` (or your chr column name) with `colors = c("grey", "skyblue")`.
+#'   - "r2": LD-based gradient coloring (requires `r2` parameter)
 #'   - "none": Single color specified by `color` parameter
-#'   Default: "auto".
+#'   - "auto" (default): Uses "r2" if `r2` is provided, otherwise "none"
+#'   Note: In grouped/multi-track plots, color_by is handled differently.
 #' @param y_axis_style Y-axis style: "none", "simple", or "full" (default: "none").
 #'   Only applies in regional mode.
 #' @param y_axis_label Label for the y-axis. Default: `expression(paste("-log"[10], "(P)"))`.
@@ -470,7 +474,7 @@ ez_feature <- function(
 #'
 #' @examples
 #' \dontrun{
-#' # Basic genome-wide Manhattan plot from data frame
+#' # Basic genome-wide Manhattan plot with alternating chromosome colors
 #' data(gwas_data)  # Example GWAS data
 #' ez_manhattan(
 #'   gwas_data,
@@ -478,7 +482,8 @@ ez_feature <- function(
 #'   bp = "BP",
 #'   p = "P",
 #'   snp = "SNP",
-#'   colors = c("dodgerblue", "darkblue")
+#'   color_by = "CHR",  # Color by chromosome column
+#'   colors = c("dodgerblue", "darkblue")  # Alternating colors
 #' )
 #'
 #' # Regional Manhattan plot (LocusZoom-style)
@@ -536,20 +541,19 @@ ez_manhattan <- function(
   color = "grey50",
   lead_snp = NULL,
   r2 = NULL,
-  colors = c("grey", "skyblue"),
+  colors = NULL,
   highlight_snps = NULL,
   highlight_color = "purple",
   threshold_p = NULL,
   threshold_color = "red",
   threshold_linetype = 2,
-  color_by = c("auto", "chr", "r2", "none"),
+  color_by = "auto",
   y_axis_style = c("none", "simple", "full"),
   y_axis_label = expression(paste("-log"[10], "(P)")),
   facet_label_position = c("top", "left"),
   ...
 ) {
   # Validate inputs
-  color_by <- match.arg(color_by)
   y_axis_style <- match.arg(y_axis_style)
   facet_label_position <- match.arg(facet_label_position)
 
@@ -666,7 +670,7 @@ ez_manhattan <- function(
 
     # Get colors for groups/tracks
     n_colors <- length(color_values)
-    if (length(colors) >= n_colors && !all(colors == c("grey", "skyblue"))) {
+    if (!is.null(colors) && length(colors) >= n_colors) {
       # User provided custom colors
       plot_colors <- colors[1:n_colors]
     } else {

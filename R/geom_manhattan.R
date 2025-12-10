@@ -32,17 +32,22 @@
 #' @param color Default point color for regional mode when color_by is not "r2" (default: "grey50").
 #' @param lead_snp Vector of SNP IDs to highlight (also accepts lead.snp for backward compatibility).
 #' @param r2 Vector of R-squared values for linkage disequilibrium (LD) coloring. Should be in same order as data rows.
-#' @param colors Vector of colors to use for alternating chromosome colors in genome-wide mode (default: c("grey", "skyblue")).
+#' @param colors Vector of colors for coloring points. Usage depends on `color_by`:
+#'   - For discrete columns: colors are recycled/mapped to factor levels
+#'   - For continuous columns: colors define a gradient (default: viridis-like palette)
+#'   - Default `c("grey", "skyblue")` is suitable for alternating chromosome colors
 #' @param highlight_snps Data frame of SNPs to highlight, with columns matching chr, bp, and p.
 #' @param highlight_color Color for highlighted SNPs (default: "purple").
 #' @param highlight_shape Shape for highlighted SNPs (default: 18).
 #' @param threshold_p A numeric value for the p-value threshold to draw a horizontal line (e.g., 5e-8).
 #' @param threshold_color Color for the threshold line (default: "red").
 #' @param threshold_linetype Linetype for the threshold line (default: 2).
-#' @param color_by Character string indicating how points should be colored. Options:
-#'   - "chr": Alternating chromosome colors (genome-wide mode only, ignored in regional mode)
-#'   - "r2": Continuous color based on R-squared values (requires r2 parameter)
+#' @param color_by How points should be colored. Can be:
+#'   - A column name in `data` (e.g., "CHR", "gene", "maf"): Colors by that column's values.
+#'     Discrete columns use `colors` as a manual palette; continuous columns use a gradient.
+#'   - "r2": Special mode using LD-based gradient coloring (requires `r2` parameter)
 #'   - "none": Single color specified by `color` parameter
+#'   - "auto" (default): Uses "r2" if `r2` is provided, otherwise "none"
 #' @param x_axis_label X-axis label (default: NULL, auto-generated).
 #' @param y_axis_label Label for the y-axis (default: expression for -log10(P)).
 #' @param ... Additional arguments passed to `ggplot2::geom_point()`.
@@ -58,14 +63,28 @@ geom_manhattan <- function(
     na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
     chr = NULL, bp = NULL, p = NULL, snp = NULL,
     logp = TRUE, size = 0.5, color = "grey50",
-    lead_snp = NULL, r2 = NULL, colors = c("grey", "skyblue"),
+    lead_snp = NULL, r2 = NULL, colors = NULL,
     highlight_snps = NULL, highlight_color = "purple", highlight_shape = 18,
     threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
-    color_by = c("auto", "chr", "r2", "none"),
+    color_by = "auto",
     x_axis_label = NULL, y_axis_label = NULL, ...
 ) {
   mode <- match.arg(mode)
-  color_by <- match.arg(color_by)
+
+  # Validate color_by: must be "auto", "r2", "none", or a column name in data
+  preset_color_options <- c("auto", "r2", "none")
+  is_custom_color_col <- FALSE
+  if (!color_by %in% preset_color_options) {
+    if (color_by %in% colnames(data)) {
+      is_custom_color_col <- TRUE
+    } else {
+      stop(paste0(
+        "color_by must be 'auto', 'r2', 'none', or a column name in data. ",
+        "Column '", color_by, "' not found. Available columns: ",
+        paste(colnames(data), collapse = ", ")
+      ))
+    }
+  }
 
   # Validate input data
   if (is.null(data)) stop("Data cannot be NULL.")
@@ -126,6 +145,10 @@ geom_manhattan <- function(
   if (!is.null(snp) && snp %in% colnames(data)) {
     optional_cols <- c(optional_cols, snp)
   }
+  # Include custom color column if specified
+  if (is_custom_color_col) {
+    optional_cols <- c(optional_cols, color_by)
+  }
 
   plot_data <- data |>
     dplyr::select(
@@ -158,21 +181,18 @@ geom_manhattan <- function(
     is_regional <- mode == "regional"
   }
 
-  # Handle color_by for regional mode
-
+  # Handle color_by auto-detection
+  # "auto" resolves to "r2" if r2 provided, otherwise "none"
   if (color_by == "auto") {
-    if (is_regional) {
-      color_by <- if (!is.null(r2)) "r2" else "none"
-    } else {
-      color_by <- "chr"
-    }
+    color_by <- if (!is.null(r2)) "r2" else "none"
+    is_custom_color_col <- FALSE
   }
 
-  # Warn if chr coloring requested in regional mode
-
-  if (is_regional && color_by == "chr" && n_chr == 1) {
-    message("color_by='chr' is ignored in regional mode (single chromosome). Using 'none'.")
-    color_by <- "none"
+  # Determine if custom color column is discrete or continuous
+  is_color_discrete <- FALSE
+  if (is_custom_color_col) {
+    color_col_data <- plot_data[[color_by]]
+    is_color_discrete <- !is.numeric(color_col_data) || is.factor(color_col_data)
   }
 
   # Process based on mode
@@ -193,9 +213,6 @@ geom_manhattan <- function(
     axis_df <- plot_data |>
       dplyr::group_by(.data$CHR) |>
       dplyr::summarize(center = mean(.data$BP))
-
-    # Assign colors based on chromosome
-    plot_data$color_group <- factor(plot_data$CHR %% 2 + 1, levels = c(1, 2))
   }
 
   # Default mapping
@@ -209,15 +226,16 @@ geom_manhattan <- function(
   }
 
   # Apply color mapping based on color_by option
-  if (color_by == "chr" && !is_regional) {
-    color_mapping <- aes(color = .data$color_group)
+  if (is_custom_color_col) {
+    # Custom column coloring
+    color_mapping <- aes(color = .data[[color_by]])
   } else if (color_by == "r2") {
     if (is.null(plot_data$r2_value)) {
       stop("r2 values must be provided in 'data' or via the 'r2' parameter when color_by is 'r2'.")
     }
     color_mapping <- aes(color = .data$r2_value)
   } else {
-    # color_by == "none" or regional without r2
+    # color_by == "none"
     color_mapping <- NULL
   }
 
@@ -254,9 +272,34 @@ geom_manhattan <- function(
     params = point_params
   )
 
+
   # Add color scales based on color_by
-  if (color_by == "chr" && !is_regional) {
-    layer_list$color_scale <- ggplot2::scale_color_manual(values = colors, guide = "none")
+  if (is_custom_color_col) {
+    if (is_color_discrete) {
+      # Discrete column: use manual scale
+      if (is.null(colors)) {
+        # Use ggplot2 default discrete colors (no scale needed, ggplot2 handles it)
+        # But we can use a nice default palette
+        n_levels <- length(unique(plot_data[[color_by]]))
+        colors <- scales::hue_pal()(n_levels)
+      }
+      layer_list$color_scale <- ggplot2::scale_color_manual(
+        values = colors,
+        name = color_by,
+        na.value = "grey50"
+      )
+    } else {
+      # Continuous column: use gradient scale
+      if (is.null(colors)) {
+        # Use viridis-like default for continuous
+        colors <- c("#440154", "#31688E", "#35B779", "#FDE725")
+      }
+      layer_list$color_scale <- ggplot2::scale_color_gradientn(
+        colors = colors,
+        na.value = "grey50",
+        name = color_by
+      )
+    }
   } else if (color_by == "r2") {
     layer_list$color_scale <- ggplot2::scale_color_gradientn(
       colors = c("blue3", "skyblue", "green2", "orange", "red3"),
