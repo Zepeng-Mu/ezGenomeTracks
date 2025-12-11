@@ -1,9 +1,9 @@
 Package: ezGenomeTracks
 Title: A ggplot2-based R package for plotting genome browser tracks easily.
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R:
     person("Zepeng", "Mu", , "zmu@broadinstitute.org", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0002-7717-3247"))
 Description: A package for creating genome browser-style visualizations using ggplot2 and aplot.
     Provides custom geoms for genomic data types including signal tracks, peaks, gene models,
     interaction arcs, and Hi-C contact matrices. Supports stacked track visualization with
