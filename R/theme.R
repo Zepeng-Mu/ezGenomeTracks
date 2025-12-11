@@ -21,41 +21,67 @@
 #'   geom_line() +
 #'   ez_theme()
 #' }
-ez_theme <- function(base_size = 10, base_family = "", base_line_size = 0.2,
-                     base_rect_size = 0.2, show_grid = FALSE,
-                     show_ticks = TRUE, show_x_axis = TRUE, show_y_axis = TRUE) {
+ez_theme <- function(
+  base_size = 10,
+  base_family = "",
+  base_line_size = 0.2,
+  base_rect_size = 0.2,
+  show_grid = FALSE,
+  show_ticks = TRUE,
+  show_x_axis = TRUE,
+  show_y_axis = TRUE
+) {
   # Start with a minimal theme
   theme <- ggplot2::theme_minimal(
-    base_size = base_size, base_family = base_family,
-    base_line_size = base_line_size, base_rect_size = base_rect_size
+    base_size = base_size,
+    base_family = base_family,
+    base_line_size = base_line_size,
+    base_rect_size = base_rect_size
   )
 
   # Modify the theme to be even more minimal
-  theme <- theme + ggplot2::theme(
-    # Remove panel grid
-    panel.grid.major = if (show_grid) ggplot2::element_line(color = "gray90", linewidth = 0.2) else ggplot2::element_blank(),
-    panel.grid.minor = ggplot2::element_blank(),
+  theme <- theme +
+    ggplot2::theme(
+      # Remove panel grid
+      panel.grid.major = if (show_grid) {
+        ggplot2::element_line(color = "gray90", linewidth = 0.2)
+      } else {
+        ggplot2::element_blank()
+      },
+      panel.grid.minor = ggplot2::element_blank(),
 
-    # Remove panel border
-    panel.border = ggplot2::element_blank(),
+      # Remove panel border
+      panel.border = ggplot2::element_blank(),
 
-    # Customize axis
-    axis.line.x = if (show_x_axis) ggplot2::element_line(color = "black", linewidth = 0.2) else ggplot2::element_blank(),
-    axis.line.y = if (show_y_axis) ggplot2::element_line(color = "black", linewidth = 0.2) else ggplot2::element_blank(),
-    axis.ticks = if (show_ticks) ggplot2::element_line(color = "black", linewidth = 0.2) else ggplot2::element_blank(),
-    axis.ticks.length = ggplot2::unit(2, "pt"),
+      # Customize axis
+      axis.line.x = if (show_x_axis) {
+        ggplot2::element_line(color = "black", linewidth = 0.2)
+      } else {
+        ggplot2::element_blank()
+      },
+      axis.line.y = if (show_y_axis) {
+        ggplot2::element_line(color = "black", linewidth = 0.2)
+      } else {
+        ggplot2::element_blank()
+      },
+      axis.ticks = if (show_ticks) {
+        ggplot2::element_line(color = "black", linewidth = 0.2)
+      } else {
+        ggplot2::element_blank()
+      },
+      axis.ticks.length = ggplot2::unit(2, "pt"),
 
-    # Reduce plot margins
-    plot.margin = ggplot2::margin(0, 5, 0, 5),
+      # Reduce plot margins
+      plot.margin = ggplot2::margin(0, 5, 0, 5),
 
-    # Customize text
-    # axis.title = ggplot2::element_text(size = ggplot2::rel(0.8)),
-    # axis.text = ggplot2::element_text(size = ggplot2::rel(0.7)),
+      # Customize text
+      # axis.title = ggplot2::element_text(size = ggplot2::rel(0.8)),
+      # axis.text = ggplot2::element_text(size = ggplot2::rel(0.7)),
 
-    # Remove legend background
-    legend.background = ggplot2::element_blank(),
-    legend.key = ggplot2::element_blank()
-  )
+      # Remove legend background
+      legend.background = ggplot2::element_blank(),
+      legend.key = ggplot2::element_blank()
+    )
 
   return(theme)
 }
@@ -124,13 +150,14 @@ ez_coverage_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
 #'   ez_gene_theme()
 #' }
 ez_gene_theme <- function(...) {
-  ez_theme(...) + ggplot2::theme(
-    axis.text.y = ggplot2::element_text(size = ggplot2::rel(1)),
-    axis.line.y = ggplot2::element_blank(),
-    axis.ticks.y = ggplot2::element_blank(),
-    axis.title.y = ggplot2::element_blank(),
-    plot.margin = ggplot2::margin(5, 5, 5, 5)
-  )
+  ez_theme(...) +
+    ggplot2::theme(
+      axis.text.y = ggplot2::element_text(size = ggplot2::rel(1)),
+      axis.line.y = ggplot2::element_blank(),
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      plot.margin = ggplot2::margin(5, 5, 5, 5)
+    )
 }
 
 #' A theme for feature tracks
@@ -180,7 +207,10 @@ ez_feature_theme <- function(...) {
 #'   geom_point() +
 #'   ez_manhattan_theme()
 #' }
-ez_manhattan_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
+ez_manhattan_theme <- function(
+  y_axis_style = c("none", "simple", "full"),
+  ...
+) {
   y_axis_style <- match.arg(y_axis_style)
 
   if (y_axis_style == "none") {

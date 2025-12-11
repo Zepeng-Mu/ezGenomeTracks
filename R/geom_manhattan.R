@@ -57,17 +57,35 @@
 #' @importFrom dplyr mutate filter select arrange group_by summarise inner_join
 #' @importFrom rlang .data
 geom_manhattan <- function(
-    mapping = NULL, data = NULL, region = NULL,
-    mode = c("auto", "regional", "genome_wide"),
-    stat = "identity", position = "identity",
-    na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-    chr = NULL, bp = NULL, p = NULL, snp = NULL,
-    logp = TRUE, size = 0.5, color = "grey50",
-    lead_snp = NULL, r2 = NULL, colors = NULL,
-    highlight_snps = NULL, highlight_color = "purple", highlight_shape = 18,
-    threshold_p = NULL, threshold_color = "red", threshold_linetype = 2,
-    color_by = "auto",
-    x_axis_label = NULL, y_axis_label = NULL, ...
+  mapping = NULL,
+  data = NULL,
+  region = NULL,
+  mode = c("auto", "regional", "genome_wide"),
+  stat = "identity",
+  position = "identity",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE,
+  chr = NULL,
+  bp = NULL,
+  p = NULL,
+  snp = NULL,
+  logp = TRUE,
+  size = 0.5,
+  color = "grey50",
+  lead_snp = NULL,
+  r2 = NULL,
+  colors = NULL,
+  highlight_snps = NULL,
+  highlight_color = "purple",
+  highlight_shape = 18,
+  threshold_p = NULL,
+  threshold_color = "red",
+  threshold_linetype = 2,
+  color_by = "auto",
+  x_axis_label = NULL,
+  y_axis_label = NULL,
+  ...
 ) {
   mode <- match.arg(mode)
 
@@ -80,34 +98,53 @@ geom_manhattan <- function(
     } else {
       stop(paste0(
         "color_by must be 'auto', 'r2', 'none', or a column name in data. ",
-        "Column '", color_by, "' not found. Available columns: ",
+        "Column '",
+        color_by,
+        "' not found. Available columns: ",
         paste(colnames(data), collapse = ", ")
       ))
     }
   }
 
   # Validate input data
-  if (is.null(data)) stop("Data cannot be NULL.")
-
+  if (is.null(data)) {
+    stop("Data cannot be NULL.")
+  }
 
   # Auto-detect column names with support for both GWAS and GRanges conventions
   detect_column <- function(data, candidates, param_name) {
     for (col in candidates) {
       if (col %in% colnames(data)) return(col)
     }
-    stop(paste0("Could not find ", param_name, " column. Expected one of: ",
-                paste(candidates, collapse = ", ")))
+    stop(paste0(
+      "Could not find ",
+      param_name,
+      " column. Expected one of: ",
+      paste(candidates, collapse = ", ")
+    ))
   }
 
   # Set column names with auto-detection
   if (is.null(chr)) {
-    chr <- detect_column(data, c("CHR", "chr", "seqnames", "chrom", "chromosome"), "chromosome")
+    chr <- detect_column(
+      data,
+      c("CHR", "chr", "seqnames", "chrom", "chromosome"),
+      "chromosome"
+    )
   }
   if (is.null(bp)) {
-    bp <- detect_column(data, c("BP", "bp", "start", "pos", "position", "POS"), "position")
+    bp <- detect_column(
+      data,
+      c("BP", "bp", "start", "pos", "position", "POS"),
+      "position"
+    )
   }
   if (is.null(p)) {
-    p <- detect_column(data, c("P", "p", "pvalue", "p.value", "pval", "P.value"), "p-value")
+    p <- detect_column(
+      data,
+      c("P", "p", "pvalue", "p.value", "pval", "P.value"),
+      "p-value"
+    )
   }
   if (is.null(snp)) {
     # SNP column is optional
@@ -192,7 +229,8 @@ geom_manhattan <- function(
   is_color_discrete <- FALSE
   if (is_custom_color_col) {
     color_col_data <- plot_data[[color_by]]
-    is_color_discrete <- !is.numeric(color_col_data) || is.factor(color_col_data)
+    is_color_discrete <- !is.numeric(color_col_data) ||
+      is.factor(color_col_data)
   }
 
   # Process based on mode
@@ -216,7 +254,7 @@ geom_manhattan <- function(
   }
 
   # Default mapping
- default_mapping <- aes(x = .data$BP, y = .data$logp)
+  default_mapping <- aes(x = .data$BP, y = .data$logp)
 
   # Create mapping based on color_by option
   if (!is.null(mapping) && inherits(mapping, "uneval")) {
@@ -231,7 +269,9 @@ geom_manhattan <- function(
     color_mapping <- aes(color = .data[[color_by]])
   } else if (color_by == "r2") {
     if (is.null(plot_data$r2_value)) {
-      stop("r2 values must be provided in 'data' or via the 'r2' parameter when color_by is 'r2'.")
+      stop(
+        "r2 values must be provided in 'data' or via the 'r2' parameter when color_by is 'r2'."
+      )
     }
     color_mapping <- aes(color = .data$r2_value)
   } else {
@@ -243,7 +283,11 @@ geom_manhattan <- function(
   current_mapping <- default_mapping
 
   # Add color mapping if not overridden by user
-  if (is.null(user_mapping$colour) && is.null(user_mapping$color) && !is.null(color_mapping)) {
+  if (
+    is.null(user_mapping$colour) &&
+      is.null(user_mapping$color) &&
+      !is.null(color_mapping)
+  ) {
     current_mapping$colour <- color_mapping$colour
   }
 
@@ -271,7 +315,6 @@ geom_manhattan <- function(
     inherit.aes = inherit.aes,
     params = point_params
   )
-
 
   # Add color scales based on color_by
   if (is_custom_color_col) {
@@ -326,7 +369,12 @@ geom_manhattan <- function(
     if (is.null(x_axis_label)) {
       chr_name <- unique(plot_data$CHR)[1]
       # Remove "chr" prefix if present for cleaner display
-      chr_display <- gsub("^chr", "", as.character(chr_name), ignore.case = TRUE)
+      chr_display <- gsub(
+        "^chr",
+        "",
+        as.character(chr_name),
+        ignore.case = TRUE
+      )
       x_axis_label <- paste0("Chr", chr_display)
     }
   } else {
@@ -382,12 +430,28 @@ geom_manhattan <- function(
   # Add additional highlight SNPs from data frame
   if (!is.null(highlight_snps)) {
     # Detect columns in highlight_snps using same logic
-    hl_chr <- detect_column(highlight_snps, c("CHR", "chr", "seqnames", "chrom"), "chromosome")
-    hl_bp <- detect_column(highlight_snps, c("BP", "bp", "start", "pos", "position"), "position")
-    hl_p <- detect_column(highlight_snps, c("P", "p", "pvalue", "p.value", "pval"), "p-value")
+    hl_chr <- detect_column(
+      highlight_snps,
+      c("CHR", "chr", "seqnames", "chrom"),
+      "chromosome"
+    )
+    hl_bp <- detect_column(
+      highlight_snps,
+      c("BP", "bp", "start", "pos", "position"),
+      "position"
+    )
+    hl_p <- detect_column(
+      highlight_snps,
+      c("P", "p", "pvalue", "p.value", "pval"),
+      "p-value"
+    )
 
     hl_data <- highlight_snps |>
-      dplyr::select(CHR = .data[[hl_chr]], BP = .data[[hl_bp]], P = .data[[hl_p]])
+      dplyr::select(
+        CHR = .data[[hl_chr]],
+        BP = .data[[hl_bp]],
+        P = .data[[hl_p]]
+      )
 
     if (logp) {
       hl_data <- hl_data |> dplyr::mutate(logp = -log10(.data$P))

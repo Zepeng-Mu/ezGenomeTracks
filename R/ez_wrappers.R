@@ -563,8 +563,12 @@ ez_manhattan <- function(
       if (col %in% colnames(data)) return(col)
     }
     if (required) {
-      stop(paste0("Could not find ", param_name, " column. Expected one of: ",
-                  paste(candidates, collapse = ", ")))
+      stop(paste0(
+        "Could not find ",
+        param_name,
+        " column. Expected one of: ",
+        paste(candidates, collapse = ", ")
+      ))
     }
     return(NULL)
   }
@@ -604,16 +608,33 @@ ez_manhattan <- function(
 
   # Auto-detect column names if not provided
   if (is.null(chr)) {
-    chr <- detect_column(plotDt, c("CHR", "chr", "seqnames", "chrom", "chromosome"), "chromosome")
+    chr <- detect_column(
+      plotDt,
+      c("CHR", "chr", "seqnames", "chrom", "chromosome"),
+      "chromosome"
+    )
   }
   if (is.null(bp)) {
-    bp <- detect_column(plotDt, c("BP", "bp", "start", "pos", "position", "POS"), "position")
+    bp <- detect_column(
+      plotDt,
+      c("BP", "bp", "start", "pos", "position", "POS"),
+      "position"
+    )
   }
   if (is.null(p)) {
-    p <- detect_column(plotDt, c("P", "p", "pvalue", "p.value", "pval", "P.value"), "p-value")
+    p <- detect_column(
+      plotDt,
+      c("P", "p", "pvalue", "p.value", "pval", "P.value"),
+      "p-value"
+    )
   }
   if (is.null(snp)) {
-    snp <- detect_column(plotDt, c("SNP", "snp", "rsid", "id", "variant_id", "marker"), "SNP", required = FALSE)
+    snp <- detect_column(
+      plotDt,
+      c("SNP", "snp", "rsid", "id", "variant_id", "marker"),
+      "SNP",
+      required = FALSE
+    )
   }
 
   # Filter data to region if provided
@@ -628,7 +649,8 @@ ez_manhattan <- function(
 
     plotDt <- plotDt |>
       dplyr::filter(
-        gsub("^chr", "", as.character(.data[[chr]]), ignore.case = TRUE) == region_chr_normalized,
+        gsub("^chr", "", as.character(.data[[chr]]), ignore.case = TRUE) ==
+          region_chr_normalized,
         .data[[bp]] >= region_start,
         .data[[bp]] <= region_end
       )
@@ -903,8 +925,12 @@ ez_gene <- function(
   # Set default colors if not using strand-based coloring
 
   if (!use_strand_colors) {
-    if (is.null(exon_color)) exon_color <- "gray50"
-    if (is.null(exon_fill)) exon_fill <- "gray50"
+    if (is.null(exon_color)) {
+      exon_color <- "gray50"
+    }
+    if (is.null(exon_fill)) {
+      exon_fill <- "gray50"
+    }
     if (is.null(intron_color)) intron_color <- "gray50"
   }
 
@@ -950,26 +976,33 @@ ez_gene <- function(
   if (nrow(gene_rows) == 0 && nrow(exon_rows) > 0) {
     # No gene body rows - create them from exon data
     # Group by gene_id (or other identifier) and create gene body spanning all exons
-    gene_bodies <- do.call(rbind, lapply(
-      split(exon_rows, exon_rows[[gene_id]]),
-      function(g) {
-        # Get the min/max coordinates across all exon-related columns
-        x_min <- min(c(g$xstart, g$exon_start), na.rm = TRUE)
-        x_max <- max(c(g$xend, g$exon_end), na.rm = TRUE)
+    gene_bodies <- do.call(
+      rbind,
+      lapply(
+        split(exon_rows, exon_rows[[gene_id]]),
+        function(g) {
+          # Get the min/max coordinates across all exon-related columns
+          x_min <- min(c(g$xstart, g$exon_start), na.rm = TRUE)
+          x_max <- max(c(g$xend, g$exon_end), na.rm = TRUE)
 
-        # Create a single gene body row
-        body_row <- g[1, , drop = FALSE]
-        body_row$type <- "gene"
-        body_row$xstart <- x_min
-        body_row$xend <- x_max
-        body_row$start <- x_min
-        body_row$end <- x_max
-        # Clear exon-specific columns for gene body
-        if ("exon_start" %in% names(body_row)) body_row$exon_start <- NA
-        if ("exon_end" %in% names(body_row)) body_row$exon_end <- NA
-        body_row
-      }
-    ))
+          # Create a single gene body row
+          body_row <- g[1, , drop = FALSE]
+          body_row$type <- "gene"
+          body_row$xstart <- x_min
+          body_row$xend <- x_max
+          body_row$start <- x_min
+          body_row$end <- x_max
+          # Clear exon-specific columns for gene body
+          if ("exon_start" %in% names(body_row)) {
+            body_row$exon_start <- NA
+          }
+          if ("exon_end" %in% names(body_row)) {
+            body_row$exon_end <- NA
+          }
+          body_row
+        }
+      )
+    )
     gene_data <- rbind(gene_bodies, gene_data)
   }
 
@@ -977,7 +1010,10 @@ ez_gene <- function(
   # This ensures intron lines span the visible region for partial overlaps
   gene_idx <- gene_data$type == "gene"
   if (any(gene_idx)) {
-    gene_data$xstart[gene_idx] <- pmax(gene_data$xstart[gene_idx], region_limits[1])
+    gene_data$xstart[gene_idx] <- pmax(
+      gene_data$xstart[gene_idx],
+      region_limits[1]
+    )
     gene_data$xend[gene_idx] <- pmin(gene_data$xend[gene_idx], region_limits[2])
   }
 
@@ -987,14 +1023,21 @@ ez_gene <- function(
     # Ensure strand column exists and has proper factor levels
 
     if (!"strand" %in% names(gene_data)) {
-      stop("Strand column not found in gene data. Cannot use strand-based coloring.")
+      stop(
+        "Strand column not found in gene data. Cannot use strand-based coloring."
+      )
     }
 
     # Add resolved color values directly to the data based on strand
     # This bypasses ggplot2's scale system for more reliable color application
     gene_data$strand_color <- ifelse(
-      gene_data$strand == "+", strand_colors["+"],
-      ifelse(gene_data$strand == "-", strand_colors["-"], strand_colors["Unknown"])
+      gene_data$strand == "+",
+      strand_colors["+"],
+      ifelse(
+        gene_data$strand == "-",
+        strand_colors["-"],
+        strand_colors["Unknown"]
+      )
     )
 
     # Build geom_gene call with aes mapping to the resolved color values
@@ -1101,8 +1144,13 @@ ez_gene <- function(
       # Use strand-based colors for labels
 
       label_data$strand_color <- ifelse(
-        label_data$strand == "+", strand_colors["+"],
-        ifelse(label_data$strand == "-", strand_colors["-"], strand_colors["Unknown"])
+        label_data$strand == "+",
+        strand_colors["+"],
+        ifelse(
+          label_data$strand == "-",
+          strand_colors["-"],
+          strand_colors["Unknown"]
+        )
       )
       p <- p +
         ggplot2::geom_text(

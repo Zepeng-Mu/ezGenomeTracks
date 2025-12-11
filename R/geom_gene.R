@@ -600,7 +600,7 @@ extract_txdb_data <- function(txdb, org.Hs.eg.db, region_gr) {
       gene_info <- AnnotationDbi::select(
         org.Hs.eg.db,
         keys = gene_ids,
-        columns = "SYMBOL",
+        columns = c("ENTREZID", "SYMBOL"),
         keytype = "ENTREZID"
       )
       # Create lookup: gene_id -> gene_symbol

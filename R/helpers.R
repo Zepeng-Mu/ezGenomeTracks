@@ -364,8 +364,12 @@ process_manhattan_input <- function(
       if (col %in% colnames(data)) return(col)
     }
     if (required) {
-      stop(paste0("Could not find ", param_name, " column. Expected one of: ",
-                  paste(candidates, collapse = ", ")))
+      stop(paste0(
+        "Could not find ",
+        param_name,
+        " column. Expected one of: ",
+        paste(candidates, collapse = ", ")
+      ))
     }
     return(NULL)
   }
@@ -379,10 +383,18 @@ process_manhattan_input <- function(
   if (is.data.frame(input)) {
     # Case 1: Data frame input
     # Auto-detect column names if not provided
-    if (is.null(chr)) chr <- detect_column(input, chr_candidates, "chromosome")
-    if (is.null(bp)) bp <- detect_column(input, bp_candidates, "position")
-    if (is.null(p)) p <- detect_column(input, p_candidates, "p-value")
-    if (is.null(snp)) snp <- detect_column(input, snp_candidates, "SNP", required = FALSE)
+    if (is.null(chr)) {
+      chr <- detect_column(input, chr_candidates, "chromosome")
+    }
+    if (is.null(bp)) {
+      bp <- detect_column(input, bp_candidates, "position")
+    }
+    if (is.null(p)) {
+      p <- detect_column(input, p_candidates, "p-value")
+    }
+    if (is.null(snp)) {
+      snp <- detect_column(input, snp_candidates, "SNP", required = FALSE)
+    }
 
     return(input)
   } else if (is.list(input)) {
@@ -400,9 +412,21 @@ process_manhattan_input <- function(
 
       if (is.data.frame(track_element)) {
         # Auto-detect column names for each track element if not provided
-        local_chr <- if (is.null(chr)) detect_column(track_element, chr_candidates, "chromosome") else chr
-        local_bp <- if (is.null(bp)) detect_column(track_element, bp_candidates, "position") else bp
-        local_p <- if (is.null(p)) detect_column(track_element, p_candidates, "p-value") else p
+        local_chr <- if (is.null(chr)) {
+          detect_column(track_element, chr_candidates, "chromosome")
+        } else {
+          chr
+        }
+        local_bp <- if (is.null(bp)) {
+          detect_column(track_element, bp_candidates, "position")
+        } else {
+          bp
+        }
+        local_p <- if (is.null(p)) {
+          detect_column(track_element, p_candidates, "p-value")
+        } else {
+          p
+        }
 
         # Add track column
         track_element$track <- track_name
@@ -510,7 +534,10 @@ process_sashimi_data <- function(
   } else if (is.data.frame(coverage_data)) {
     required_cols <- c("seqnames", "start", "end", "score")
     if (!all(required_cols %in% colnames(coverage_data))) {
-      stop("Coverage data frame must contain columns: ", paste(required_cols, collapse = ", "))
+      stop(
+        "Coverage data frame must contain columns: ",
+        paste(required_cols, collapse = ", ")
+      )
     }
     coverage_df <- coverage_data |>
       dplyr::filter(
@@ -528,7 +555,10 @@ process_sashimi_data <- function(
   } else if (is.data.frame(junction_data)) {
     required_cols <- c("seqnames", "start", "end", "score")
     if (!all(required_cols %in% colnames(junction_data))) {
-      stop("Junction data frame must contain columns: ", paste(required_cols, collapse = ", "))
+      stop(
+        "Junction data frame must contain columns: ",
+        paste(required_cols, collapse = ", ")
+      )
     }
     junction_df <- junction_data |>
       dplyr::filter(
@@ -542,7 +572,7 @@ process_sashimi_data <- function(
 
   # Handle empty junction data
 
-if (nrow(junction_df) == 0) {
+  if (nrow(junction_df) == 0) {
     junction_df$y_start <- numeric(0)
     junction_df$y_end <- numeric(0)
     junction_df$arc_direction <- character(0)

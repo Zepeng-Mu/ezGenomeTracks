@@ -29,10 +29,19 @@
 #'   track_by = "sample", group_by = "condition"
 #' )
 #' }
-plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
-                           color_by = NULL, colors = NULL, type = "area",
-                           alpha = 0.8, binwidth = NULL,
-                           facet_scales = "free_y", ...) {
+plot_signal_df <- function(
+  data,
+  region,
+  track_by = NULL,
+  group_by = NULL,
+  color_by = NULL,
+  colors = NULL,
+  type = "area",
+  alpha = 0.8,
+  binwidth = NULL,
+  facet_scales = "free_y",
+  ...
+) {
   # Check required columns
   required_cols <- c("start", "end", "score")
   if (!all(required_cols %in% colnames(data))) {
@@ -66,12 +75,13 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
     mapping <- do.call(ggplot2::aes, mapping_list)
 
     # Add geom_coverage with the mapping
-    p <- p + geom_coverage(
-      mapping = mapping,
-      type = type,
-      alpha = alpha,
-      ...
-    )
+    p <- p +
+      geom_coverage(
+        mapping = mapping,
+        type = type,
+        alpha = alpha,
+        ...
+      )
 
     # Add color scales if colors are specified
     if (!is.null(colors)) {
@@ -82,12 +92,13 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
     }
   } else {
     # Add geom_coverage without grouping or color mapping
-    p <- p + geom_coverage(
-      mapping = ggplot2::aes(x = .data$start, y = .data$score),
-      type = type,
-      alpha = alpha,
-      ...
-    )
+    p <- p +
+      geom_coverage(
+        mapping = ggplot2::aes(x = .data$start, y = .data$score),
+        type = type,
+        alpha = alpha,
+        ...
+      )
   }
 
   # Apply binning if requested
@@ -97,17 +108,17 @@ plot_signal_df <- function(data, region, track_by = NULL, group_by = NULL,
 
   # Add faceting if track_by is specified
   if (!is.null(track_by)) {
-    p <- p + ggplot2::facet_wrap(
-      ggplot2::vars(.data[[track_by]]),
-      ncol = 1,
-      scales = facet_scales,
-      strip.position = "left"
-    )
+    p <- p +
+      ggplot2::facet_wrap(
+        ggplot2::vars(.data[[track_by]]),
+        ncol = 1,
+        scales = facet_scales,
+        strip.position = "left"
+      )
   }
 
   # Apply the appropriate theme and scale
-  p <- p + ez_coverage_theme() +
-    scale_x_genome_region(region)
+  p <- p + ez_coverage_theme() + scale_x_genome_region(region)
 
   return(p)
 }

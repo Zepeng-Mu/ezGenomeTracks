@@ -30,15 +30,15 @@
 #'   scale_fill_hic()
 #' }
 geom_hic <- function(
-    mapping = NULL,
-    data = NULL,
-    stat = "identity",
-    position = "identity",
-    ...,
-    resolution = NULL,
-    na.rm = FALSE,
-    show.legend = NA,
-    inherit.aes = TRUE
+  mapping = NULL,
+  data = NULL,
+  stat = "identity",
+  position = "identity",
+  ...,
+  resolution = NULL,
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
 ) {
   ggplot2::layer(
     data = data,
@@ -89,7 +89,13 @@ GeomHic <- ggproto(
     }
     data
   },
-  draw_panel = function(data, panel_params, coord, resolution = NULL, na.rm = FALSE) {
+  draw_panel = function(
+    data,
+    panel_params,
+    coord,
+    resolution = NULL,
+    na.rm = FALSE
+  ) {
     if (nrow(data) == 0) {
       return(grid::nullGrob())
     }
@@ -166,16 +172,16 @@ GeomHic <- ggproto(
 #'   coord_fixed(ratio = 0.5)
 #' }
 geom_hic_triangle <- function(
-    mapping = NULL,
-    data = NULL,
-    stat = "identity",
-    position = "identity",
-    ...,
-    resolution = NULL,
-    max_distance = NULL,
-    na.rm = FALSE,
-    show.legend = NA,
-    inherit.aes = TRUE
+  mapping = NULL,
+  data = NULL,
+  stat = "identity",
+  position = "identity",
+  ...,
+  resolution = NULL,
+  max_distance = NULL,
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
 ) {
   ggplot2::layer(
     data = data,
@@ -218,7 +224,7 @@ GeomHicTriangle <- ggproto(
       if (length(x_vals) > 1) {
         resolution <- min(diff(x_vals))
       } else {
-        resolution <- 10000  # Default fallback
+        resolution <- 10000 # Default fallback
         warning("Could not infer resolution, using default 10000bp")
       }
     }
@@ -241,8 +247,12 @@ GeomHicTriangle <- ggproto(
     data
   },
   draw_panel = function(
-      data, panel_params, coord,
-      resolution = NULL, max_distance = NULL, na.rm = FALSE
+    data,
+    panel_params,
+    coord,
+    resolution = NULL,
+    max_distance = NULL,
+    na.rm = FALSE
   ) {
     if (nrow(data) == 0) {
       return(grid::nullGrob())
@@ -360,11 +370,11 @@ GeomHicTriangle <- ggproto(
 #' hic_df <- process_hic_data("contacts.matrix", "chr1:1000000-2000000")
 #' }
 process_hic_data <- function(
-    data,
-    region = NULL,
-    resolution = 10000,
-    upper_triangle = FALSE,
-    symmetric = TRUE
+  data,
+  region = NULL,
+  resolution = 10000,
+  upper_triangle = FALSE,
+  symmetric = TRUE
 ) {
   # Case 1: File path
   if (is.character(data) && length(data) == 1 && file.exists(data)) {
@@ -383,7 +393,11 @@ process_hic_data <- function(
     n_bins <- end_bin - start_bin + 1
 
     # Read the matrix
-    hic_matrix <- as.matrix(utils::read.table(data, header = TRUE, row.names = 1))
+    hic_matrix <- as.matrix(utils::read.table(
+      data,
+      header = TRUE,
+      row.names = 1
+    ))
 
     # Extract the region of interest
     bin_indices <- seq_len(n_bins)
@@ -398,9 +412,8 @@ process_hic_data <- function(
     hic_df$pos1 <- (start_bin + hic_df$bin1 - 1) * resolution + resolution / 2
     hic_df$pos2 <- (start_bin + hic_df$bin2 - 1) * resolution + resolution / 2
     hic_df <- hic_df[, c("pos1", "pos2", "score")]
-  }
-  # Case 2: Matrix
-  else if (is.matrix(data)) {
+  } else if (is.matrix(data)) {
+    # Case 2: Matrix
     n_bins <- nrow(data)
 
     # Parse region if provided for coordinate conversion
@@ -419,9 +432,8 @@ process_hic_data <- function(
     hic_df$pos1 <- (start_bin + hic_df$bin1 - 1) * resolution + resolution / 2
     hic_df$pos2 <- (start_bin + hic_df$bin2 - 1) * resolution + resolution / 2
     hic_df <- hic_df[, c("pos1", "pos2", "score")]
-  }
-  # Case 3: Data frame (sparse format)
-  else if (is.data.frame(data)) {
+  } else if (is.data.frame(data)) {
+    # Case 3: Data frame (sparse format)
     # Check which columns are present
     if (all(c("pos1", "pos2") %in% names(data))) {
       # Already has genomic coordinates
@@ -456,8 +468,7 @@ process_hic_data <- function(
     }
 
     hic_df <- hic_df[, c("pos1", "pos2", "score")]
-  }
-  else {
+  } else {
     stop("data must be a file path, matrix, or data frame")
   }
 
@@ -527,17 +538,17 @@ process_hic_data <- function(
 #' )
 #' }
 ez_hic <- function(
-    data,
-    region,
-    resolution = 10000,
-    style = c("triangle", "square"),
-    palette = c("cooler", "ylgnbu", "viridis", "bwr"),
-    trans = "log10",
-    limits = NULL,
-    max_distance = NULL,
-    rasterize = FALSE,
-    show_diagonal = TRUE,
-    ...
+  data,
+  region,
+  resolution = 10000,
+  style = c("triangle", "square"),
+  palette = c("cooler", "ylgnbu", "viridis", "bwr"),
+  trans = "log10",
+  limits = NULL,
+  max_distance = NULL,
+  rasterize = FALSE,
+  show_diagonal = TRUE,
+  ...
 ) {
   style <- match.arg(style)
   palette <- match.arg(palette)
@@ -568,13 +579,17 @@ ez_hic <- function(
   end_pos <- GenomicRanges::end(region_gr)
 
   # Create the plot based on style
- if (style == "triangle") {
+  if (style == "triangle") {
     # Triangle view: x = midpoint, y = distance
     p <- ggplot2::ggplot(
       hic_df,
       ggplot2::aes(x = .data$pos1, y = .data$pos2, fill = .data$score)
     ) +
-      geom_hic_triangle(resolution = resolution, max_distance = max_distance, ...)
+      geom_hic_triangle(
+        resolution = resolution,
+        max_distance = max_distance,
+        ...
+      )
   } else {
     # Square heatmap view
     p <- ggplot2::ggplot(
@@ -613,7 +628,11 @@ ez_hic <- function(
         labels = function(x) format_genomic_coord(x)
       ) +
       ggplot2::coord_fixed(ratio = 1) +
-      ggplot2::labs(x = paste0("Chr", chr), y = paste0("Chr", chr), fill = "Score") +
+      ggplot2::labs(
+        x = paste0("Chr", chr),
+        y = paste0("Chr", chr),
+        fill = "Score"
+      ) +
       ez_theme()
   }
 
