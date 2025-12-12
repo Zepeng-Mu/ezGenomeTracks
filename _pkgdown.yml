@@ -1,6 +1,6 @@
 destination: docs
 
-url: https://yourusername.github.io/ezGenomeTracks/
+url: https://zepeng-mu.github.io/ezGenomeTracks/
 
 home:
   title: Easy Visualization of Genomic Tracks
@@ -90,4 +90,4 @@ navbar:
         href: articles/advanced_usage.html
     github:
       icon: fab fa-github fa-lg
-      href: https://github.com/yourusername/ezGenomeTracks
+      href: https://github.com/Zepeng-Mu/ezGenomeTracks

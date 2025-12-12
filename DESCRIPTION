@@ -9,6 +9,8 @@ Description: A package for creating genome browser-style visualizations using gg
     interaction arcs, and Hi-C contact matrices. Supports stacked track visualization with
     a common genomic coordinate system.
 License: MIT + file LICENSE
+URL: https://github.com/Zepeng-Mu/ezGenomeTracks, https://zepeng-mu.github.io/ezGenomeTracks/
+BugReports: https://github.com/Zepeng-Mu/ezGenomeTracks/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
