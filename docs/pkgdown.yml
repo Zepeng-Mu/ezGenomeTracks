@@ -2,7 +2,7 @@ pandoc: 3.8.2.1
 pkgdown: 2.1.3
 pkgdown_sha: ~
 articles: {}
-last_built: 2025-12-12T20:06Z
+last_built: 2025-12-12T21:29Z
 urls:
   reference: https://zepeng-mu.github.io/ezGenomeTracks/reference
   article: https://zepeng-mu.github.io/ezGenomeTracks/articles
