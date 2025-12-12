@@ -1,3 +1,3 @@
 # ezGenomeTracks (development version)
 
-* Initial CRAN submission.
+* v0.0.1 release.
