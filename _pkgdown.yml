@@ -16,9 +16,11 @@ reference:
     Main functions for creating genomic tracks
   contents:
   - ez_coverage
-  - ez_peak
+  - ez_feature
   - ez_gene
-  - ez_arc
+  - ez_link
+  - ez_sashimi
+  - ez_manhattan
   - ez_hic
   - genome_plot
 
@@ -26,29 +28,40 @@ reference:
   desc: "Low-level geometric objects for genomic data"
   contents:
   - geom_coverage
-  - geom_peak
+  - geom_feature
   - geom_gene
-  - geom_arc
+  - geom_link
+  - geom_manhattan
   - geom_hic
+  - geom_hic_triangle
 
-- title: "Track Functions"
-  desc: "Functions for importing and formatting track data"
+- title: "Data Processing Functions"
+  desc: "Functions for importing and processing track data"
   contents:
-  - signal_track
-  - peak_track
-  - gene_track
+  - process_signal_input
+  - process_gene_data
+  - process_interaction_data
+  - process_sashimi_data
+  - process_manhattan_input
+  - process_hic_data
+  - import_genomic_data
   - interaction_track
-  - hic_track
 
 - title: "Themes and Scales"
   desc: "Functions for customizing track appearance"
   contents:
   - ez_theme
   - ez_coverage_theme
+  - ez_feature_theme
   - ez_gene_theme
-  - ez_peak_theme
+  - ez_sashimi_theme
+  - ez_manhattan_theme
+  - ez_hic_theme
   - scale_x_genome
   - scale_x_genome_region
+  - scale_y_strand
+  - scale_fill_hic
+  - hic_palettes
 
 - title: "Annotation Functions"
   desc: "Functions for adding annotations to tracks"
@@ -57,14 +70,20 @@ reference:
   - add_hline
   - add_rect
   - add_text
+  - add_highlight
 
 - title: "Helper Functions"
-  desc: "Utility functions for data conversion"
+  desc: "Utility functions for data conversion and calculation"
   contents:
   - granges_to_df
   - df_to_granges
   - parse_region
   - format_genomic_coord
+  - extract_txdb_data
+  - get_single_signal
+  - plot_signal_df
+  - calculate_link_ylim
+  - stat_bin_signal
 
 - title: "Example Datasets"
   desc: "Example datasets for demonstration"
@@ -73,6 +92,7 @@ reference:
   - example_peaks
   - example_genes
   - example_interactions
+  - example_junctions
   - example_hic
 
 navbar:
