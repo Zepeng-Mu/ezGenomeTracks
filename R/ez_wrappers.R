@@ -890,15 +890,15 @@ ez_manhattan <- function(
 ez_gene <- function(
   data,
   region,
-  exon_height = 0.4,
-  intron_width = 0.4,
+  exon_height = 0.2,
+  intron_width = 0.6,
   exon_color = NULL,
   exon_fill = NULL,
   intron_color = NULL,
   gene_id = "gene_id",
   gene_name = "gene_name",
   y = "strand",
-  label = NULL,
+  label = "gene_name",
   label_size = 3,
   label_color = NULL,
   ...
