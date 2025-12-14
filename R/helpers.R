@@ -23,12 +23,21 @@ granges_to_df <- function(gr, keep.mcols = TRUE) {
     stop("Input must be a GRanges object")
   }
 
+  # Extract coordinates
+
+  start_vals <- GenomicRanges::start(gr)
+  end_vals <- GenomicRanges::end(gr)
+
+
+  # Adjust start when start equals end
+  start_vals <- ifelse(start_vals == end_vals, start_vals - 1, start_vals)
+
   # Create base data frame with coordinates
   df <- data.frame(
     seqnames = as.character(GenomicRanges::seqnames(gr)),
-    start = GenomicRanges::start(gr),
-    end = GenomicRanges::end(gr),
-    width = GenomicRanges::width(gr),
+    start = start_vals,
+    end = end_vals,
+    width = end_vals - start_vals,
     strand = as.character(GenomicRanges::strand(gr))
   )
 
