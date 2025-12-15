@@ -107,6 +107,15 @@ ez_coverage <- function(
 
   # Determine plotting strategy
   has_track <- "track" %in% colnames(plotDt)
+
+  # Auto-detect group column when color_by = "group" and group_var not specified
+
+  # This handles the case where process_signal_input adds a "group" column
+  # for character vector inputs (multiple files → overlapping tracks)
+  if (is.null(group_var) && color_by == "group" && "group" %in% colnames(plotDt)) {
+    group_var <- "group"
+  }
+
   has_group <- !is.null(group_var) && group_var %in% colnames(plotDt)
 
   # Create base plot
