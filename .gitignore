@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-*/.DS_Store
+.DS_Store
 .github/agents/pkgdown.agent.md
+.DS_Store

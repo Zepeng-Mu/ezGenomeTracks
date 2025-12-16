@@ -167,8 +167,8 @@ Control theme variants (`ez_theme()`, track-specific themes), y-axis visibility 
 
 ## Citation
 
-If this package aids your work, please cite it appropriately (add citation info when available).
+If this package aids your work, please cite it appropriately (e.g. mention the GitHub repo in Methods section).
 
 ## License
 
-Add license details here (e.g. MIT) if not already specified.
+MIT license.
