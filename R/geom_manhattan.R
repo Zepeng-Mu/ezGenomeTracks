@@ -226,11 +226,23 @@ geom_manhattan <- function(
   }
 
   # Determine if custom color column is discrete or continuous
+  # Special case: if color_by is the chromosome column, always treat as discrete
   is_color_discrete <- FALSE
+  is_chr_coloring <- FALSE
   if (is_custom_color_col) {
-    color_col_data <- plot_data[[color_by]]
-    is_color_discrete <- !is.numeric(color_col_data) ||
-      is.factor(color_col_data)
+    # Check if color_by is the chromosome column (for alternating chr colors)
+    is_chr_coloring <- color_by == chr
+    if (is_chr_coloring) {
+      is_color_discrete <- TRUE
+      # Convert chromosome column to factor for discrete scale
+      # Use unique values in current order to preserve chromosome ordering
+      chr_levels <- unique(plot_data[[color_by]])
+      plot_data[[color_by]] <- factor(plot_data[[color_by]], levels = chr_levels)
+    } else {
+      color_col_data <- plot_data[[color_by]]
+      is_color_discrete <- !is.numeric(color_col_data) ||
+        is.factor(color_col_data)
+    }
   }
 
   # Process based on mode
@@ -320,17 +332,31 @@ geom_manhattan <- function(
   if (is_custom_color_col) {
     if (is_color_discrete) {
       # Discrete column: use manual scale
+      n_levels <- length(unique(plot_data[[color_by]]))
       if (is.null(colors)) {
-        # Use ggplot2 default discrete colors (no scale needed, ggplot2 handles it)
-        # But we can use a nice default palette
-        n_levels <- length(unique(plot_data[[color_by]]))
+        # Use ggplot2 default discrete colors
         colors <- scales::hue_pal()(n_levels)
       }
-      layer_list$color_scale <- ggplot2::scale_color_manual(
-        values = colors,
-        name = color_by,
-        na.value = "grey50"
-      )
+
+      # For chromosome coloring, cycle through colors for alternating effect
+      if (is_chr_coloring) {
+        # Get unique chromosome values in order
+        chr_levels <- unique(plot_data[[color_by]])
+        # Cycle colors to match number of chromosomes
+        chr_colors <- rep_len(colors, length(chr_levels))
+        names(chr_colors) <- chr_levels
+        layer_list$color_scale <- ggplot2::scale_color_manual(
+          values = chr_colors,
+          guide = "none",  # Hide legend for chromosome coloring
+          na.value = "grey50"
+        )
+      } else {
+        layer_list$color_scale <- ggplot2::scale_color_manual(
+          values = colors,
+          name = color_by,
+          na.value = "grey50"
+        )
+      }
     } else {
       # Continuous column: use gradient scale
       if (is.null(colors)) {
