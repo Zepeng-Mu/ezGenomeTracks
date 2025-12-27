@@ -11,8 +11,7 @@
 #'   - `"heatmap"`: `score` is mapped to `fill`, producing colored tiles.
 #' @param na.rm If `TRUE`, silently drop `NA` values.
 #' @param ... Additional arguments passed to [ggplot2::layer()], e.g.
-#'   `linewidth = 0.8`, or `alpha = 0.6`. Note: `color` and `colour` parameters
-#'   are ignored as this geom only uses fill aesthetics.
+#'   `linewidth = 0.8`, or `alpha = 0.6`.
 #'
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
@@ -82,22 +81,21 @@ geom_coverage <- function(
     mapping <- do.call(aes, mapping)
   }
 
-  # Force color aesthetic to NA to prevent borders
+  # Force color aesthetic to NA to prevent borders on geom elements
   dots <- list(...)
   dots$color <- NULL
   dots$colour <- NULL
 
-  # Explicitly set colour to NA in params
   params_list <- utils::modifyList(
     list(
       type = type,
       na.rm = na.rm,
-      colour = NA # Force no border
+      colour = NA
     ),
     dots
   )
 
-  layer(
+  geom_layer <- layer(
     data = data,
     mapping = mapping,
     stat = stat,
@@ -107,6 +105,8 @@ geom_coverage <- function(
     inherit.aes = inherit.aes,
     params = params_list
   )
+
+  geom_layer
 }
 
 #' @rdname geom_coverage

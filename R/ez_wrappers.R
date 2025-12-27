@@ -16,6 +16,8 @@
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
 #' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
+#' @param border Logical. If `TRUE`, adds a black border around the plotting panel (default: FALSE)
+#' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
 #' @param ... Additional arguments passed to geom_coverage
 #' @return A ggplot2 object
 #' @export
@@ -66,6 +68,8 @@ ez_coverage <- function(
   alpha = 0.5,
   bin_width = NULL,
   facet_label_position = c("top", "left"),
+  border = FALSE,
+  show_legend = FALSE,
   ...
 ) {
   # Validate inputs
@@ -112,7 +116,9 @@ ez_coverage <- function(
 
   # This handles the case where process_signal_input adds a "group" column
   # for character vector inputs (multiple files → overlapping tracks)
-  if (is.null(group_var) && color_by == "group" && "group" %in% colnames(plotDt)) {
+  if (
+    is.null(group_var) && color_by == "group" && "group" %in% colnames(plotDt)
+  ) {
     group_var <- "group"
   }
 
@@ -170,7 +176,11 @@ ez_coverage <- function(
     names(plot_colors) <- color_values
 
     p <- p +
-      ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
+      ggplot2::scale_fill_manual(
+        values = plot_colors,
+        name = legend_name,
+        guide = if (show_legend) "legend" else "none"
+      )
   } else {
     # No grouping - use single color or track-based colors
     if (has_track) {
@@ -198,7 +208,11 @@ ez_coverage <- function(
       names(plot_colors) <- color_values
 
       p <- p +
-        ggplot2::scale_fill_manual(values = plot_colors, name = legend_name)
+        ggplot2::scale_fill_manual(
+          values = plot_colors,
+          name = legend_name,
+          guide = if (show_legend) "legend" else "none"
+        )
     } else {
       # Single track without grouping
       p <- ggplot2::ggplot(
@@ -222,14 +236,17 @@ ez_coverage <- function(
           ~track,
           ncol = 1,
           scales = "free_y",
-          strip.position = "left"
+          strip.position = "left",
         ) +
         ggplot2::theme(
           strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
-          strip.placement = "outside"
+          strip.placement = "inside",
+          panel.spacing.y = ggplot2::unit(0, "pt")
         )
     } else {
-      p <- p + ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
+      p <- p +
+        ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
+        ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
     }
   }
 
@@ -245,6 +262,23 @@ ez_coverage <- function(
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
     ggplot2::coord_cartesian(ylim = y_range) +
     ggplot2::labs(x = paste0("Chr", chr))
+
+  # Apply border after theme (so it doesn't get overwritten)
+  if (border) {
+    p <- p +
+      ggplot2::theme(
+        panel.border = ggplot2::element_rect(
+          colour = "black",
+          fill = NA,
+          linewidth = 0.5
+        )
+      )
+  }
+
+  # Remove spacing between facet panels (applied last to avoid being overwritten)
+  if (has_track) {
+    p <- p + ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
+  }
 
   return(p)
 }
