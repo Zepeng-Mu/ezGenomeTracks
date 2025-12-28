@@ -5,3 +5,4 @@
 ^pkgdown$
 ^vignettes/articles$
 ^\.github$
+^\.github/copilot-instructions\.md$

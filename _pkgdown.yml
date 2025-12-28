@@ -102,18 +102,18 @@ navbar:
   components:
     intro:
       text: Get started
-      href: articles/get_started.html
+      href: get_started.html
     tracks:
       text: Tracks
       menu:
       - text: Coverage
-        href: articles/tracks_coverage.html
+        href: tracks_coverage.html
       - text: Gene
-        href: articles/tracks_gene.html
+        href: tracks_gene.html
       - text: Sashimi
-        href: articles/tracks_sashimi.html
+        href: tracks_sashimi.html
       - text: Manhattan
-        href: articles/tracks_manhattan.html
+        href: tracks_manhattan.html
     github:
       icon: fab fa-github fa-lg
       href: https://github.com/Zepeng-Mu/ezGenomeTracks
