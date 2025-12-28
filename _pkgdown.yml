@@ -107,13 +107,13 @@ navbar:
       text: Tracks
       menu:
       - text: Coverage
-        href: tracks_coverage.html
+        href: articles/tracks_coverage.html
       - text: Gene
-        href: tracks_gene.html
+        href: articles/tracks_gene.html
       - text: Sashimi
-        href: tracks_sashimi.html
+        href: articles/tracks_sashimi.html
       - text: Manhattan
-        href: tracks_manhattan.html
+        href: articles/tracks_manhattan.html
     github:
       icon: fab fa-github fa-lg
       href: https://github.com/Zepeng-Mu/ezGenomeTracks
