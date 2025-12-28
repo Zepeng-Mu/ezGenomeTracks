@@ -15,7 +15,7 @@
 #'
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
-#' @importFrom ggplot2 GeomRect GeomTile layer aes ggproto Geom
+#' @importFrom ggplot2 GeomRect GeomTile GeomPath layer aes ggproto Geom
 #'
 #' @examples
 #' \dontrun{
@@ -81,18 +81,12 @@ geom_coverage <- function(
     mapping <- do.call(aes, mapping)
   }
 
-  # Force color aesthetic to NA to prevent borders on geom elements
-  dots <- list(...)
-  dots$color <- NULL
-  dots$colour <- NULL
-
   params_list <- utils::modifyList(
     list(
       type = type,
-      na.rm = na.rm,
-      colour = NA
+      na.rm = na.rm
     ),
-    dots
+    list(...)
   )
 
   geom_layer <- layer(
@@ -112,6 +106,7 @@ geom_coverage <- function(
 #' @rdname geom_coverage
 #' @format NULL
 #' @usage NULL
+#' @importFrom ggplot2 GeomPath
 GeomCoverage <- ggproto(
   "GeomCoverage",
   Geom,
@@ -133,8 +128,64 @@ GeomCoverage <- ggproto(
       data$y <- 1
       data$height <- 1
       GeomTile$draw_panel(data, panel_params, coord)
+    } else if (type == "line") {
+      # For line type, create step-like path connecting score values
+      # Use 'fill' aesthetic as the line colour (since fill is the user-facing "color" param)
+      n <- nrow(data)
+      if (n == 0) return(grid::nullGrob())
+
+      # Determine the grouping variable
+      if ("group" %in% names(data)) {
+        groups <- unique(data$group)
+      } else {
+        groups <- 1
+        data$group <- 1
+      }
+
+      # Build path data for each group
+      path_data_list <- lapply(groups, function(g) {
+        gdata <- data[data$group == g, , drop = FALSE]
+        gdata <- gdata[order(gdata$xmin), , drop = FALSE]
+        gn <- nrow(gdata)
+        if (gn == 0) return(NULL)
+
+        # Create step pattern: start -> end at ymax level for each bin
+        x_coords <- numeric(2 * gn)
+        y_coords <- numeric(2 * gn)
+        for (i in seq_len(gn)) {
+          x_coords[2 * i - 1] <- gdata$xmin[i]
+          x_coords[2 * i] <- gdata$xmax[i]
+          y_coords[2 * i - 1] <- gdata$ymax[i]
+          y_coords[2 * i] <- gdata$ymax[i]
+        }
+
+        # Use fill as the line colour (fill is the user-facing "color" of the track)
+        line_colour <- if ("fill" %in% names(gdata) &&
+                           length(gdata$fill) > 0 &&
+                           !all(is.na(gdata$fill))) {
+          gdata$fill[1]
+        } else {
+          "steelblue"
+        }
+
+        data.frame(
+          x = x_coords,
+          y = y_coords,
+          PANEL = gdata$PANEL[1],
+          group = g,
+          colour = line_colour,
+          linewidth = gdata$linewidth[1],
+          linetype = gdata$linetype[1],
+          alpha = gdata$alpha[1]
+        )
+      })
+
+      path_data <- do.call(rbind, path_data_list)
+
+      GeomPath$draw_panel(path_data, panel_params, coord)
     } else {
-      # Use GeomRect for area and line (which accepts xmin, xmax, ymin, ymax)
+      # Use GeomRect for area type - suppress borders by setting colour = NA
+      data$colour <- NA
       GeomRect$draw_panel(data, panel_params, coord)
     }
   },

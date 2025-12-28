@@ -7,10 +7,12 @@
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
 #' @param track_labels Optional vector of track labels (used for character vector input)
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
-#' @param fill Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.
 #' @param group_var Column name for grouping data within a single data frame (default: NULL)
 #' @param color_by Whether colors distinguish "group" or "track" (default: "group")
-#' @param colors Color palette for groups/tracks. If NULL, uses default palette (default: NULL)
+#' @param colors Color(s) for the coverage track. Can be a single color (e.g., "steelblue") or
+#'   a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
+#'   If fewer colors than tracks/groups are provided, colors will be recycled.
+#'   Default is "steelblue".
 #' @param y_axis_style Y-axis style: "none", "simple", or "full" (default: "none")
 #' @param y_range Y-axis range limits (default: NULL)
 #' @param alpha Transparency (default: 0.5)
@@ -39,7 +41,7 @@
 #'   seqnames = "chr1", start = 1:100, end = 1:100,
 #'   score = rnorm(100), sample = rep(c("A", "B"), 50)
 #' )
-#' ez_coverage(df, "chr1:1-100", group_var = "sample")
+#' ez_coverage(df, "chr1:1-100", group_var = "sample", colors = c("blue", "orange"))
 #'
 #' # Character vector of files
 #' ez_coverage(c("sample1.bw", "sample2.bw"), "chr1:1-100")
@@ -51,7 +53,8 @@
 #'     "H3K27ac" = "h3k27ac.bw",
 #'     "H3K4me3" = c("rep1.bw", "rep2.bw")
 #'   ),
-#'   "chr1:1-100"
+#'   "chr1:1-100",
+#'   colors = c("purple", "darkgreen", "orange")
 #' )
 #' }
 ez_coverage <- function(
@@ -59,10 +62,9 @@ ez_coverage <- function(
   region,
   track_labels = NULL,
   type = c("area", "line", "heatmap"),
-  fill = "steelblue",
   group_var = NULL,
   color_by = c("group", "track"),
-  colors = NULL,
+  colors = "steelblue",
   y_axis_style = c("none", "simple", "full"),
   y_range = NULL,
   alpha = 0.5,
@@ -87,25 +89,6 @@ ez_coverage <- function(
 
   chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
 
-  # Default color palette function
-  get_default_colors <- function(n) {
-    if (n <= 9) {
-      return(c(
-        "#1f4e79",
-        "#d35400",
-        "#27ae60",
-        "#8e44ad",
-        "#f1c40f",
-        "#16a085",
-        "#e74c3c",
-        "#8b4513",
-        "#5d6d7e"
-      )[1:n])
-    } else {
-      return(rainbow(n))
-    }
-  }
-
   # Process input using helper function (handles GRanges, data.frame, character, list)
   plotDt <- process_signal_input(input, region, track_labels)
 
@@ -125,8 +108,9 @@ ez_coverage <- function(
   has_group <- !is.null(group_var) && group_var %in% colnames(plotDt)
 
   # Create base plot
+  # Always use 'fill' aesthetic - GeomCoverage handles converting fill to line colour for type="line"
   if (has_group) {
-    # Data has grouping - use color/fill mapping
+    # Data has grouping - use fill mapping
     if (has_track) {
       # Multiple tracks with grouping
       if (color_by == "group") {
@@ -166,13 +150,9 @@ ez_coverage <- function(
     p <- ggplot2::ggplot(plotDt, aes_mapping) +
       geom_coverage(type = type, alpha = alpha, ...)
 
-    # Apply color scales
+    # Apply color scales - recycle colors if needed
     n_colors <- length(color_values)
-    if (is.null(colors)) {
-      plot_colors <- get_default_colors(n_colors)
-    } else {
-      plot_colors <- colors[1:n_colors]
-    }
+    plot_colors <- rep_len(colors, n_colors)
     names(plot_colors) <- color_values
 
     p <- p +
@@ -198,13 +178,9 @@ ez_coverage <- function(
       p <- ggplot2::ggplot(plotDt, aes_mapping) +
         geom_coverage(type = type, alpha = alpha, ...)
 
-      # Apply color scales
+      # Apply color scales - recycle colors if needed
       n_colors <- length(color_values)
-      if (is.null(colors)) {
-        plot_colors <- get_default_colors(n_colors)
-      } else {
-        plot_colors <- colors[1:n_colors]
-      }
+      plot_colors <- rep_len(colors, n_colors)
       names(plot_colors) <- color_values
 
       p <- p +
@@ -221,7 +197,7 @@ ez_coverage <- function(
       ) +
         geom_coverage(
           type = type,
-          fill = fill,
+          fill = colors[1],
           alpha = alpha,
           ...
         )
