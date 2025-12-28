@@ -1,6 +1,12 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/404.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/LICENSE-text.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/get_started.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/index.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_coverage.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_gene.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_manhattan.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_sashimi.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/authors.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/copilot-instructions.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/index.html</loc></url>

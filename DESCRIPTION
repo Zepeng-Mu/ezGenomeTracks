@@ -32,7 +32,10 @@ Suggests:
     BiocStyle,
     roxygen2,
     pkgdown,
-    GenomicFeatures
+    GenomicFeatures,
+    covr,
+    withr,
+    mockr
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BiocViews: Visualization, Sequencing, HiC

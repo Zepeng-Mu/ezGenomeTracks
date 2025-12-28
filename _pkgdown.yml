@@ -3,12 +3,12 @@ destination: docs
 url: https://zepeng-mu.github.io/ezGenomeTracks/
 
 home:
-  title: Easy Visualization of Genomic Tracks
+  title: ezGenomeTracks
   description: A ggplot2-based R package for creating publication-quality genomic track visualizations
 
 template:
   bootstrap: 5
-  bootswatch: flatly
+  bootswatch: journal
 
 reference:
 - title: "Core Functions"
@@ -97,17 +97,36 @@ reference:
 
 navbar:
   structure:
-    left: [intro, reference, articles, tutorials, news]
+    left: [intro, articles, tracks, reference, news]
     right: [github]
   components:
     intro:
-      text: Introduction
-      href: articles/introduction.html
+      text: Get started
+      href: articles/get_started.html
     articles:
       text: Articles
       menu:
+      - text: Basic Usage
+        href: articles/basic_usage.html
       - text: Advanced Usage
         href: articles/advanced_usage.html
+    tracks:
+      text: Tracks
+      menu:
+      - text: Coverage
+        href: articles/tracks_coverage.html
+      - text: Gene
+        href: articles/tracks_gene.html
+      - text: Feature
+        href: articles/tracks_feature.html
+      - text: Link
+        href: articles/tracks_link.html
+      - text: Sashimi
+        href: articles/tracks_sashimi.html
+      - text: Manhattan
+        href: articles/tracks_manhattan.html
+      - text: HiC
+        href: articles/tracks_manhattan.html
     github:
       icon: fab fa-github fa-lg
       href: https://github.com/Zepeng-Mu/ezGenomeTracks
