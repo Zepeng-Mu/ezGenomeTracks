@@ -1,0 +1,44 @@
+---
+title: "Manhattan plot"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ezGenomeTracks)
+```
+
+`ezGenomeTracks` allows for two type of Manhattan plots. First, a genome-wide Manhattan when more than one chromosome is involved. This is very typical for GWAS results. Second, a region-level Manhattan plot, which is more similar to a LocusZoom plot.
+
+# Genome-wide Manhattan plot
+
+We use the example GWAS data from `qqman` package to demonstrate genome-wide Manhattan.
+
+```{r}
+library(qqman)
+head(gwasResults)
+```
+
+```{r}
+ez_manhattan(
+  input = gwasResults,
+  chr = "CHR",
+  bp = "BP",
+  p = "P",
+  color_by = "CHR",
+  colors = c("grey", "skyblue")
+)
+```
+
+# Region-level Manhattan plot
+
+```{r}
+ez_manhattan(
+  input = gwasResults |> dplyr::filter(CHR == 1)
+)
+```

@@ -1,0 +1,83 @@
+---
+title: "Get started"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ezGenomeTracks)
+```
+
+# Motivation
+
+There are several R/python packages that plot genome browser tracks, but most of them require a lot of coding to set up. PygenomeTracks is one of my favorite, but it requires writing `.ini` configuration files and running command-line tools, which can be cumbersome for R users, and is not flexible for data exploration.
+
+Using `ggplot2`, it is possible to generate beautiful genome browser plots, although it typically requires a lot of custom code and data wrangling. That motivated me to create an R package that is based on `ggplot2`, while providing simple high-level functions for common track types. The goal is to make it easy to create publication-quality genome browser plots with minimal code, while still allowing for advanced customization when needed.
+
+# Design principles
+
+ezGenomeTracks is designed around three core principles: modular ggplot2 geoms, simple high-level wrappers, and consistent genomic scaling and styling. The package provides both low-level building blocks for advanced customization and easy-to-use helpers for quick plotting.
+
+**Easy `ez_*` wrappers**: For most common use-cases the package provides `ez_*()` helper functions such as `ez_coverage()`, `ez_gene()`, and `ez_feature()`. These wrappers accept flexible input types (file paths, `data.frame`, `GRanges`, or named lists) and internally prepare the data, select sensible defaults, and return a full ggplot2 layer or complete track that you can stack with `genome_plot()`. I imagine most users will primarily use these high-level wrappers for quick plotting.
+
+```{r, eval = FALSE}
+# one-line coverage track from a bigWig or data.frame
+cov <- ez_coverage("inst/extdata/example_signal.bw", colour = "steelblue")
+
+# one-line gene model track
+genes <- ez_gene(example_genes)
+
+# stack and display
+genome_plot(list(cov, genes), region = "chr1:100000-101000")
+```
+
+**Custom Geoms**: Some power users may want to custom their plots beyond what the `ez_*` wrappers can provide. In this case, the package also exposes a set of `geom_*()` layers (e.g. `geom_coverage()`, `geom_gene()`, `geom_feature()`, `geom_link()`, `geom_hic()`). Because these are regular `ggplot2` geoms you can use them directly with any `ggplot()` call.
+
+```{r, eval = FALSE}
+library(ggplot2)
+library(ezGenomeTracks)
+
+# `signal_df` is a data frame with columns `seqnames`, `start`, `end`, `score`
+ggplot(signal_df) +
+  geom_coverage(aes(xmin = start, xmax = end, y = score)) +
+  scale_x_genome_region(region = "chr1:100000-101000")
+```
+
+**Genomic scales for readable labels**: Genomic coordinates can be large and hard to read when plotted directly. The package provides `scale_x_genome_region()` and related helpers which transform coordinate labels into human-friendly formats and enforce consistent axis limits across stacked tracks. Key behaviors:
+
+- Accepts a `region` specification (string like "chr1:1000-2000" or a `GRanges`) and sets `x` limits to that region so all stacked tracks share the same genomic window.
+- Formats tick labels in base pairs, kilobases (kb), or megabases (Mb) as appropriate so axis labels are compact and readable.
+- Optionally shows chromosome names and relative offsets to make cross-track alignment clear.
+
+Using `scale_x_genome_region()` keeps multi-track plots aligned and makes numeric labels concise — e.g., `100,000` becomes `100 kb` where appropriate.
+
+```{r, eval = FALSE}
+plot_list <- list(ez_coverage(example_signal), ez_gene(example_genes))
+genome_plot(plot_list, region = "chr2:50000-80000") +
+  scale_x_genome_region(region = "chr2:50000-80000")
+```
+
+**Custom themes for simple, pretty plots**: The package defines `ez_theme()` as a minimal base theme and track-specific themes such as `ez_coverage_theme()` and `ez_gene_theme()`. These themes remove unnecessary gridlines, adjust margins, and set clean defaults for fonts, axis appearance, and legend placement so the resulting tracks are visually consistent and publication-ready.
+
+Themes are lightweight and composable, so you can add or override small pieces with ggplot2 theme calls. Examples of what the themes control:
+
+- Background and grid visibility
+- Y-axis labeling and tick formatting for strand-aware tracks
+- Default colors and palettes for Hi-C / interaction plots
+- Spacing between stacked tracks (via `heights` in `genome_plot()`)
+
+Example — applying themes and tweaking appearance:
+
+```{r, eval = FALSE}
+p <- ez_coverage(example_signal) + ez_coverage_theme()
+q <- ez_gene(example_genes) + ez_gene_theme()
+
+genome_plot(list(p, q), region = "chr1:100000-101000", heights = c(1, 0.8))
+```
+
+**Stacking tracks vertically with `genome_plot()`**: Finally, the `genome_plot()` function takes a list of ggplot2 layers (from `ez_*` wrappers or custom geoms) and stacks them vertically into a single plot. It handles aligning the x-axes, applying themes, and adjusting track heights for a cohesive multi-track visualization. I believe this is a powerful yet flexible way to compose complex genome browser views as it allows the user to tinker with individual tracks first and then combine them seamlessly.

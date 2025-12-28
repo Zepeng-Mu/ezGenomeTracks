@@ -1,0 +1,28 @@
+---
+title: "tracks_gene"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ezGenomeTracks)
+```
+
+`ezGenomeTracks` provides functions to interact with `TxDb` objects, map gene ID to symbols and plot genes.
+
+```{r}
+library(org.Hs.eg.db)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+
+txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+```
+
+
+```{r}
+geneRegion <- "chr12:6,534,517-6,538,371"
+```
