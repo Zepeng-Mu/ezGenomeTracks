@@ -102,7 +102,7 @@ navbar:
   components:
     intro:
       text: Get started
-      href: get_started.html
+      href: articles/get_started.html
     tracks:
       text: Tracks
       menu:
