@@ -28,7 +28,6 @@ granges_to_df <- function(gr, keep.mcols = TRUE) {
   start_vals <- GenomicRanges::start(gr)
   end_vals <- GenomicRanges::end(gr)
 
-
   # Adjust start when start equals end
   start_vals <- ifelse(start_vals == end_vals, start_vals - 1, start_vals)
 
@@ -470,12 +469,15 @@ parse_region <- function(region) {
     stop("Region must be a single character string")
   }
 
+  # Remove commas (thousand separators) from the region string
+  region <- gsub(",", "", region)
+
   # Parse the region string using regular expression
   # Match pattern: chromosome followed by any separator (: _ -) then start and end positions
   matches <- regexpr("^(.+?)[:_-](\\d+)[:_-](\\d+)$", region, perl = TRUE)
   if (matches == -1) {
     stop(
-      "Region must be in the format 'chr*start*end' where * can be :, _, or -"
+      "Region must be in the format 'chr*start*end' where * can be `:`, `_`, or `-`"
     )
   }
 

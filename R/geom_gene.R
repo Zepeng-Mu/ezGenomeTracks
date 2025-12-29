@@ -594,8 +594,14 @@ extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
   if (is.null(org.Hs.eg.db)) {
     # Common OrgDb package names to check
     orgdb_packages <- c(
-      "org.Hs.eg.db", "org.Mm.eg.db", "org.Rn.eg.db", "org.Dm.eg.db",
-      "org.Ce.eg.db", "org.Sc.sgd.db", "org.Dr.eg.db", "org.At.tair.db"
+      "org.Hs.eg.db",
+      "org.Mm.eg.db",
+      "org.Rn.eg.db",
+      "org.Dm.eg.db",
+      "org.Ce.eg.db",
+      "org.Sc.sgd.db",
+      "org.Dr.eg.db",
+      "org.At.tair.db"
     )
 
     for (pkg_name in orgdb_packages) {
