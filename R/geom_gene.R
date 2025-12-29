@@ -560,18 +560,24 @@ process_gene_data <- function(
 #'
 #' @param txdb A TxDb object (e.g., TxDb.Hsapiens.UCSC.hg19.knownGene)
 #' @param region_gr A GRanges object specifying the genomic region
+#' @param org.Hs.eg.db An OrgDb object for gene symbol lookup (e.g., org.Hs.eg.db).
+#'   If NULL (default), the function will attempt to auto-detect an OrgDb
+#'   object from the global environment. If not found, gene IDs will be used
+#'   as gene names.
 #' @return A data frame with gene and exon information formatted for geom_gene
+#' @export
 #' @importFrom GenomicFeatures genes exonsBy
 #' @importFrom IRanges subsetByOverlaps findOverlaps
 #' @importFrom AnnotationDbi select
 #' @examples
 #' \dontrun{
 #' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#' library(org.Hs.eg.db)
 #' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 #' region_gr <- parse_region("chr1:1000000-2000000")
 #' gene_data <- extract_txdb_data(txdb, region_gr)
 #' }
-extract_txdb_data <- function(txdb, org.Hs.eg.db, region_gr) {
+extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
   # Check dependencies
   if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
     stop(
@@ -582,6 +588,31 @@ extract_txdb_data <- function(txdb, org.Hs.eg.db, region_gr) {
     stop(
       "Package 'AnnotationDbi' is required for TxDb support. Install it with: BiocManager::install('AnnotationDbi')"
     )
+  }
+
+  # Auto-detect OrgDb if not provided
+  if (is.null(org.Hs.eg.db)) {
+    # Common OrgDb package names to check
+    orgdb_packages <- c(
+      "org.Hs.eg.db", "org.Mm.eg.db", "org.Rn.eg.db", "org.Dm.eg.db",
+      "org.Ce.eg.db", "org.Sc.sgd.db", "org.Dr.eg.db", "org.At.tair.db"
+    )
+
+    for (pkg_name in orgdb_packages) {
+      # Check if package is available and try to load the OrgDb object
+      if (requireNamespace(pkg_name, quietly = TRUE)) {
+        # Use package::package pattern to access the OrgDb object
+        candidate <- tryCatch(
+          eval(parse(text = paste0(pkg_name, "::", pkg_name))),
+          error = function(e) NULL
+        )
+        if (!is.null(candidate) && methods::is(candidate, "OrgDb")) {
+          org.Hs.eg.db <- candidate
+          message("Auto-detected OrgDb: ", pkg_name)
+          break
+        }
+      }
+    }
   }
 
   # 1. Extract genes in region
@@ -595,22 +626,27 @@ extract_txdb_data <- function(txdb, org.Hs.eg.db, region_gr) {
 
   # 2. Get gene symbols
   gene_ids <- names(region_genes)
-  gene_symbols <- tryCatch(
-    {
-      gene_info <- AnnotationDbi::select(
-        org.Hs.eg.db,
-        keys = gene_ids,
-        columns = c("ENTREZID", "SYMBOL"),
-        keytype = "ENTREZID"
-      )
-      # Create lookup: gene_id -> gene_symbol
-      setNames(gene_info$SYMBOL, gene_info$ENTREZID)
-    },
-    error = function(e) {
-      # Fallback: use gene_id if symbols not available
-      setNames(gene_ids, gene_ids)
-    }
-  )
+  gene_symbols <- if (!is.null(org.Hs.eg.db)) {
+    tryCatch(
+      {
+        gene_info <- AnnotationDbi::select(
+          org.Hs.eg.db,
+          keys = gene_ids,
+          columns = c("ENTREZID", "SYMBOL"),
+          keytype = "ENTREZID"
+        )
+        # Create lookup: gene_id -> gene_symbol
+        setNames(gene_info$SYMBOL, gene_info$ENTREZID)
+      },
+      error = function(e) {
+        # Fallback: use gene_id if symbols not available
+        setNames(gene_ids, gene_ids)
+      }
+    )
+  } else {
+    # No OrgDb available, use gene IDs as names
+    setNames(gene_ids, gene_ids)
+  }
 
   # 3. Extract exons
   all_exons <- GenomicFeatures::exonsBy(txdb, by = "gene")
