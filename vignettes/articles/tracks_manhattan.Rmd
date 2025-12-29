@@ -15,7 +15,7 @@ library(ezGenomeTracks)
 
 `ezGenomeTracks` allows for two type of Manhattan plots. First, a genome-wide Manhattan when more than one chromosome is involved. This is very typical for GWAS results. Second, a region-level Manhattan plot, which is more similar to a LocusZoom plot.
 
-# Genome-wide Manhattan plot
+## Genome-wide Manhattan plot
 
 We use the example GWAS data from `qqman` package to demonstrate genome-wide Manhattan.
 
@@ -35,10 +35,21 @@ ez_manhattan(
 )
 ```
 
-# Region-level Manhattan plot
+## Region-level Manhattan plot
+
+You can use `r2` option to color the dots with LD information.
 
 ```{r}
+region <- "chr3:200-500"
+locusResults <- gwasResults |> 
+  dplyr::filter(CHR == 3 & BP > 200 & BP < 500)
+
 ez_manhattan(
-  input = gwasResults |> dplyr::filter(CHR == 1)
+  input = locusResults,
+  region = region,
+  snp = "SNP",
+  lead_snp = "rs3057",
+  r2 = -log10(locusResults$P) / max(-log10(locusResults$P)),
+  size = 1
 )
 ```

@@ -1,5 +1,5 @@
 ---
-title: "tracks_gene"
+title: "Gene track"
 ---
 
 ```{r, include = FALSE}
@@ -15,6 +15,8 @@ library(ezGenomeTracks)
 
 `ezGenomeTracks` provides functions to interact with `TxDb` objects, map gene ID to symbols and plot genes.
 
+## Set up data
+
 ```{r}
 library(org.Hs.eg.db)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
@@ -22,7 +24,24 @@ library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 ```
 
+## Plot genes with `ez_gene`
 
-```{r}
-geneRegion <- "chr12:6,534,517-6,538,371"
+```{r, fig.height=1}
+geneRegion <- "chr10:6,012,410-6,063,160"
+
+ez_gene(data = txdb, geneRegion)
+```
+
+## Advanced usage
+
+Extracting gene information from a `TxDb` object can be slow. Alternatively, you can use functions provided in the package to extract gene information from a given region, and use the output data frame for plotting.
+
+```{r, fig.height=1}
+geneRegion <- "chr10:6,012,410-6,063,160"
+geneDf <- ezGenomeTracks:::extract_txdb_data(
+  txdb,
+  region_gr = ezGenomeTracks::parse_region(geneRegion)
+)
+
+ez_gene(data = geneDf, geneRegion)
 ```

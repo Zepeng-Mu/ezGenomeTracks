@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Coverage • ezGenomeTracks</title>
+<title>Coverage track • ezGenomeTracks</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Coverage">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Coverage track">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -57,7 +57,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Coverage</h1>
+      <h1>Coverage track</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/Zepeng-Mu/ezGenomeTracks/blob/HEAD/vignettes/articles/tracks_coverage.Rmd" class="external-link"><code>vignettes/articles/tracks_coverage.Rmd</code></a></small>
@@ -149,9 +149,7 @@ wrappers, automatically convert the x-axis to readable scales.</p>
 <span>  track_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AA"</span>, <span class="st">"AG"</span>, <span class="st">"GG"</span><span class="op">)</span>,</span>
 <span>  facet_label_position <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  show_legend <span class="op">=</span> <span class="cn">T</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in geom_coverage(type = type, alpha = alpha, ...): Ignoring</span></span>
-<span><span class="co">#&gt; unknown parameters: `show_legend`</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 <p><img src="tracks_coverage_files/figure-html/unnamed-chunk-4-3.png" width="700"></p>
 <p>There are two notable things in the above examples. First, we can use
 <code>show_legend = T</code> add legends back. Second, the stacked
@@ -210,9 +208,7 @@ differential usage across the three genotypes.</p>
 <span>  track_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AA"</span>, <span class="st">"AG"</span>, <span class="st">"GG"</span><span class="op">)</span>,</span>
 <span>  facet_label_position <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  border <span class="op">=</span> <span class="cn">T</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in geom_coverage(type = type, alpha = alpha, ...): Ignoring</span></span>
-<span><span class="co">#&gt; unknown parameters: `border`</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 <p><img src="tracks_coverage_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 <p>Draw lines for coverage.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
@@ -227,9 +223,7 @@ differential usage across the three genotypes.</p>
 <span>  track_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AA"</span>, <span class="st">"AG"</span>, <span class="st">"GG"</span><span class="op">)</span>,</span>
 <span>  facet_label_position <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  show_legend <span class="op">=</span> <span class="cn">T</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in geom_coverage(type = type, fill = fill, alpha = alpha, ...):</span></span>
-<span><span class="co">#&gt; Ignoring unknown parameters: `show_legend`</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 <p><img src="tracks_coverage_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 </div>
 </div>

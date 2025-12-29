@@ -111,9 +111,20 @@ demonstrate genome-wide Manhattan.</p>
 <div class="section level2">
 <h2 id="region-level-manhattan-plot">Region-level Manhattan plot<a class="anchor" aria-label="anchor" href="#region-level-manhattan-plot"></a>
 </h2>
+<p>You can use <code>r2</code> option to color the dots with LD
+information.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_manhattan.html">ez_manhattan</a></span><span class="op">(</span></span>
-<span>  input <span class="op">=</span> <span class="va">gwasResults</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">CHR</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">region</span> <span class="op">&lt;-</span> <span class="st">"chr3:200-500"</span></span>
+<span><span class="va">locusResults</span> <span class="op">&lt;-</span> <span class="va">gwasResults</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">CHR</span> <span class="op">==</span> <span class="fl">3</span> <span class="op">&amp;</span> <span class="va">BP</span> <span class="op">&gt;</span> <span class="fl">200</span> <span class="op">&amp;</span> <span class="va">BP</span> <span class="op">&lt;</span> <span class="fl">500</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/ez_manhattan.html">ez_manhattan</a></span><span class="op">(</span></span>
+<span>  input <span class="op">=</span> <span class="va">locusResults</span>,</span>
+<span>  region <span class="op">=</span> <span class="va">region</span>,</span>
+<span>  snp <span class="op">=</span> <span class="st">"SNP"</span>,</span>
+<span>  lead_snp <span class="op">=</span> <span class="st">"rs3057"</span>,</span>
+<span>  r2 <span class="op">=</span> <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log10</a></span><span class="op">(</span><span class="va">locusResults</span><span class="op">$</span><span class="va">P</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log10</a></span><span class="op">(</span><span class="va">locusResults</span><span class="op">$</span><span class="va">P</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  size <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="tracks_manhattan_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
 </div>
