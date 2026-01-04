@@ -13,7 +13,11 @@
 #'   a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
 #'   If fewer colors than tracks/groups are provided, colors will be recycled.
 #'   Default is "steelblue".
-#' @param y_axis_style Y-axis style: "none", "simple", or "full" (default: "none")
+#' @param y_axis_style Y-axis style: "none", "simple", "minmax", or "full" (default: "none")
+#'   - "none": No y-axis displayed
+#'   - "simple": Shows y-range as \[min - max\] label at top-left
+#'   - "minmax": Shows only min and max values on y-axis with ticks
+#'   - "full": Full y-axis with all ticks and labels
 #' @param y_range Y-axis range limits (default: NULL)
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
@@ -26,7 +30,6 @@
 #' @importFrom ggplot2 ggplot aes scale_y_continuous coord_cartesian labs facet_wrap scale_color_manual scale_fill_manual theme element_text
 #' @importFrom dplyr filter mutate bind_rows
 #' @examples
-#' \dontrun{
 #' # From a GRanges object
 #' library(GenomicRanges)
 #' gr <- GRanges(
@@ -42,21 +45,6 @@
 #'   score = rnorm(100), sample = rep(c("A", "B"), 50)
 #' )
 #' ez_coverage(df, "chr1:1-100", group_var = "sample", colors = c("blue", "orange"))
-#'
-#' # Character vector of files
-#' ez_coverage(c("sample1.bw", "sample2.bw"), "chr1:1-100")
-#'
-#' # Named list with stacking
-#' ez_coverage(
-#'   list(
-#'     "ATAC-seq" = "atac.bw",
-#'     "H3K27ac" = "h3k27ac.bw",
-#'     "H3K4me3" = c("rep1.bw", "rep2.bw")
-#'   ),
-#'   "chr1:1-100",
-#'   colors = c("purple", "darkgreen", "orange")
-#' )
-#' }
 ez_coverage <- function(
   input,
   region,
@@ -65,7 +53,7 @@ ez_coverage <- function(
   group_var = NULL,
   color_by = c("group", "track"),
   colors = "steelblue",
-  y_axis_style = c("none", "simple", "full"),
+  y_axis_style = c("none", "simple", "minmax", "full"),
   y_range = NULL,
   alpha = 0.5,
   bin_width = NULL,
@@ -206,6 +194,14 @@ ez_coverage <- function(
 
   # Add faceting if multiple tracks
   if (has_track) {
+    # Warn if y_axis_style is "none" and y_range is NULL for multiple tracks
+    if (y_axis_style == "none" && is.null(y_range)) {
+      warning(
+        "y_axis_style is set to 'none' with multiple tracks. ",
+        "Consider setting y_range to allow for better comparison between tracks.",
+        call. = FALSE
+      )
+    }
     if (facet_label_position == "left") {
       p <- p +
         ggplot2::facet_wrap(
@@ -231,13 +227,58 @@ ez_coverage <- function(
     p <- p + stat_bin_signal(binwidth = bin_width)
   }
 
+  # Calculate y-axis limits for annotations
+  if (is.null(y_range)) {
+    y_min <- 0
+    y_max <- max(plotDt$score, na.rm = TRUE)
+  } else {
+    y_min <- y_range[1]
+    y_max <- y_range[2]
+  }
+
+  # Parse region for x positioning
+  region_gr <- parse_region(region)
+  x_min <- GenomicRanges::start(region_gr)
+  x_max <- GenomicRanges::end(region_gr)
+
   # Apply the appropriate theme and scale
-  p <- p +
-    ez_coverage_theme(y_axis_style = y_axis_style) +
-    scale_x_genome_region(region) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::coord_cartesian(ylim = y_range) +
-    ggplot2::labs(x = paste0("Chr", chr))
+  if (y_axis_style == "minmax") {
+    p <- p +
+      ez_coverage_theme(y_axis_style = y_axis_style) +
+      scale_x_genome_region(region) +
+      ggplot2::scale_y_continuous(
+        expand = c(0, 0),
+        breaks = c(y_min, y_max),
+        labels = function(x) round(x, 1)
+      ) +
+      ggplot2::coord_cartesian(ylim = c(y_min, y_max)) +
+      ggplot2::labs(x = paste0("Chr", chr))
+  } else if (y_axis_style == "simple") {
+    # Create the [min - max] label
+    y_label <- paste0("[", round(y_min, 1), " - ", round(y_max, 1), "]")
+    p <- p +
+      ez_coverage_theme(y_axis_style = y_axis_style) +
+      scale_x_genome_region(region) +
+      ggplot2::scale_y_continuous(expand = c(0, 0)) +
+      ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
+      ggplot2::labs(x = paste0("Chr", chr)) +
+      ggplot2::annotate(
+        "text",
+        x = x_min,
+        y = y_max,
+        label = y_label,
+        hjust = 0,
+        vjust = 0,
+        size = 3
+      )
+  } else {
+    p <- p +
+      ez_coverage_theme(y_axis_style = y_axis_style) +
+      scale_x_genome_region(region) +
+      ggplot2::scale_y_continuous(expand = c(0, 0)) +
+      ggplot2::coord_cartesian(ylim = y_range) +
+      ggplot2::labs(x = paste0("Chr", chr))
+  }
 
   # Apply border after theme (so it doesn't get overwritten)
   if (border) {
@@ -303,36 +344,20 @@ ez_coverage <- function(
 #' @importFrom methods is
 #'
 #' @examples
-#' \dontrun{
-#' # From a BED file with score-based coloring
-#' track1 <- ez_feature(
-#'   "peaks.bed",
-#'   "chr1:1000000-2000000",
-#'   fill = "blue",
-#'   use_score = TRUE
-#' )
-#'
 #' # From a data frame with uniform coloring
 #' features <- data.frame(
-#'   chrom = c("chr1", "chr1", "chr1"),
+#'   seqnames = c("chr1", "chr1", "chr1"),
 #'   start = c(1000, 3000, 5000),
 #'   end = c(2000, 4000, 6000),
 #'   name = c("peak1", "peak2", "peak3"),
 #'   score = c(10, 30, 50)
 #' )
-#' track2 <- ez_feature(
+#' track <- ez_feature(
 #'   features,
 #'   "chr1:1-10000",
 #'   fill = "darkgreen",
 #'   alpha = 0.8
 #' )
-#'
-#' # Combine with other tracks using aplot
-#' ez_plot(list(
-#'   "Features" = track1,
-#'   "Genes" = track2
-#' ), "chr1:1-10000")
-#' }
 ez_feature <- function(
   input,
   region,
@@ -492,60 +517,14 @@ ez_feature <- function(
 #' @importFrom rlang .data
 #'
 #' @examples
-#' \dontrun{
-#' # Basic genome-wide Manhattan plot with alternating chromosome colors
-#' data(gwas_data)  # Example GWAS data
-#' ez_manhattan(
-#'   gwas_data,
-#'   chr = "CHR",
-#'   bp = "BP",
-#'   p = "P",
-#'   snp = "SNP",
-#'   color_by = "CHR",  # Color by chromosome column
-#'   colors = c("dodgerblue", "darkblue")  # Alternating colors
-#' )
-#'
-#' # Regional Manhattan plot (LocusZoom-style)
-#' ez_manhattan(
-#'   gwas_data,
-#'   region = "chr1:1000000-2000000",
-#'   r2 = gwas_data$r2,  # LD values
-#'   color_by = "r2",
-#'   lead_snp = "rs123456"
-#' )
-#'
-#' # With highlighted lead SNP and threshold line
-#' ez_manhattan(
-#'   gwas_data,
-#'   chr = "CHR",
-#'   bp = "BP",
-#'   p = "P",
-#'   snp = "SNP",
-#'   lead_snp = "rs123456",
-#'   highlight_color = "red",
-#'   threshold_p = 5e-8,
-#'   threshold_color = "red"
-#' )
-#'
-#' # Single data frame with grouping
+#' # Basic genome-wide Manhattan plot
 #' df <- data.frame(
-#'   CHR = rep(1:5, each = 20),
-#'   BP = rep(1:20, 5),
-#'   P = runif(100),
-#'   SNP = paste0("rs", 1:100),
-#'   study = rep(c("Study1", "Study2"), 50)
+#'   CHR = rep(1:3, each = 20),
+#'   BP = rep(1:20, 3) * 1000,
+#'   P = runif(60, 0.0001, 1),
+#'   SNP = paste0("rs", 1:60)
 #' )
-#' ez_manhattan(df, group_var = "study")
-#'
-#' # Named list for stacked tracks
-#' ez_manhattan(
-#'   list(
-#'     "GWAS 1" = gwas_data1,
-#'     "GWAS 2" = gwas_data2,
-#'     "Meta-analysis" = gwas_meta
-#'   )
-#' )
-#' }
+#' ez_manhattan(df)
 ez_manhattan <- function(
   input,
   region = NULL,
@@ -878,34 +857,9 @@ ez_manhattan <- function(
 #' @importFrom methods is
 #'
 #' @examples
-#' \dontrun{
-#' # From a GTF file (default strand-based coloring)
-#' track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
-#'
-#' # From a TxDb object
-#' library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-#' txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-#' track2 <- ez_gene(txdb, "chr1:1000000-2000000")
-#'
-#' # With custom uniform styling (overrides strand-based colors)
-#' track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
-#'   exon_fill = "steelblue",
-#'   exon_color = "navy",
-#'   intron_color = "darkblue",
-#'   intron_width = 0.6
-#' )
-#'
-#' # With gene name labels
-#' track4 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
-#'   label = "gene_name",
-#'   label_size = 3
-#' )
-#'
-#' # With custom y-axis grouping by transcript (uses gray50 uniform color)
-#' track5 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
-#'   y = "transcript_id"
-#' )
-#' }
+#' # From a data frame
+#' data(example_genes)
+#' ez_gene(example_genes, "chr1:11869-14409")
 ez_gene <- function(
   data,
   region,
@@ -1258,42 +1212,15 @@ ez_gene <- function(
 #' @importFrom methods is
 #'
 #' @examples
-#' \dontrun{
-#' # From a BEDPE file with score-based coloring
-#' track1 <- ez_link(
-#'   "interactions.bedpe",
-#'   "chr1:1000000-2000000",
-#'   use_score = TRUE,
-#'   color = "red"
-#' )
-#'
 #' # From a data frame with uniform coloring
-#' interactions <- data.frame(
-#'   chr1 = c("chr1", "chr1", "chr1"),
-#'   start1 = c(1000, 3000, 5000),
-#'   end1 = c(2000, 4000, 6000),
-#'   chr2 = c("chr1", "chr1", "chr1"),
-#'   start2 = c(8000, 7000, 9000),
-#'   end2 = c(9000, 8000, 10000),
-#'   score = c(5, 10, 15)
-#' )
-#' track2 <- ez_link(
-#'   interactions,
+#' data(example_interactions)
+#' ez_link(
+#'   example_interactions,
 #'   "chr1:1-15000",
 #'   color = "darkblue",
 #'   size = 1,
 #'   alpha = 0.8
 #' )
-#'
-#' # Upward curves with taller arcs
-#' track3 <- ez_link(
-#'   interactions,
-#'   "chr1:1-15000",
-#'   direction = "up",
-#'   height_factor = 0.2,
-#'   color = "purple"
-#' )
-#' }
 ez_link <- function(
   data,
   region,
@@ -1442,34 +1369,15 @@ ez_link <- function(
 #' @importFrom dplyr mutate
 #'
 #' @examples
-#' \dontrun{
 #' # Basic sashimi plot
 #' coverage <- data.frame(
-#'   seqnames = "chr1", start = 1:100, end = 2:101, score = c(runif(30, 5, 10),
-#'     rep(0, 20), runif(50, 5, 10))
+#'   seqnames = "chr1", start = 1:100, end = 2:101,
+#'   score = c(runif(30, 5, 10), rep(0, 20), runif(50, 5, 10))
 #' )
 #' junctions <- data.frame(
 #'   seqnames = "chr1", start = c(30), end = c(50), score = c(15)
 #' )
 #' ez_sashimi(coverage, junctions, "chr1:1-100")
-#'
-#' # With log-transformed scores and custom colors
-#' ez_sashimi(
-#'   coverage, junctions, "chr1:1-100",
-#'   coverage_fill = "darkblue",
-#'   junction_color = "red",
-#'   score_transform = "log10",
-#'   junction_direction = "up"
-#' )
-#'
-#' # From files
-#' ez_sashimi(
-#'   "coverage.bedgraph",
-#'   "junctions.bed",
-#'   "chr1:1000000-2000000",
-#'   show_labels = TRUE
-#' )
-#' }
 ez_sashimi <- function(
   coverage_data,
   junction_data,

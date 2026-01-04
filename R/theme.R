@@ -91,7 +91,11 @@ ez_theme <- function(
 #' This function creates a theme specifically for coverage/signal tracks.
 #' It removes the y-axis text and title, and makes the plot more compact.
 #'
-#' @param y_axis_style Style of the y-axis. Options are "none", "simple", and "full".
+#' @param y_axis_style Style of the y-axis. Options are:
+#'   - "none": No y-axis displayed
+#'   - "simple": Shows y-range as \[min - max\] label at top-left (handled in ez_coverage)
+#'   - "minmax": Shows only min and max values on y-axis with ticks
+#'   - "full": Full y-axis with all ticks and labels
 #' @param ... Additional arguments passed to ez_theme
 #' @return A ggplot2 theme object
 #' @export
@@ -103,7 +107,7 @@ ez_theme <- function(
 #'   geom_line() +
 #'   ez_coverage_theme()
 #' }
-ez_coverage_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
+ez_coverage_theme <- function(y_axis_style = c("none", "simple", "minmax", "full"), ...) {
   y_axis_style <- match.arg(y_axis_style)
 
   if (y_axis_style == "none") {
@@ -116,12 +120,20 @@ ez_coverage_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
         plot.margin = ggplot2::margin(5, 5, 5, 5)
       )
   } else if (y_axis_style == "simple") {
+    # Simple style: no y-axis, label is added via annotation in ez_coverage()
     theme <- ez_theme(...) +
       ggplot2::theme(
         axis.title.y = ggplot2::element_blank(),
         axis.ticks.y = ggplot2::element_blank(),
         axis.line.y = ggplot2::element_blank(),
         axis.text.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(12, 5, 5, 5)  # Extra top margin for label
+      )
+  } else if (y_axis_style == "minmax") {
+    # Minmax style: show only min and max ticks on y-axis
+    theme <- ez_theme(...) +
+      ggplot2::theme(
+        axis.title.y = ggplot2::element_blank(),
         plot.margin = ggplot2::margin(5, 5, 5, 5)
       )
   } else if (y_axis_style == "full") {
@@ -131,6 +143,8 @@ ez_coverage_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
         plot.margin = ggplot2::margin(5, 5, 5, 5)
       )
   }
+
+  return(theme)
 }
 
 #' A theme for gene tracks

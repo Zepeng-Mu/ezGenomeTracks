@@ -28,6 +28,7 @@ granges_to_df <- function(gr, keep.mcols = TRUE) {
   start_vals <- GenomicRanges::start(gr)
   end_vals <- GenomicRanges::end(gr)
 
+
   # Adjust start when start equals end
   start_vals <- ifelse(start_vals == end_vals, start_vals - 1, start_vals)
 
