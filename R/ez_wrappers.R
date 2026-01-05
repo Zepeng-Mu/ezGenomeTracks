@@ -1159,14 +1159,32 @@ ez_gene <- function(
   }
 
   # Apply theme and scale
-  p <- p +
-    ggplot2::scale_y_discrete(
-      expand = c(0.1, 0.1),
-      drop = FALSE # Keep all levels even if not present
-    ) +
-    scale_x_genome_region(region) +
-    ez_gene_theme() +
-    ggplot2::labs(x = NULL) # Remove x-axis title
+  if (use_strand_colors) {
+    p <- p +
+      ggplot2::scale_y_discrete(
+        expand = c(0.1, 0.1),
+        drop = FALSE
+      ) +
+      scale_x_genome_region(region) +
+      ez_gene_theme() +
+      ggplot2::theme(
+        axis.text.y = ggplot2::element_text(
+          size = 14,
+          face = "bold",
+          colour = c(strand_colors["-"], strand_colors["+"])
+        )
+      ) +
+      ggplot2::labs(x = NULL)
+  } else {
+    p <- p +
+      ggplot2::scale_y_discrete(
+        expand = c(0.1, 0.1),
+        drop = FALSE
+      ) +
+      scale_x_genome_region(region) +
+      ez_gene_theme() +
+      ggplot2::labs(x = NULL)
+  }
 
   return(p)
 }

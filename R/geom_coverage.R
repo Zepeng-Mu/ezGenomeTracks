@@ -132,7 +132,9 @@ GeomCoverage <- ggproto(
       # For line type, create step-like path connecting score values
       # Use 'fill' aesthetic as the line colour (since fill is the user-facing "color" param)
       n <- nrow(data)
-      if (n == 0) return(grid::nullGrob())
+      if (n == 0) {
+        return(grid::nullGrob())
+      }
 
       # Determine the grouping variable
       if ("group" %in% names(data)) {
@@ -147,7 +149,9 @@ GeomCoverage <- ggproto(
         gdata <- data[data$group == g, , drop = FALSE]
         gdata <- gdata[order(gdata$xmin), , drop = FALSE]
         gn <- nrow(gdata)
-        if (gn == 0) return(NULL)
+        if (gn == 0) {
+          return(NULL)
+        }
 
         # Create step pattern: start -> end at ymax level for each bin
         x_coords <- numeric(2 * gn)
@@ -160,9 +164,12 @@ GeomCoverage <- ggproto(
         }
 
         # Use fill as the line colour (fill is the user-facing "color" of the track)
-        line_colour <- if ("fill" %in% names(gdata) &&
-                           length(gdata$fill) > 0 &&
-                           !all(is.na(gdata$fill))) {
+        line_colour <- if (
+          "fill" %in%
+            names(gdata) &&
+            length(gdata$fill) > 0 &&
+            !all(is.na(gdata$fill))
+        ) {
           gdata$fill[1]
         } else {
           "steelblue"

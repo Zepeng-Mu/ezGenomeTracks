@@ -28,7 +28,6 @@ granges_to_df <- function(gr, keep.mcols = TRUE) {
   start_vals <- GenomicRanges::start(gr)
   end_vals <- GenomicRanges::end(gr)
 
-
   # Adjust start when start equals end
   start_vals <- ifelse(start_vals == end_vals, start_vals - 1, start_vals)
 
@@ -346,7 +345,6 @@ process_signal_input <- function(input, region, track_labels = NULL) {
 #' @export
 #' @importFrom dplyr bind_rows mutate
 #' @examples
-#' \dontrun
 #' # Data frame input with GWAS-style columns
 #' df <- data.frame(CHR = 1, BP = 1:100, P = runif(100), SNP = paste0("rs", 1:100))
 #' process_manhattan_input(df)
@@ -358,7 +356,6 @@ process_signal_input <- function(input, region, track_labels = NULL) {
 #' # List input
 #' data_list <- list("GWAS1" = df1, "GWAS2" = df2)
 #' process_manhattan_input(data_list)
-#' }
 process_manhattan_input <- function(
   input,
   chr = NULL,
