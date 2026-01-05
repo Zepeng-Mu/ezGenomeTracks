@@ -6,24 +6,26 @@
 \usage{
 ez_manhattan(
   input,
-  chr = "CHR",
-  bp = "BP",
-  p = "P",
-  snp = "SNP",
+  region = NULL,
+  chr = NULL,
+  bp = NULL,
+  p = NULL,
+  snp = NULL,
   track_labels = NULL,
   group_var = NULL,
-  color_by = c("group", "track"),
   logp = TRUE,
   size = 0.5,
-  lead.snp = NULL,
+  color = "grey50",
+  lead_snp = NULL,
   r2 = NULL,
-  colors = c("grey", "skyblue"),
+  colors = NULL,
   highlight_snps = NULL,
   highlight_color = "purple",
   threshold_p = NULL,
   threshold_color = "red",
   threshold_linetype = 2,
-  colorBy = "chr",
+  color_by = "auto",
+  y_axis_style = c("none", "simple", "full"),
   y_axis_label = expression(paste("-log"[10], "(P)")),
   facet_label_position = c("top", "left"),
   ...
@@ -31,19 +33,25 @@ ez_manhattan(
 }
 \arguments{
 \item{input}{A data frame or named list of data frames containing GWAS results
-with columns for chromosome, position, p-values, and optionally SNP names.}
+with columns for chromosome, position, p-values, and optionally SNP names.
+Supports both GWAS-style (CHR, BP, P) and GRanges-style (seqnames, start, pvalue)
+column naming conventions.}
+
+\item{region}{Optional genomic region string (e.g., "chr1:1000000-2000000") to
+force regional mode. When provided, data is filtered to this region and the
+plot uses coordinate-based x-axis consistent with \code{ez_coverage} and \code{ez_gene}.}
 
 \item{chr}{Character string specifying the column name for chromosome numbers.
-Default: "CHR".}
+Default: "CHR". Also accepts "seqnames", "chrom", etc.}
 
 \item{bp}{Character string specifying the column name for base pair positions.
-Default: "BP".}
+Default: "BP". Also accepts "start", "pos", "position", etc.}
 
 \item{p}{Character string specifying the column name for p-values.
-Default: "P".}
+Default: "P". Also accepts "pvalue", "p.value", etc.}
 
 \item{snp}{Character string specifying the column name for SNP identifiers.
-Default: "SNP".}
+Default: "SNP". Also accepts "rsid", "variant_id", etc.}
 
 \item{track_labels}{Optional vector of track labels (used for unnamed list input).
 Default: NULL.}
@@ -51,25 +59,29 @@ Default: NULL.}
 \item{group_var}{Column name for grouping data within a single data frame.
 Default: NULL.}
 
-\item{color_by}{Whether colors distinguish "group" or "track".
-Default: "group".}
-
 \item{logp}{Logical indicating whether to plot -log10(p-values).
 Default: TRUE.}
 
 \item{size}{Numeric value for point size in the plot.
 Default: 0.5.}
 
-\item{lead.snp}{Character string of SNP ID to highlight as the lead variant.
+\item{color}{Default point color for regional mode when color_by is not "r2".
+Default: "grey50".}
+
+\item{lead_snp}{Character string or vector of SNP IDs to highlight as the lead variant(s).
 Default: NULL.}
 
 \item{r2}{Numeric vector of r² values for coloring points by linkage
 disequilibrium (LD) with lead variant. Must be same length as number of
 rows in data. Default: NULL.}
 
-\item{colors}{Character vector specifying colors. For multi-track or grouped plots,
-this can be a vector of colors. For standard plots, a vector of length 2
-for alternating chromosomes. Default: c("grey", "skyblue").}
+\item{colors}{Vector of colors for coloring points. Usage depends on \code{color_by}:
+\itemize{
+\item For discrete columns: colors are recycled/mapped to factor levels
+\item For continuous columns: colors define a gradient (default: viridis-like palette)
+\item For multi-track or grouped plots: colors for each track/group
+Default: NULL (appropriate defaults are chosen automatically).
+}}
 
 \item{highlight_snps}{Character vector of SNP IDs to highlight.
 Default: NULL.}
@@ -86,8 +98,19 @@ Default: "red".}
 \item{threshold_linetype}{Linetype for the significance threshold line.
 Default: 2 (dashed).}
 
-\item{colorBy}{Character string specifying the variable to use for coloring points.
-Must be a column name in the data. Default: "chr".}
+\item{color_by}{How points should be colored. Can be:
+\itemize{
+\item A column name in the data (e.g., "CHR", "gene", "maf"): Colors by that column.
+Use \code{colors} to specify a custom palette. For chromosome coloring, use
+\code{color_by = "CHR"} (or your chr column name) with \code{colors = c("grey", "skyblue")}.
+\item "r2": LD-based gradient coloring (requires \code{r2} parameter)
+\item "none": Single color specified by \code{color} parameter
+\item "auto" (default): Uses "r2" if \code{r2} is provided, otherwise "none"
+Note: In grouped/multi-track plots, color_by is handled differently.
+}}
+
+\item{y_axis_style}{Y-axis style: "none", "simple", or "full" (default: "none").
+Only applies in regional mode.}
 
 \item{y_axis_label}{Label for the y-axis. Default: \code{expression(paste("-log"[10], "(P)"))}.}
 
@@ -101,6 +124,8 @@ A ggplot2 object containing the Manhattan plot.
 \description{
 This function creates a Manhattan plot from GWAS (Genome-Wide Association Study)
 data, which is a standard way to visualize p-values across the genome.
+Supports both genome-wide and regional (LocusZoom-style) modes with automatic
+detection based on data content or explicit region specification.
 }
 \details{
 This function creates a Manhattan plot for GWAS results.
@@ -108,55 +133,31 @@ It is a wrapper around geom_manhattan that provides a flexible interface
 with support for grouping and multiple tracks.
 
 The function creates a Manhattan plot with chromosomes on the x-axis and
--log10(p-values) on the y-axis. Points are colored by chromosome and can be
-highlighted based on significance or LD with lead variants.
+-log10(p-values) on the y-axis. The plot mode is automatically determined:
+\itemize{
+\item \strong{Regional mode}: When \code{region} is provided OR when data contains only one
+chromosome, the plot uses genomic coordinate formatting consistent with
+\code{ez_coverage} and \code{ez_gene}, making it suitable for stacking with other
+tracks via \code{genome_plot()}. This is ideal for LocusZoom-style regional
+association plots.
+\item \strong{Genome-wide mode}: When data contains multiple chromosomes and no region
+is specified, chromosomes are displayed with alternating colors and
+cumulative positions.
+}
+
+For LD-based coloring (LocusZoom style), provide \code{r2} values and set
+\code{color_by = "r2"}.
 
 For multiple tracks (via named list), plots are stacked vertically using facets.
 For grouped data (via group_var), colors distinguish different groups within tracks.
 }
 \examples{
-\dontrun{
-# Basic Manhattan plot from data frame
-data(gwas_data)  # Example GWAS data
-ez_manhattan(
-  gwas_data,
-  chr = "CHR",
-  bp = "BP",
-  p = "P",
-  snp = "SNP",
-  colors = c("dodgerblue", "darkblue")
-)
-
-# With highlighted lead SNP and threshold line
-ez_manhattan(
-  gwas_data,
-  chr = "CHR",
-  bp = "BP",
-  p = "P",
-  snp = "SNP",
-  lead.snp = "rs123456",
-  highlight_color = "red",
-  threshold_p = 5e-8,
-  threshold_color = "red"
-)
-
-# Single data frame with grouping
+# Basic genome-wide Manhattan plot
 df <- data.frame(
-  CHR = rep(1:5, each = 20),
-  BP = rep(1:20, 5),
-  P = runif(100),
-  SNP = paste0("rs", 1:100),
-  study = rep(c("Study1", "Study2"), 50)
+  CHR = rep(1:3, each = 20),
+  BP = rep(1:20, 3) * 1000,
+  P = runif(60, 0.0001, 1),
+  SNP = paste0("rs", 1:60)
 )
-ez_manhattan(df, group_var = "study")
-
-# Named list for stacked tracks
-ez_manhattan(
-  list(
-    "GWAS 1" = gwas_data1,
-    "GWAS 2" = gwas_data2,
-    "Meta-analysis" = gwas_meta
-  )
-)
-}
+ez_manhattan(df)
 }

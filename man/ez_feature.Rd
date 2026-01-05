@@ -57,34 +57,18 @@ and 'end' columns. If 'score' column is present and \code{use_score = TRUE},
 features will be colored by their score values.
 }
 \examples{
-\dontrun{
-# From a BED file with score-based coloring
-track1 <- ez_feature(
-  "peaks.bed",
-  "chr1:1000000-2000000",
-  fill = "blue",
-  use_score = TRUE
-)
-
 # From a data frame with uniform coloring
 features <- data.frame(
-  chrom = c("chr1", "chr1", "chr1"),
+  seqnames = c("chr1", "chr1", "chr1"),
   start = c(1000, 3000, 5000),
   end = c(2000, 4000, 6000),
   name = c("peak1", "peak2", "peak3"),
   score = c(10, 30, 50)
 )
-track2 <- ez_feature(
+track <- ez_feature(
   features,
   "chr1:1-10000",
   fill = "darkgreen",
   alpha = 0.8
 )
-
-# Combine with other tracks using aplot
-ez_plot(list(
-  "Features" = track1,
-  "Genes" = track2
-), "chr1:1-10000")
-}
 }

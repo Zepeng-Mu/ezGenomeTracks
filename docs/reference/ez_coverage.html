@@ -53,15 +53,16 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 <span>  <span class="va">region</span>,</span>
 <span>  track_labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"area"</span>, <span class="st">"line"</span>, <span class="st">"heatmap"</span><span class="op">)</span>,</span>
-<span>  fill <span class="op">=</span> <span class="st">"steelblue"</span>,</span>
 <span>  group_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  color_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"track"</span><span class="op">)</span>,</span>
-<span>  colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  y_axis_style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"simple"</span>, <span class="st">"full"</span><span class="op">)</span>,</span>
+<span>  colors <span class="op">=</span> <span class="st">"steelblue"</span>,</span>
+<span>  y_axis_style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"simple"</span>, <span class="st">"minmax"</span>, <span class="st">"full"</span><span class="op">)</span>,</span>
 <span>  y_range <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  bin_width <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  facet_label_position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"top"</span>, <span class="st">"left"</span><span class="op">)</span>,</span>
+<span>  border <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_legend <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -71,7 +72,7 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 
 
 <dl><dt id="arg-input">input<a class="anchor" aria-label="anchor" href="#arg-input"></a></dt>
-<dd><p>A data frame, character vector of file paths, or named list of data sources</p></dd>
+<dd><p>A GRanges object, data frame, character vector of file paths, or named list of data sources.</p></dd>
 
 
 <dt id="arg-region">region<a class="anchor" aria-label="anchor" href="#arg-region"></a></dt>
@@ -86,10 +87,6 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 <dd><p>Type of signal visualization: "line", "area", or "heatmap" (default: "area")</p></dd>
 
 
-<dt id="arg-fill">fill<a class="anchor" aria-label="anchor" href="#arg-fill"></a></dt>
-<dd><p>Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.</p></dd>
-
-
 <dt id="arg-group-var">group_var<a class="anchor" aria-label="anchor" href="#arg-group-var"></a></dt>
 <dd><p>Column name for grouping data within a single data frame (default: NULL)</p></dd>
 
@@ -99,11 +96,18 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 
 
 <dt id="arg-colors">colors<a class="anchor" aria-label="anchor" href="#arg-colors"></a></dt>
-<dd><p>Color palette for groups/tracks. If NULL, uses default palette (default: NULL)</p></dd>
+<dd><p>Color(s) for the coverage track. Can be a single color (e.g., "steelblue") or
+a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
+If fewer colors than tracks/groups are provided, colors will be recycled.
+Default is "steelblue".</p></dd>
 
 
 <dt id="arg-y-axis-style">y_axis_style<a class="anchor" aria-label="anchor" href="#arg-y-axis-style"></a></dt>
-<dd><p>Y-axis style: "none", "simple", or "full" (default: "none")</p></dd>
+<dd><p>Y-axis style: "none", "simple", "minmax", or "full" (default: "none")</p><ul><li><p>"none": No y-axis displayed</p></li>
+<li><p>"simple": Shows y-range as [min - max] label at top-left</p></li>
+<li><p>"minmax": Shows only min and max values on y-axis with ticks</p></li>
+<li><p>"full": Full y-axis with all ticks and labels</p></li>
+</ul></dd>
 
 
 <dt id="arg-y-range">y_range<a class="anchor" aria-label="anchor" href="#arg-y-range"></a></dt>
@@ -122,6 +126,14 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 <dd><p>Position of facet labels: "top" or "left" (default: "top")</p></dd>
 
 
+<dt id="arg-border">border<a class="anchor" aria-label="anchor" href="#arg-border"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, adds a black border around the plotting panel (default: FALSE)</p></dd>
+
+
+<dt id="arg-show-legend">show_legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, displays the legend (default: FALSE)</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to geom_coverage</p></dd>
 
@@ -133,27 +145,27 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># From a GRanges object</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomicRanges" class="external-link">GenomicRanges</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  seqnames <span class="op">=</span> <span class="st">"chr1"</span>,</span></span>
+<span class="r-in"><span>  ranges <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/IRanges-constructor.html" class="external-link">IRanges</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, end <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span><span class="va">gr</span>, <span class="st">"chr1:1-100"</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(input, seqnames == as.character(region_gr@seqnames),     start &gt;= region_gr@start, end &lt;= region_gr@end):</span> <span style="color: #00BBBB;">ℹ</span> In argument: `start &gt;= region_gr@start`.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> no slot of name "start" for this object of class "GRanges"</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Single data frame with grouping</span></span></span>
 <span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  seqnames <span class="op">=</span> <span class="st">"chr1"</span>, start <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, end <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span>,</span></span>
 <span class="r-in"><span>  score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>, <span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span><span class="va">df</span>, <span class="st">"chr1:1-100"</span>, group_var <span class="op">=</span> <span class="st">"sample"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Character vector of files</span></span></span>
-<span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample1.bw"</span>, <span class="st">"sample2.bw"</span><span class="op">)</span>, <span class="st">"chr1:1-100"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Named list with stacking</span></span></span>
-<span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="st">"ATAC-seq"</span> <span class="op">=</span> <span class="st">"atac.bw"</span>,</span></span>
-<span class="r-in"><span>    <span class="st">"H3K27ac"</span> <span class="op">=</span> <span class="st">"h3k27ac.bw"</span>,</span></span>
-<span class="r-in"><span>    <span class="st">"H3K4me3"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rep1.bw"</span>, <span class="st">"rep2.bw"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span>,</span></span>
-<span class="r-in"><span>  <span class="st">"chr1:1-100"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span><span class="va">df</span>, <span class="st">"chr1:1-100"</span>, group_var <span class="op">=</span> <span class="st">"sample"</span>, colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(input, seqnames == as.character(region_gr@seqnames),     start &gt;= region_gr@start, end &lt;= region_gr@end):</span> <span style="color: #00BBBB;">ℹ</span> In argument: `start &gt;= region_gr@start`.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> no slot of name "start" for this object of class "GRanges"</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

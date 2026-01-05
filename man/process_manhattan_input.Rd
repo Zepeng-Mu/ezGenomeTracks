@@ -6,23 +6,27 @@
 \usage{
 process_manhattan_input(
   input,
-  chr = "CHR",
-  bp = "BP",
-  p = "P",
-  snp = "SNP",
+  chr = NULL,
+  bp = NULL,
+  p = NULL,
+  snp = NULL,
   track_labels = NULL
 )
 }
 \arguments{
 \item{input}{Either a data frame or named list of data frames}
 
-\item{chr}{Column name for chromosome (default: "CHR")}
+\item{chr}{Column name for chromosome. If NULL, auto-detects from common names
+(CHR, chr, seqnames, chrom, chromosome). Default: NULL}
 
-\item{bp}{Column name for base pair position (default: "BP")}
+\item{bp}{Column name for base pair position. If NULL, auto-detects from common names
+(BP, bp, start, pos, position, POS). Default: NULL}
 
-\item{p}{Column name for p-value (default: "P")}
+\item{p}{Column name for p-value. If NULL, auto-detects from common names
+(P, p, pvalue, p.value, pval). Default: NULL}
 
-\item{snp}{Column name for SNP identifier (default: "SNP")}
+\item{snp}{Column name for SNP identifier. If NULL, auto-detects from common names
+(SNP, snp, rsid, id, variant_id, marker). Default: NULL (optional column)}
 
 \item{track_labels}{Optional vector of track labels (used for unnamed list input)}
 }
@@ -32,15 +36,19 @@ A data frame with standardized columns and optionally track column
 \description{
 This function converts any input type (data.frame or named list) into a
 standardized data frame with consistent columns for Manhattan plot visualization.
+Supports both GWAS-style (CHR, BP, P) and GRanges-style (seqnames, start, pvalue)
+column naming conventions with auto-detection.
 }
 \examples{
-\dontrun{
-# Data frame input
+# Data frame input with GWAS-style columns
 df <- data.frame(CHR = 1, BP = 1:100, P = runif(100), SNP = paste0("rs", 1:100))
 process_manhattan_input(df)
+
+# Data frame input with GRanges-style columns
+df2 <- data.frame(seqnames = "chr1", start = 1:100, pvalue = runif(100))
+process_manhattan_input(df2)
 
 # List input
 data_list <- list("GWAS1" = df1, "GWAS2" = df2)
 process_manhattan_input(data_list)
-}
 }

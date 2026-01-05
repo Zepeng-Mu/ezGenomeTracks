@@ -66,15 +66,15 @@ instead, explicitly set <code>exon_color</code>, <code>exon_fill</code>, and <co
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ez_gene</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">region</span>,</span>
-<span>  exon_height <span class="op">=</span> <span class="fl">0.4</span>,</span>
-<span>  intron_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>  exon_height <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  intron_width <span class="op">=</span> <span class="fl">0.6</span>,</span>
 <span>  exon_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exon_fill <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  intron_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  gene_id <span class="op">=</span> <span class="st">"gene_id"</span>,</span>
 <span>  gene_name <span class="op">=</span> <span class="st">"gene_name"</span>,</span>
 <span>  y <span class="op">=</span> <span class="st">"strand"</span>,</span>
-<span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  label <span class="op">=</span> <span class="st">"gene_name"</span>,</span>
 <span>  label_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  label_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -169,34 +169,13 @@ and <code>colour</code> arguments are ignored; use <code>exon_color</code>, <cod
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># From a GTF file (default strand-based coloring)</span></span></span>
-<span class="r-in"><span><span class="va">track1</span> <span class="op">&lt;-</span> <span class="fu">ez_gene</span><span class="op">(</span><span class="st">"genes.gtf"</span>, <span class="st">"chr1:1000000-2000000"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># From a TxDb object</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg19.knownGene</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">txdb</span> <span class="op">&lt;-</span> <span class="va">TxDb.Hsapiens.UCSC.hg19.knownGene</span></span></span>
-<span class="r-in"><span><span class="va">track2</span> <span class="op">&lt;-</span> <span class="fu">ez_gene</span><span class="op">(</span><span class="va">txdb</span>, <span class="st">"chr1:1000000-2000000"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># With custom uniform styling (overrides strand-based colors)</span></span></span>
-<span class="r-in"><span><span class="va">track3</span> <span class="op">&lt;-</span> <span class="fu">ez_gene</span><span class="op">(</span><span class="st">"genes.gtf"</span>, <span class="st">"chr1:1000000-2000000"</span>,</span></span>
-<span class="r-in"><span>  exon_fill <span class="op">=</span> <span class="st">"steelblue"</span>,</span></span>
-<span class="r-in"><span>  exon_color <span class="op">=</span> <span class="st">"navy"</span>,</span></span>
-<span class="r-in"><span>  intron_color <span class="op">=</span> <span class="st">"darkblue"</span>,</span></span>
-<span class="r-in"><span>  intron_width <span class="op">=</span> <span class="fl">0.6</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># With gene name labels</span></span></span>
-<span class="r-in"><span><span class="va">track4</span> <span class="op">&lt;-</span> <span class="fu">ez_gene</span><span class="op">(</span><span class="st">"genes.gtf"</span>, <span class="st">"chr1:1000000-2000000"</span>,</span></span>
-<span class="r-in"><span>  label <span class="op">=</span> <span class="st">"gene_name"</span>,</span></span>
-<span class="r-in"><span>  label_size <span class="op">=</span> <span class="fl">3</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># With custom y-axis grouping by transcript (uses gray50 uniform color)</span></span></span>
-<span class="r-in"><span><span class="va">track5</span> <span class="op">&lt;-</span> <span class="fu">ez_gene</span><span class="op">(</span><span class="st">"genes.gtf"</span>, <span class="st">"chr1:1000000-2000000"</span>,</span></span>
-<span class="r-in"><span>  y <span class="op">=</span> <span class="st">"transcript_id"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># From a data frame</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">example_genes</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ez_gene</span><span class="op">(</span><span class="va">example_genes</span>, <span class="st">"chr1:11869-14409"</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Ignoring unknown parameters: `arrow_length`, `arrow_type`, `exon_colour`,</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> `intron_colour`, and `clip_to_region`</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Ignoring unknown aesthetics: <span style="color: #00BB00;">fill</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in `$&lt;-.data.frame`(`*tmp*`, label_x, value = numeric(0)):</span> replacement has 0 rows, data has 5</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

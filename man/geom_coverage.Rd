@@ -72,8 +72,7 @@ to use \code{position_jitter()}, give the position as \code{"jitter"}.
 }}
 
 \item{...}{Additional arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}, e.g.
-\code{linewidth = 0.8}, or \code{alpha = 0.6}. Note: \code{color} and \code{colour} parameters
-are ignored as this geom only uses fill aesthetics.}
+\code{linewidth = 0.8}, or \code{alpha = 0.6}.}
 
 \item{na.rm}{If \code{TRUE}, silently drop \code{NA} values.}
 

@@ -68,40 +68,13 @@ The visualization includes:
 }
 }
 \examples{
-\dontrun{
-# From a BEDPE file with score-based coloring
-track1 <- ez_link(
-  "interactions.bedpe",
-  "chr1:1000000-2000000",
-  use_score = TRUE,
-  color = "red"
-)
-
 # From a data frame with uniform coloring
-interactions <- data.frame(
-  chr1 = c("chr1", "chr1", "chr1"),
-  start1 = c(1000, 3000, 5000),
-  end1 = c(2000, 4000, 6000),
-  chr2 = c("chr1", "chr1", "chr1"),
-  start2 = c(8000, 7000, 9000),
-  end2 = c(9000, 8000, 10000),
-  score = c(5, 10, 15)
-)
-track2 <- ez_link(
-  interactions,
+data(example_interactions)
+ez_link(
+  example_interactions,
   "chr1:1-15000",
   color = "darkblue",
   size = 1,
   alpha = 0.8
 )
-
-# Upward curves with taller arcs
-track3 <- ez_link(
-  interactions,
-  "chr1:1-15000",
-  direction = "up",
-  height_factor = 0.2,
-  color = "purple"
-)
-}
 }

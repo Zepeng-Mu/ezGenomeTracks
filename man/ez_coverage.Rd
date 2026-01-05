@@ -9,20 +9,21 @@ ez_coverage(
   region,
   track_labels = NULL,
   type = c("area", "line", "heatmap"),
-  fill = "steelblue",
   group_var = NULL,
   color_by = c("group", "track"),
-  colors = NULL,
-  y_axis_style = c("none", "simple", "full"),
+  colors = "steelblue",
+  y_axis_style = c("none", "simple", "minmax", "full"),
   y_range = NULL,
   alpha = 0.5,
   bin_width = NULL,
   facet_label_position = c("top", "left"),
+  border = FALSE,
+  show_legend = FALSE,
   ...
 )
 }
 \arguments{
-\item{input}{A data frame, character vector of file paths, or named list of data sources}
+\item{input}{A GRanges object, data frame, character vector of file paths, or named list of data sources.}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
 
@@ -30,15 +31,22 @@ ez_coverage(
 
 \item{type}{Type of signal visualization: "line", "area", or "heatmap" (default: "area")}
 
-\item{fill}{Fill color for area plots (default: "steelblue"). Can be a vector for multiple colors.}
-
 \item{group_var}{Column name for grouping data within a single data frame (default: NULL)}
 
 \item{color_by}{Whether colors distinguish "group" or "track" (default: "group")}
 
-\item{colors}{Color palette for groups/tracks. If NULL, uses default palette (default: NULL)}
+\item{colors}{Color(s) for the coverage track. Can be a single color (e.g., "steelblue") or
+a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
+If fewer colors than tracks/groups are provided, colors will be recycled.
+Default is "steelblue".}
 
-\item{y_axis_style}{Y-axis style: "none", "simple", or "full" (default: "none")}
+\item{y_axis_style}{Y-axis style: "none", "simple", "minmax", or "full" (default: "none")
+\itemize{
+\item "none": No y-axis displayed
+\item "simple": Shows y-range as [min - max] label at top-left
+\item "minmax": Shows only min and max values on y-axis with ticks
+\item "full": Full y-axis with all ticks and labels
+}}
 
 \item{y_range}{Y-axis range limits (default: NULL)}
 
@@ -47,6 +55,10 @@ ez_coverage(
 \item{bin_width}{Width of bins in base pairs (default: NULL)}
 
 \item{facet_label_position}{Position of facet labels: "top" or "left" (default: "top")}
+
+\item{border}{Logical. If \code{TRUE}, adds a black border around the plotting panel (default: FALSE)}
+
+\item{show_legend}{Logical. If \code{TRUE}, displays the legend (default: FALSE)}
 
 \item{...}{Additional arguments passed to geom_coverage}
 }
@@ -58,25 +70,19 @@ This function creates a coverage track visualization from various input types.
 It provides a flexible interface with support for grouping and multiple tracks.
 }
 \examples{
-\dontrun{
+# From a GRanges object
+library(GenomicRanges)
+gr <- GRanges(
+  seqnames = "chr1",
+  ranges = IRanges(start = 1:100, end = 1:100),
+  score = rnorm(100)
+)
+ez_coverage(gr, "chr1:1-100")
+
 # Single data frame with grouping
 df <- data.frame(
   seqnames = "chr1", start = 1:100, end = 1:100,
   score = rnorm(100), sample = rep(c("A", "B"), 50)
 )
-ez_coverage(df, "chr1:1-100", group_var = "sample")
-
-# Character vector of files
-ez_coverage(c("sample1.bw", "sample2.bw"), "chr1:1-100")
-
-# Named list with stacking
-ez_coverage(
-  list(
-    "ATAC-seq" = "atac.bw",
-    "H3K27ac" = "h3k27ac.bw",
-    "H3K4me3" = c("rep1.bw", "rep2.bw")
-  ),
-  "chr1:1-100"
-)
-}
+ez_coverage(df, "chr1:1-100", group_var = "sample", colors = c("blue", "orange"))
 }

@@ -70,7 +70,6 @@ reference:
   - add_hline
   - add_rect
   - add_text
-  - add_highlight
 
 - title: "Helper Functions"
   desc: "Utility functions for data conversion and calculation"

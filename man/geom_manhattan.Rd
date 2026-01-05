@@ -7,29 +7,31 @@
 geom_manhattan(
   mapping = NULL,
   data = NULL,
+  region = NULL,
+  mode = c("auto", "regional", "genome_wide"),
   stat = "identity",
   position = "identity",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  chr = "CHR",
-  bp = "BP",
-  p = "P",
-  snp = "SNP",
+  chr = NULL,
+  bp = NULL,
+  p = NULL,
+  snp = NULL,
   logp = TRUE,
   size = 0.5,
-  lead.snp = NULL,
+  color = "grey50",
+  lead_snp = NULL,
   r2 = NULL,
-  colors = c("grey", "skyblue"),
+  colors = NULL,
   highlight_snps = NULL,
   highlight_color = "purple",
   highlight_shape = 18,
   threshold_p = NULL,
   threshold_color = "red",
   threshold_linetype = 2,
-  colorBy = "chr",
+  color_by = "auto",
   x_axis_label = NULL,
-  y_axis_label_prefix = NULL,
   y_axis_label = NULL,
   ...
 )
@@ -38,6 +40,11 @@ geom_manhattan(
 \item{mapping}{Set of aesthetic mappings created by \code{aes()}. If not specified, the default mappings are used.}
 
 \item{data}{A \code{data.frame} containing the data to be plotted. Must include columns for chromosome, base pair position, and p-value. Optional column for SNP identifier.}
+
+\item{region}{Optional genomic region string (e.g., "chr1:1000000-2000000") to force regional mode
+and set x-axis limits. When provided, data is NOT filtered (use \code{ez_manhattan} for filtering).}
+
+\item{mode}{Plot mode: "auto" (default, detect from data), "regional", or "genome_wide".}
 
 \item{stat}{The statistical transformation to apply to the data (default: "identity").}
 
@@ -49,25 +56,35 @@ geom_manhattan(
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics; if \code{TRUE}, inherits them.}
 
-\item{chr}{Name of the chromosome column in \code{data} (default: "CHR").}
+\item{chr}{Name of the chromosome column in \code{data}. Supports both GWAS-style ("CHR") and
+GRanges-style ("seqnames") conventions. Default: auto-detect.}
 
-\item{bp}{Name of the base pair position column in \code{data} (default: "BP").}
+\item{bp}{Name of the base pair position column in \code{data}. Supports both GWAS-style ("BP")
+and GRanges-style ("start") conventions. Default: auto-detect.}
 
-\item{p}{Name of the p-value column in \code{data} (default: "P").}
+\item{p}{Name of the p-value column in \code{data}. Supports "P", "pvalue", "p.value", etc.
+Default: auto-detect.}
 
-\item{snp}{Name of the SNP identifier column in \code{data} (default: "SNP").}
+\item{snp}{Name of the SNP identifier column in \code{data} (default: "SNP" or "snp").}
 
-\item{logp}{Logical. If -log10() is used for p.}
+\item{logp}{Logical. If TRUE (default), -log10() transformation is applied to p-values.}
 
 \item{size}{Point size (default: 0.5).}
 
-\item{lead.snp}{Vector of SNP to highlight.}
+\item{color}{Default point color for regional mode when color_by is not "r2" (default: "grey50").}
 
-\item{r2}{Vector of R-squared values for linkage disequilibrium (LD) coloring. Should be in same order as SNP.}
+\item{lead_snp}{Vector of SNP IDs to highlight (also accepts lead.snp for backward compatibility).}
 
-\item{colors}{Vector of colors to use for alternating chromosome colors (default: c("grey", "skyblue")).}
+\item{r2}{Vector of R-squared values for linkage disequilibrium (LD) coloring. Should be in same order as data rows.}
 
-\item{highlight_snps}{Data frame of SNPs to highlight, with columns \code{CHR}, \code{BP}, and \code{P}.}
+\item{colors}{Vector of colors for coloring points. Usage depends on \code{color_by}:
+\itemize{
+\item For discrete columns: colors are recycled/mapped to factor levels
+\item For continuous columns: colors define a gradient (default: viridis-like palette)
+\item Default \code{c("grey", "skyblue")} is suitable for alternating chromosome colors
+}}
+
+\item{highlight_snps}{Data frame of SNPs to highlight, with columns matching chr, bp, and p.}
 
 \item{highlight_color}{Color for highlighted SNPs (default: "purple").}
 
@@ -79,19 +96,33 @@ geom_manhattan(
 
 \item{threshold_linetype}{Linetype for the threshold line (default: 2).}
 
-\item{colorBy}{Character string indicating how points should be colored. Options are "chr" (default, alternating chromosome colors) or "r2" (continuous color based on R-squared values).}
+\item{color_by}{How points should be colored. Can be:
+\itemize{
+\item A column name in \code{data} (e.g., "CHR", "gene", "maf"): Colors by that column's values.
+Discrete columns use \code{colors} as a manual palette; continuous columns use a gradient.
+\item "r2": Special mode using LD-based gradient coloring (requires \code{r2} parameter)
+\item "none": Single color specified by \code{color} parameter
+\item "auto" (default): Uses "r2" if \code{r2} is provided, otherwise "none"
+}}
 
-\item{x_axis_label}{X-axis label (default: NULL).}
+\item{x_axis_label}{X-axis label (default: NULL, auto-generated).}
 
-\item{y_axis_label_prefix}{Y-axis label prefix added before \code{expression(paste("-log"[10], "(P)"))}). Default: NULL.}
-
-\item{y_axis_label}{Label for the y-axis, overwrites y_axis_label_prefix. Default: NULL.}
+\item{y_axis_label}{Label for the y-axis (default: expression for -log10(P)).}
 
 \item{...}{Additional arguments passed to \code{ggplot2::geom_point()}.}
 }
 \value{
-A \code{ggplot2} layer.
+A list of \code{ggplot2} layers and scales.
 }
 \description{
-\code{geom_manhattan} creates a Manhattan plot, which can be used to visualize both GWAS and QTL.
+\code{geom_manhattan} creates a Manhattan plot for visualizing GWAS or QTL data.
+The function automatically detects whether to use regional mode (single chromosome)
+or genome-wide mode (multiple chromosomes) based on the data.
+
+In \strong{regional mode} (single chromosome): Uses \code{scale_x_genome_region()} for x-axis
+formatting consistent with other track functions like \code{ez_coverage} and \code{ez_gene}.
+This mode is suitable for LocusZoom-style plots and can be stacked with other tracks.
+
+In \strong{genome-wide mode} (multiple chromosomes): Uses cumulative base pair positions
+with chromosome labels on the x-axis and alternating colors per chromosome.
 }

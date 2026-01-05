@@ -4,12 +4,17 @@
 \alias{extract_txdb_data}
 \title{Extract gene data from TxDb object}
 \usage{
-extract_txdb_data(txdb, org.Hs.eg.db, region_gr)
+extract_txdb_data(txdb, region_gr, org.Hs.eg.db = NULL)
 }
 \arguments{
 \item{txdb}{A TxDb object (e.g., TxDb.Hsapiens.UCSC.hg19.knownGene)}
 
 \item{region_gr}{A GRanges object specifying the genomic region}
+
+\item{org.Hs.eg.db}{An OrgDb object for gene symbol lookup (e.g., org.Hs.eg.db).
+If NULL (default), the function will attempt to auto-detect an OrgDb
+object from the global environment. If not found, gene IDs will be used
+as gene names.}
 }
 \value{
 A data frame with gene and exon information formatted for geom_gene
@@ -21,6 +26,7 @@ for a specific genomic region.
 \examples{
 \dontrun{
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(org.Hs.eg.db)
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 region_gr <- parse_region("chr1:1000000-2000000")
 gene_data <- extract_txdb_data(txdb, region_gr)

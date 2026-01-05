@@ -4,10 +4,16 @@
 \alias{ez_coverage_theme}
 \title{A theme for coverage tracks}
 \usage{
-ez_coverage_theme(y_axis_style = c("none", "simple", "full"), ...)
+ez_coverage_theme(y_axis_style = c("none", "simple", "minmax", "full"), ...)
 }
 \arguments{
-\item{y_axis_style}{Style of the y-axis. Options are "none", "simple", and "full".}
+\item{y_axis_style}{Style of the y-axis. Options are:
+\itemize{
+\item "none": No y-axis displayed
+\item "simple": Shows y-range as [min - max] label at top-left (handled in ez_coverage)
+\item "minmax": Shows only min and max values on y-axis with ticks
+\item "full": Full y-axis with all ticks and labels
+}}
 
 \item{...}{Additional arguments passed to ez_theme}
 }

@@ -8,15 +8,14 @@ ez_sashimi(
   coverage_data,
   junction_data,
   region,
-  coverage_fill = "steelblue",
-  coverage_alpha = 0.5,
+  coverage_fill = "purple3",
   junction_direction = c("alternate", "up", "down"),
-  junction_curvature = 0.5,
-  height_factor = 0.15,
-  junction_color = "gray50",
-  junction_alpha = 0.7,
+  junction_curvature = 0.05,
+  height_factor = 0.05,
+  junction_color = "purple3",
+  alpha = 1,
   score_transform = c("identity", "log10", "sqrt"),
-  linewidth_range = c(0.5, 3),
+  linewidth_range = c(0.1, 1.5),
   show_labels = TRUE,
   label_size = 3,
   label_color = "black",
@@ -35,8 +34,6 @@ or a file path to a BED file. start/end represent the splice junction donor/acce
 
 \item{coverage_fill}{Fill color for coverage area. Default: "steelblue"}
 
-\item{coverage_alpha}{Transparency for coverage area (0-1). Default: 0.5}
-
 \item{junction_direction}{Direction of junction arcs: "alternate" (default, odd junctions up,
 even down), "up" (all arcs above coverage), or "down" (all arcs below zero line)}
 
@@ -48,7 +45,7 @@ Higher values create taller arcs. Default: 0.15}
 
 \item{junction_color}{Color for junction arcs. Default: "gray50"}
 
-\item{junction_alpha}{Transparency for junction arcs (0-1). Default: 0.7}
+\item{alpha}{Transparency for both coverage and junction arcs (0-1). Default: 0.5}
 
 \item{score_transform}{Transformation for junction scores when mapping to line width:
 "identity" (no transformation), "log10", or "sqrt". Default: "identity"}
@@ -90,32 +87,13 @@ Junction scores are mapped to line width using the specified transformation.
 Use "log10" or "sqrt" for data with wide score ranges to prevent very thick lines.
 }
 \examples{
-\dontrun{
 # Basic sashimi plot
 coverage <- data.frame(
-  seqnames = "chr1", start = 1:100, end = 2:101, score = c(runif(30, 5, 10),
-    rep(0, 20), runif(50, 5, 10))
+  seqnames = "chr1", start = 1:100, end = 2:101,
+  score = c(runif(30, 5, 10), rep(0, 20), runif(50, 5, 10))
 )
 junctions <- data.frame(
   seqnames = "chr1", start = c(30), end = c(50), score = c(15)
 )
 ez_sashimi(coverage, junctions, "chr1:1-100")
-
-# With log-transformed scores and custom colors
-ez_sashimi(
-  coverage, junctions, "chr1:1-100",
-  coverage_fill = "darkblue",
-  junction_color = "red",
-  score_transform = "log10",
-  junction_direction = "up"
-)
-
-# From files
-ez_sashimi(
-  "coverage.bedgraph",
-  "junctions.bed",
-  "chr1:1000000-2000000",
-  show_labels = TRUE
-)
-}
 }

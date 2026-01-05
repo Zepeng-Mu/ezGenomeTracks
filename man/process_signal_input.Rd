@@ -7,7 +7,8 @@
 process_signal_input(input, region, track_labels = NULL)
 }
 \arguments{
-\item{input}{Either a data frame, character vector of file paths, or named list}
+\item{input}{A GRanges object, data frame, character vector of file paths, or named list.
+GRanges objects are automatically converted to data frames.}
 
 \item{region}{A genomic region string in the format "chr:start-end"}
 
@@ -18,11 +19,16 @@ A data frame with standardized columns: seqnames, start, end, score,
 and optionally track and group columns
 }
 \description{
-This function converts any input type (data.frame, character vector, or list)
+This function converts any input type (GRanges, data.frame, character vector, or list)
 into a standardized data frame with consistent columns for signal visualization.
 }
 \examples{
 \dontrun{
+# GRanges input
+library(GenomicRanges)
+gr <- GRanges(seqnames = "chr1", ranges = IRanges(1:100, 1:100), score = rnorm(100))
+process_signal_input(gr, "chr1:1-100")
+
 # Data frame input
 df <- data.frame(seqnames = "chr1", start = 1:100, end = 1:100, score = rnorm(100))
 process_signal_input(df, "chr1:1-100")

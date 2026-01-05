@@ -7,15 +7,15 @@
 ez_gene(
   data,
   region,
-  exon_height = 0.4,
-  intron_width = 0.4,
+  exon_height = 0.2,
+  intron_width = 0.6,
   exon_color = NULL,
   exon_fill = NULL,
   intron_color = NULL,
   gene_id = "gene_id",
   gene_name = "gene_name",
   y = "strand",
-  label = NULL,
+  label = "gene_name",
   label_size = 3,
   label_color = NULL,
   ...
@@ -93,32 +93,7 @@ The visualization includes:
 }
 }
 \examples{
-\dontrun{
-# From a GTF file (default strand-based coloring)
-track1 <- ez_gene("genes.gtf", "chr1:1000000-2000000")
-
-# From a TxDb object
-library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-track2 <- ez_gene(txdb, "chr1:1000000-2000000")
-
-# With custom uniform styling (overrides strand-based colors)
-track3 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
-  exon_fill = "steelblue",
-  exon_color = "navy",
-  intron_color = "darkblue",
-  intron_width = 0.6
-)
-
-# With gene name labels
-track4 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
-  label = "gene_name",
-  label_size = 3
-)
-
-# With custom y-axis grouping by transcript (uses gray50 uniform color)
-track5 <- ez_gene("genes.gtf", "chr1:1000000-2000000",
-  y = "transcript_id"
-)
-}
+# From a data frame
+data(example_genes)
+ez_gene(example_genes, "chr1:11869-14409")
 }

@@ -48,7 +48,7 @@ It removes the y-axis text and title, and makes the plot more compact.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ez_coverage_theme</span><span class="op">(</span>y_axis_style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"simple"</span>, <span class="st">"full"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ez_coverage_theme</span><span class="op">(</span>y_axis_style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"simple"</span>, <span class="st">"minmax"</span>, <span class="st">"full"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -56,7 +56,11 @@ It removes the y-axis text and title, and makes the plot more compact.</p>
 
 
 <dl><dt id="arg-y-axis-style">y_axis_style<a class="anchor" aria-label="anchor" href="#arg-y-axis-style"></a></dt>
-<dd><p>Style of the y-axis. Options are "none", "simple", and "full".</p></dd>
+<dd><p>Style of the y-axis. Options are:</p><ul><li><p>"none": No y-axis displayed</p></li>
+<li><p>"simple": Shows y-range as [min - max] label at top-left (handled in ez_coverage)</p></li>
+<li><p>"minmax": Shows only min and max values on y-axis with ticks</p></li>
+<li><p>"full": Full y-axis with all ticks and labels</p></li>
+</ul></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
