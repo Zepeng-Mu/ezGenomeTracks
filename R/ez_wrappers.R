@@ -1160,10 +1160,17 @@ ez_gene <- function(
 
   # Apply theme and scale
   if (use_strand_colors) {
+    # Determine which strands are present and build color vector accordingly
+    # Discrete y-axis orders factor levels alphabetically: "-" < "+" < "Unknown"
+    present_strands <- unique(as.character(gene_data$strand))
+    all_strand_order <- c("-", "+", "Unknown")
+    present_ordered <- all_strand_order[all_strand_order %in% present_strands]
+    axis_colors <- strand_colors[present_ordered]
+
     p <- p +
       ggplot2::scale_y_discrete(
         expand = c(0.1, 0.1),
-        drop = FALSE
+        drop = TRUE  # Drop unused levels so colors match
       ) +
       scale_x_genome_region(region) +
       ez_gene_theme() +
@@ -1171,7 +1178,7 @@ ez_gene <- function(
         axis.text.y = ggplot2::element_text(
           size = 14,
           face = "bold",
-          colour = c(strand_colors["-"], strand_colors["+"])
+          colour = axis_colors
         )
       ) +
       ggplot2::labs(x = NULL)
