@@ -69,6 +69,70 @@ vstack_plot <- function(..., region = NULL, heights = NULL) {
   return(combined_plot)
 }
 
+#' Stack multiple plots horizontally
+#'
+#' This function stacks multiple plots horizontally. Unlike vstack_plot,
+#' the plots do not need to share a common region and can display different
+#' genomic regions side by side.
+#'
+#' @param ... ggplot2 objects representing genome tracks or plots
+#' @param widths Relative widths of the plots (default: NULL, equal widths)
+#' @return A composite plot with horizontally stacked plots
+#' @export
+#' @importFrom aplot insert_right
+#' @examples
+#' \dontrun{
+#' track1 <- ez_coverage("signal.bw", "chr1:1000000-2000000")
+#' track2 <- ez_coverage("signal.bw", "chr2:5000000-6000000")
+#' track3 <- ez_coverage("signal.bw", "chr3:1000000-2000000")
+#' p <- hstack_plot(track1, track2, track3)
+#' p <- hstack_plot(track1, track2, track3, widths = c(2, 1))
+#' }
+hstack_plot <- function(..., widths = NULL) {
+  # Collect the plots
+  plots <- list(...)
+
+  # Check if we have any plots
+  if (length(plots) == 0) {
+    stop("No plots provided")
+  }
+
+  # Validate that all plots are ggplot objects
+  for (i in seq_along(plots)) {
+    if (!inherits(plots[[i]], "gg") && !inherits(plots[[i]], "ggplot")) {
+      stop(sprintf(
+        "Plot %d is not a valid ggplot object. Got class: %s",
+        i,
+        paste(class(plots[[i]]), collapse = ", ")
+      ))
+    }
+  }
+
+  # Set default widths if not provided
+  if (is.null(widths)) {
+    widths <- rep(1, length(plots) - 1)
+  } else if (length(widths) != length(plots) - 1) {
+    stop("Length of widths must be one less than the number of plots")
+  }
+
+  # Stack plots horizontally using insert_right
+  # Start with the first plot
+  combined_plot <- plots[[1]]
+
+  # Add remaining plots to the right
+  if (length(plots) > 1) {
+    for (i in 2:length(plots)) {
+      combined_plot <- aplot::insert_right(
+        combined_plot,
+        plots[[i]],
+        width = widths[i - 1]
+      )
+    }
+  }
+
+  return(combined_plot)
+}
+
 #' Add a vertical line to a genome track
 #'
 #' This function adds a vertical line to a genome track at a specific position.
