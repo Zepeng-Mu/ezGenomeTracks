@@ -39,7 +39,7 @@ bw2 <- system.file(
 # Use `ez_coverage` function
 
 ## Plot a single coverage track
-```{r}
+```{r, fig.height=4}
 ez_coverage(
   input = bw0,
   region = "chr2:231109000-231115000"
@@ -52,34 +52,20 @@ Note that `ez_coverage`, like all other `ez_*` wrappers, automatically convert t
 
 To plot stacked tracks, use a `list()` for `input` to `ez_coverage`.
 
-```{r}
+```{r, fig.height=4}
 ez_coverage(
   input = list(bw0, bw1, bw2),
   region = "chr2:231109000-231115000",
-  y_axis_style = "full",
-  y_range = c(0, 100)
+  y_axis_style = "full"
 )
 
 ez_coverage(
   input = list(bw0, bw1, bw2),
   region = "chr2:231109000-231115000",
   y_axis_style = "full",
-  y_range = c(0, 100),
   colors = c("blue2", "orange2", "purple2"),
   alpha = 1,
   track_labels = c("AA", "AG", "GG")
-)
-
-ez_coverage(
-  input = list(bw0, bw1, bw2),
-  region = "chr2:231109000-231115000",
-  y_axis_style = "none",
-  y_range = c(0, 100),
-  colors = c("blue2", "orange2", "purple2"),
-  alpha = 1,
-  track_labels = c("AA", "AG", "GG"),
-  facet_label_position = "left",
-  show_legend = T
 )
 ```
 
@@ -89,7 +75,7 @@ There are two notable things in the above examples. First, we can use `show_lege
 
 In some cases, we want to plot overlapping tracks to compare coverage heights. To do so, use a **vector** for `input` to `ez_coverage`.
 
-```{r}
+```{r, fig.height=4}
 ez_coverage(
   input = c(bw0, bw1, bw2),
   region = "chr2:231109000-231115000",
@@ -110,7 +96,7 @@ In this way, it is clear that the second exon in this plot showed differential u
 
 Set y-axis range to all tracks.
 
-```{r}
+```{r, fig.height=4}
 ez_coverage(
   input = list(bw0, bw1, bw2),
   region = "chr2:231109000-231115000",
@@ -125,7 +111,7 @@ ez_coverage(
 
 Add border around tracks.
 
-```{r}
+```{r, fig.height=4}
 ez_coverage(
   input = list(bw0, bw1, bw2),
   region = "chr2:231109000-231115000",
@@ -140,7 +126,7 @@ ez_coverage(
 ```
 
 Draw lines for coverage.
-```{r}
+```{r, fig.height=4}
 ez_coverage(
   input = c(bw0, bw1, bw2),
   region = "chr2:231109000-231115000",
@@ -155,6 +141,37 @@ ez_coverage(
 )
 ```
 
+Change y-axis style.
+
+```{r, fig.height=4}
+ez_coverage(
+  input = list(bw0, bw1, bw2),
+  region = "chr2:231109000-231115000",
+  y_axis_style = "simple",
+  colors = c("blue2", "orange2", "purple2"),
+  alpha = 1,
+  track_labels = c("AA", "AG", "GG")
+)
+
+ez_coverage(
+  input = list(bw0, bw1, bw2),
+  region = "chr2:231109000-231115000",
+  y_axis_style = "minmax",
+  colors = c("blue2", "orange2", "purple2"),
+  alpha = 1,
+  track_labels = c("AA", "AG", "GG")
+)
+
+ez_coverage(
+  input = list(bw0, bw1, bw2),
+  region = "chr2:231109000-231115000",
+  y_axis_style = "none",
+  colors = c("blue2", "orange2", "purple2"),
+  alpha = 1,
+  track_labels = c("AA", "AG", "GG")
+)
+```
+
 # Use `geom_coverage` function
 
 For advanced users that hope to do more customization with the plots, `geom_coverage` can be directly used with `ggplot` calls.
@@ -166,7 +183,7 @@ bw0_cov <- rtracklayer::import(bw0) |>
 head(bw0_cov)
 ```
 
-```{r}
+```{r, fig.height=4}
 ggplot(bw0_cov) +
   geom_coverage()
 ```

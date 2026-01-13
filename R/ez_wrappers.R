@@ -497,7 +497,7 @@ ez_feature <- function(
 #' - **Regional mode**: When `region` is provided OR when data contains only one
 #'   chromosome, the plot uses genomic coordinate formatting consistent with
 #'   `ez_coverage` and `ez_gene`, making it suitable for stacking with other
-#'   tracks via `genome_plot()`. This is ideal for LocusZoom-style regional
+#'   tracks via `vstack_plot()`. This is ideal for LocusZoom-style regional
 #'   association plots.
 #'
 #' - **Genome-wide mode**: When data contains multiple chromosomes and no region

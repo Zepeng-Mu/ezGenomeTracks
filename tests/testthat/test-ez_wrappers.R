@@ -7,10 +7,17 @@ test_that("ez_coverage handles various input types correctly", {
   p1 <- ez_coverage(example_signal, region = "chr1:1000000-2000000")
   expect_s3_class(p1, "ggplot")
   expect_true(length(p1$layers) > 0)
+  expect_true(is_valid_ggplot(p1))
+  expect_true(can_render_plot(p1))
 
   # Test different types
   p2 <- ez_coverage(example_signal, region = "chr1:1000000-2000000", type = "line")
   expect_s3_class(p2, "ggplot")
+  expect_true(is_valid_ggplot(p2))
+
+  p3 <- ez_coverage(example_signal, region = "chr1:1000000-2000000", type = "heatmap")
+  expect_s3_class(p3, "ggplot")
+  expect_true(is_valid_ggplot(p3))
 
   # Test parameter validation
   expect_error(ez_coverage(example_signal, region = "chr1:1000000-2000000", alpha = 2))
@@ -19,6 +26,25 @@ test_that("ez_coverage handles various input types correctly", {
   # Test with missing required columns
   bad_data <- example_signal[, -which(names(example_signal) == "score")]
   expect_error(ez_coverage(bad_data, region = "chr1:1000000-2000000"))
+
+  # Test with custom styling parameters
+  p_styled <- ez_coverage(
+    example_signal,
+    region = "chr1:1000000-2000000",
+    fill = "steelblue",
+    color = "darkblue",
+    alpha = 0.7
+  )
+  expect_s3_class(p_styled, "ggplot")
+  expect_true(is_valid_ggplot(p_styled))
+  expect_true(can_render_plot(p_styled))
+
+  # Test with test data generated from helper functions
+  test_data <- create_test_genomic_data()
+  p_test_data <- ez_coverage(test_data, region = "chr1:1000000-1100000")
+  expect_s3_class(p_test_data, "ggplot")
+  expect_true(is_valid_ggplot(p_test_data))
+  expect_true(can_render_plot(p_test_data))
 })
 
 test_that("ez_feature creates a feature track", {

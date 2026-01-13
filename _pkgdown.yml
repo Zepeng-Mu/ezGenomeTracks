@@ -22,7 +22,7 @@ reference:
   - ez_sashimi
   - ez_manhattan
   - ez_hic
-  - genome_plot
+  - vstack_plot
 
 - title: "Geom Functions"
   desc: "Low-level geometric objects for genomic data"

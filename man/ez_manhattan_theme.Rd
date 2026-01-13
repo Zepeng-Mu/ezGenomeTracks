@@ -22,7 +22,7 @@ A ggplot2 theme object
 }
 \description{
 This function creates a theme specifically for regional Manhattan plots.
-It provides consistent styling with other track types for use with \code{genome_plot()}.
+It provides consistent styling with other track types for use with \code{vstack_plot()}.
 }
 \examples{
 \dontrun{

@@ -203,7 +203,7 @@ ez_feature_theme <- function(...) {
 #' A theme for Manhattan plots
 #'
 #' This function creates a theme specifically for regional Manhattan plots.
-#' It provides consistent styling with other track types for use with `genome_plot()`.
+#' It provides consistent styling with other track types for use with `vstack_plot()`.
 #'
 #' @param y_axis_style Style of the y-axis. Options are "none", "simple", and "full".
 #'   - "none": Removes all y-axis elements

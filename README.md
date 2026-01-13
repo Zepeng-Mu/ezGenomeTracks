@@ -1,6 +1,6 @@
 # ezGenomeTracks
 
-Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) and easy wrappers (`ez_*`) to plot common genomics data (coverage, genes, features/peaks, interactions/arcs, Hi-C, Manhattan) and compose them vertically with a shared genomic x-axis via `genome_plot()`.
+Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) and easy wrappers (`ez_*`) to plot common genomics data (coverage, genes, features/peaks, interactions/arcs, Hi-C, Manhattan) and compose them vertically with a shared genomic x-axis via `vstack_plot()`.
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -128,7 +128,7 @@ track_hic <- ez_hic(hic_df, region = region)
 Stack tracks vertically with synchronized genomic x-axis.
 
 ``` r
-combined <- genome_plot(
+combined <- vstack_plot(
   list(
     coverage = track_cov,
     genes = track_gene,
@@ -147,7 +147,7 @@ Each `ez_*` can take: - Data frame (as above) - File path (e.g. BED, bedGraph, G
 
 ## Customization
 
-Control theme variants (`ez_theme()`, track-specific themes), y-axis visibility (`none`, `simple`, `full`), colors (standard ggplot2 scales or custom palettes), and relative track heights in `genome_plot()`.
+Control theme variants (`ez_theme()`, track-specific themes), y-axis visibility (`none`, `simple`, `full`), colors (standard ggplot2 scales or custom palettes), and relative track heights in `vstack_plot()`.
 
 ## Data Conventions Summary
 

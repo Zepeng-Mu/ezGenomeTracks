@@ -1,33 +1,55 @@
 # Tests for geom functions
 
 test_that("geom_coverage creates different visualization types", {
-  # Create test data
-  test_data <- data.frame(
-    start = seq(1, 100, 10),
-    end = seq(10, 100, 10),
-    score = rnorm(10)
-  )
+  # Create test data using helper functions
+  test_data <- create_test_genomic_data()
 
   # Test area plot (default)
   p1 <- ggplot2::ggplot(test_data) + geom_coverage()
   expect_s3_class(p1, "ggplot")
   expect_true(length(p1$layers) > 0)
+  expect_true(is_valid_ggplot(p1))
+  expect_true(can_render_plot(p1))
 
   # Test line plot
   p2 <- ggplot2::ggplot(test_data) + geom_coverage(type = "line")
   expect_s3_class(p2, "ggplot")
   expect_true(length(p2$layers) > 0)
+  expect_true(is_valid_ggplot(p2))
+  expect_true(can_render_plot(p2))
 
   # Test heatmap
   p3 <- ggplot2::ggplot(test_data) + geom_coverage(type = "heatmap")
   expect_s3_class(p3, "ggplot")
   expect_true(length(p3$layers) > 0)
+  expect_true(is_valid_ggplot(p3))
+  expect_true(can_render_plot(p3))
 
   # Test with custom mapping
   p4 <- ggplot2::ggplot(test_data) +
     geom_coverage(ggplot2::aes(x = start, y = score, color = score))
   expect_s3_class(p4, "ggplot")
   expect_true(length(p4$layers) > 0)
+  expect_true(is_valid_ggplot(p4))
+  expect_true(can_render_plot(p4))
+
+  # Test with different binning parameters
+  p5 <- ggplot2::ggplot(test_data) + geom_coverage(binwidth = 500)
+  expect_s3_class(p5, "ggplot")
+  expect_true(is_valid_ggplot(p5))
+  expect_true(can_render_plot(p5))
+
+  # Test edge case: single data point
+  single_point <- data.frame(
+    seqnames = "chr1",
+    start = 1000,
+    end = 1100,
+    score = 5.0
+  )
+  p6 <- ggplot2::ggplot(single_point) + geom_coverage()
+  expect_s3_class(p6, "ggplot")
+  expect_true(is_valid_ggplot(p6))
+  expect_true(can_render_plot(p6))
 })
 
 test_that("geom_feature creates feature tracks", {
