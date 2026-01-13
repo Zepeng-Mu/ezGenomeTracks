@@ -56,7 +56,7 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="ezgenometracks">ezGenomeTracks<a class="anchor" aria-label="anchor" href="#ezgenometracks"></a>
 </h1></div>
-<p>Minimal, ggplot2-based genome browser tracks for R. Provides geoms (<code>geom_*</code>) and easy wrappers (<code>ez_*</code>) to plot common genomics data (coverage, genes, features/peaks, interactions/arcs, Hi-C, Manhattan) and compose them vertically with a shared genomic x-axis via <code><a href="reference/genome_plot.html">genome_plot()</a></code>.</p>
+<p>Minimal, ggplot2-based genome browser tracks for R. Provides geoms (<code>geom_*</code>) and easy wrappers (<code>ez_*</code>) to plot common genomics data (coverage, genes, features/peaks, interactions/arcs, Hi-C, Manhattan) and compose them vertically with a shared genomic x-axis via <code><a href="reference/vstack_plot.html">vstack_plot()</a></code>.</p>
 <p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a> <a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></p>
 <blockquote>
 <p>[!NOTE] <code>ezGenomeTracks</code> is my experiment with Vibe Coding. I mostly use Github Copilot Business. I have also tried Cursor, TRAE and Windsurf.</p>
@@ -176,7 +176,7 @@
 </h2>
 <p>Stack tracks vertically with synchronized genomic x-axis.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/genome_plot.html">genome_plot</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vstack_plot.html">vstack_plot</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    coverage <span class="op">=</span> <span class="va">track_cov</span>,</span>
 <span>    genes <span class="op">=</span> <span class="va">track_gene</span>,</span>
@@ -196,7 +196,7 @@
 <div class="section level2">
 <h2 id="customization">Customization<a class="anchor" aria-label="anchor" href="#customization"></a>
 </h2>
-<p>Control theme variants (<code><a href="reference/ez_theme.html">ez_theme()</a></code>, track-specific themes), y-axis visibility (<code>none</code>, <code>simple</code>, <code>full</code>), colors (standard ggplot2 scales or custom palettes), and relative track heights in <code><a href="reference/genome_plot.html">genome_plot()</a></code>.</p>
+<p>Control theme variants (<code><a href="reference/ez_theme.html">ez_theme()</a></code>, track-specific themes), y-axis visibility (<code>none</code>, <code>simple</code>, <code>full</code>), colors (standard ggplot2 scales or custom palettes), and relative track heights in <code><a href="reference/vstack_plot.html">vstack_plot()</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="data-conventions-summary">Data Conventions Summary<a class="anchor" aria-label="anchor" href="#data-conventions-summary"></a>

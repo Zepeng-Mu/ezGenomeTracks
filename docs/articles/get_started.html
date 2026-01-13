@@ -105,7 +105,7 @@ as <code><a href="../reference/ez_coverage.html">ez_coverage()</a></code>, <code
 (file paths, <code>data.frame</code>, <code>GRanges</code>, or named
 lists) and internally prepare the data, select sensible defaults, and
 return a full ggplot2 layer or complete track that you can stack with
-<code><a href="../reference/genome_plot.html">genome_plot()</a></code>. I imagine most users will primarily use
+<code><a href="../reference/vstack_plot.html">vstack_plot()</a></code>. I imagine most users will primarily use
 these high-level wrappers for quick plotting.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># one-line coverage track from a bigWig or data.frame</span></span>
@@ -115,7 +115,7 @@ these high-level wrappers for quick plotting.</p>
 <span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ez_gene.html">ez_gene</a></span><span class="op">(</span><span class="va">example_genes</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># stack and display</span></span>
-<span><span class="fu"><a href="../reference/genome_plot.html">genome_plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">cov</span>, <span class="va">genes</span><span class="op">)</span>, region <span class="op">=</span> <span class="st">"chr1:100000-101000"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/vstack_plot.html">vstack_plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">cov</span>, <span class="va">genes</span><span class="op">)</span>, region <span class="op">=</span> <span class="st">"chr1:100000-101000"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Custom Geoms</strong>: Some power users may want to custom
 their plots beyond what the <code>ez_*</code> wrappers can provide. In
 this case, the package also exposes a set of <code>geom_*()</code>
@@ -152,7 +152,7 @@ aligned and makes numeric labels concise — e.g., <code>100,000</code>
 becomes <code>100 kb</code> where appropriate.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plot_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span><span class="va">example_signal</span><span class="op">)</span>, <span class="fu"><a href="../reference/ez_gene.html">ez_gene</a></span><span class="op">(</span><span class="va">example_genes</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/genome_plot.html">genome_plot</a></span><span class="op">(</span><span class="va">plot_list</span>, region <span class="op">=</span> <span class="st">"chr2:50000-80000"</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu"><a href="../reference/vstack_plot.html">vstack_plot</a></span><span class="op">(</span><span class="va">plot_list</span>, region <span class="op">=</span> <span class="st">"chr2:50000-80000"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/scale_x_genome_region.html">scale_x_genome_region</a></span><span class="op">(</span>region <span class="op">=</span> <span class="st">"chr2:50000-80000"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Custom themes for simple, pretty plots</strong>: The package
 defines <code><a href="../reference/ez_theme.html">ez_theme()</a></code> as a minimal base theme and
@@ -169,17 +169,17 @@ control:</p>
 <li>Y-axis labeling and tick formatting for strand-aware tracks</li>
 <li>Default colors and palettes for Hi-C / interaction plots</li>
 <li>Spacing between stacked tracks (via <code>heights</code> in
-<code><a href="../reference/genome_plot.html">genome_plot()</a></code>)</li>
+<code><a href="../reference/vstack_plot.html">vstack_plot()</a></code>)</li>
 </ul>
 <p>Example — applying themes and tweaking appearance:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span><span class="va">example_signal</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="../reference/ez_coverage_theme.html">ez_coverage_theme</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ez_gene.html">ez_gene</a></span><span class="op">(</span><span class="va">example_genes</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="../reference/ez_gene_theme.html">ez_gene_theme</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/genome_plot.html">genome_plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">p</span>, <span class="va">q</span><span class="op">)</span>, region <span class="op">=</span> <span class="st">"chr1:100000-101000"</span>, heights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/vstack_plot.html">vstack_plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">p</span>, <span class="va">q</span><span class="op">)</span>, region <span class="op">=</span> <span class="st">"chr1:100000-101000"</span>, heights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Stacking tracks vertically with
-<code><a href="../reference/genome_plot.html">genome_plot()</a></code></strong>: Finally, the
-<code><a href="../reference/genome_plot.html">genome_plot()</a></code> function takes a list of ggplot2 layers (from
+<code><a href="../reference/vstack_plot.html">vstack_plot()</a></code></strong>: Finally, the
+<code><a href="../reference/vstack_plot.html">vstack_plot()</a></code> function takes a list of ggplot2 layers (from
 <code>ez_*</code> wrappers or custom geoms) and stacks them vertically
 into a single plot. It handles aligning the x-axes, applying themes, and
 adjusting track heights for a cohesive multi-track visualization. I

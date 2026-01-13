@@ -67,7 +67,7 @@
 <li>Apply appropriate themes automatically</li>
 </ul></li>
 <li>
-<strong>Track composition</strong> (<code><a href="reference/genome_plot.html">genome_plot()</a></code>): Stacks multiple tracks with aligned x-axes
+<strong>Track composition</strong> (<code>genome_plot()</code>): Stacks multiple tracks with aligned x-axes
 <ul><li>Uses <code><a href="https://rdrr.io/pkg/aplot/man/plot_list.html" class="external-link">aplot::plot_list()</a></code> for vertical stacking</li>
 <li>Located in <code>R/genome_plot.R</code>
 </li>
@@ -145,7 +145,7 @@
 <div class="section level3">
 <h3 id="aplot-stacking">aplot Stacking<a class="anchor" aria-label="anchor" href="#aplot-stacking"></a></h3>
 <ul><li>
-<code><a href="reference/genome_plot.html">genome_plot()</a></code> passes tracks to <code><a href="https://rdrr.io/pkg/aplot/man/plot_list.html" class="external-link">aplot::plot_list()</a></code> with <code>guides = "collect"</code>
+<code>genome_plot()</code> passes tracks to <code><a href="https://rdrr.io/pkg/aplot/man/plot_list.html" class="external-link">aplot::plot_list()</a></code> with <code>guides = "collect"</code>
 </li>
 <li>All tracks MUST share the same x-axis limits (via <code><a href="reference/scale_x_genome_region.html">scale_x_genome_region()</a></code>)</li>
 <li>Use <code>heights</code> parameter for relative track sizing</li>

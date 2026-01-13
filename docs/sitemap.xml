@@ -39,7 +39,6 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_sashimi_theme.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_theme.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/format_genomic_coord.html</loc></url>
-<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/genome_plot.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_coverage.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_feature.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_gene.html</loc></url>
@@ -66,5 +65,6 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/scale_x_genome_region.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/scale_y_strand.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/stat_bin_signal.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/vstack_plot.html</loc></url>
 </urlset>
 
