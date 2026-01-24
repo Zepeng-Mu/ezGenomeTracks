@@ -230,6 +230,7 @@ ez_coverage <- function(
   # Parse region for x positioning
   region_gr <- parse_region(region)
   x_min <- GenomicRanges::start(region_gr)
+  x_max <- GenomicRanges::end(region_gr)
 
   # Calculate y-axis limits for annotations (track-specific if multiple tracks)
   if (is.null(y_range)) {
@@ -299,8 +300,10 @@ ez_coverage <- function(
           data = y_range_df,
           ggplot2::aes(x = .data$x, y = .data$y_max, label = .data$y_label),
           hjust = 0,
-          vjust = 0,
+          vjust = 1,
           size = 3,
+          nudge_x = (x_max - x_min) * 0.01,
+          nudge_y = -(max(y_range_df$y_max) * 0.05),
           inherit.aes = FALSE
         )
     } else {
@@ -314,10 +317,11 @@ ez_coverage <- function(
         ggplot2::labs(x = paste0("Chr", chr)) +
         ggplot2::annotate(
           "text",
-          x = x_min,
-          y = y_max,
+          x = x_min + (x_max - x_min) * 0.01,
+          y = y_max * 0.95,
           label = y_label,
           hjust = 0,
+          vjust = 1,
           vjust = 0,
           size = 3
         )
