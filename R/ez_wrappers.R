@@ -227,22 +227,55 @@ ez_coverage <- function(
     p <- p + stat_bin_signal(binwidth = bin_width)
   }
 
-  # Calculate y-axis limits for annotations
-  if (is.null(y_range)) {
-    y_min <- 0
-    y_max <- max(plotDt$score, na.rm = TRUE)
-  } else {
-    y_min <- y_range[1]
-    y_max <- y_range[2]
-  }
-
   # Parse region for x positioning
   region_gr <- parse_region(region)
   x_min <- GenomicRanges::start(region_gr)
-  x_max <- GenomicRanges::end(region_gr)
+
+  # Calculate y-axis limits for annotations (track-specific if multiple tracks)
+  if (is.null(y_range)) {
+    if (has_track) {
+      # Calculate per-track y-ranges
+      y_range_df <- plotDt |>
+        dplyr::group_by(track) |>
+        dplyr::summarise(
+          y_min = 0,
+          y_max = max(score, na.rm = TRUE),
+          .groups = "drop"
+        ) |>
+        dplyr::mutate(
+          y_label = paste0("[", round(y_min, 1), " - ", round(y_max, 1), "]"),
+          x = x_min
+        )
+    } else {
+      y_min <- 0
+      y_max <- max(plotDt$score, na.rm = TRUE)
+    }
+  } else {
+    y_min <- y_range[1]
+    y_max <- y_range[2]
+    if (has_track) {
+      # Use the same y_range for all tracks
+      y_range_df <- data.frame(
+        track = unique(plotDt$track),
+        y_min = y_min,
+        y_max = y_max,
+        y_label = paste0("[", round(y_min, 1), " - ", round(y_max, 1), "]"),
+        x = x_min
+      )
+    }
+  }
 
   # Apply the appropriate theme and scale
   if (y_axis_style == "minmax") {
+    if (has_track) {
+      # For multiple tracks, minmax doesn't work well with free_y scales
+      # Use a common y-range if y_range is provided, otherwise use global max
+      if (is.null(y_range)) {
+        global_y_max <- max(plotDt$score, na.rm = TRUE)
+        y_min <- 0
+        y_max <- global_y_max
+      }
+    }
     p <- p +
       ez_coverage_theme(y_axis_style = y_axis_style) +
       scale_x_genome_region(region) +
@@ -254,23 +287,41 @@ ez_coverage <- function(
       ggplot2::coord_cartesian(ylim = c(y_min, y_max)) +
       ggplot2::labs(x = paste0("Chr", chr))
   } else if (y_axis_style == "simple") {
-    # Create the [min - max] label
-    y_label <- paste0("[", round(y_min, 1), " - ", round(y_max, 1), "]")
-    p <- p +
-      ez_coverage_theme(y_axis_style = y_axis_style) +
-      scale_x_genome_region(region) +
-      ggplot2::scale_y_continuous(expand = c(0, 0)) +
-      ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
-      ggplot2::labs(x = paste0("Chr", chr)) +
-      ggplot2::annotate(
-        "text",
-        x = x_min,
-        y = y_max,
-        label = y_label,
-        hjust = 0,
-        vjust = 0,
-        size = 3
-      )
+    if (has_track) {
+      # Use geom_text for per-track labels
+      p <- p +
+        ez_coverage_theme(y_axis_style = y_axis_style) +
+        scale_x_genome_region(region) +
+        ggplot2::scale_y_continuous(expand = c(0, 0)) +
+        ggplot2::coord_cartesian(clip = "off") +
+        ggplot2::labs(x = paste0("Chr", chr)) +
+        ggplot2::geom_text(
+          data = y_range_df,
+          ggplot2::aes(x = .data$x, y = .data$y_max, label = .data$y_label),
+          hjust = 0,
+          vjust = 0,
+          size = 3,
+          inherit.aes = FALSE
+        )
+    } else {
+      # Single track - use annotate
+      y_label <- paste0("[", round(y_min, 1), " - ", round(y_max, 1), "]")
+      p <- p +
+        ez_coverage_theme(y_axis_style = y_axis_style) +
+        scale_x_genome_region(region) +
+        ggplot2::scale_y_continuous(expand = c(0, 0)) +
+        ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
+        ggplot2::labs(x = paste0("Chr", chr)) +
+        ggplot2::annotate(
+          "text",
+          x = x_min,
+          y = y_max,
+          label = y_label,
+          hjust = 0,
+          vjust = 0,
+          size = 3
+        )
+    }
   } else {
     p <- p +
       ez_coverage_theme(y_axis_style = y_axis_style) +
