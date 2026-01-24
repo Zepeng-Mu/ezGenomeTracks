@@ -211,7 +211,7 @@ GeomLink <- ggproto(
         y = grid::unit(y_bezier, "native"),
         gp = grid::gpar(
           col = row$colour,
-          lwd = row$linewidth * .pt,
+          lwd = row$linewidth * ggplot2::.pt,
           lty = row$linetype,
           lineend = "butt",
           alpha = row$alpha

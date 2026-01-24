@@ -74,6 +74,95 @@
 <span><span class="co">#&gt; Easy and flexible genomic track visualization</span></span>
 <span><span class="co">#&gt; Use citation('ezGenomeTracks') to see how to cite this package</span></span>
 <span><span class="co">#&gt; For documentation and examples, visit: https://github.com/zmu/ezGenomeTracks</span></span></code></pre></div>
+<p>Sashimi plots are an elegant way to visualize mRNA splicing data, but
+few existing tools can do it. Years ago I wrote a custom track class for
+pyGenomeTracks and have seen several people using it. Here,
+<code>ezGenomeTracks</code> provides a unified <code>ez_sashimi</code>
+function that makes it even easier to plot Sashimi plots. It takes a
+bigwig file and a link file as inputs.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bw0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>  <span class="st">"extdata"</span>,</span>
+<span>  <span class="st">"avg_chr2-231091223_231109786_231113600_0.bw"</span>,</span>
+<span>  package <span class="op">=</span> <span class="st">"ezGenomeTracks"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bw1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>  <span class="st">"extdata"</span>,</span>
+<span>  <span class="st">"avg_chr2-231091223_231109786_231113600_1.bw"</span>,</span>
+<span>  package <span class="op">=</span> <span class="st">"ezGenomeTracks"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bw2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>  <span class="st">"extdata"</span>,</span>
+<span>  <span class="st">"avg_chr2-231091223_231109786_231113600_2.bw"</span>,</span>
+<span>  package <span class="op">=</span> <span class="st">"ezGenomeTracks"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">link0</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/fread.html" class="external-link">fread</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>    <span class="st">"extdata"</span>,</span>
+<span>    <span class="st">"chr2-231091223_231109786_231113600_0.sashimi"</span>,</span>
+<span>    package <span class="op">=</span> <span class="st">"ezGenomeTracks"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  header <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seqnames"</span>, <span class="st">"start"</span>, <span class="st">"end"</span>, <span class="st">"name"</span>, <span class="st">"score"</span>, <span class="st">"strand"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">link1</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/fread.html" class="external-link">fread</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>    <span class="st">"extdata"</span>,</span>
+<span>    <span class="st">"chr2-231091223_231109786_231113600_1.sashimi"</span>,</span>
+<span>    package <span class="op">=</span> <span class="st">"ezGenomeTracks"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  header <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seqnames"</span>, <span class="st">"start"</span>, <span class="st">"end"</span>, <span class="st">"name"</span>, <span class="st">"score"</span>, <span class="st">"strand"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">link2</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/fread.html" class="external-link">fread</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>    <span class="st">"extdata"</span>,</span>
+<span>    <span class="st">"chr2-231091223_231109786_231113600_2.sashimi"</span>,</span>
+<span>    package <span class="op">=</span> <span class="st">"ezGenomeTracks"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  header <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seqnames"</span>, <span class="st">"start"</span>, <span class="st">"end"</span>, <span class="st">"name"</span>, <span class="st">"score"</span>, <span class="st">"strand"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">link0</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    seqnames     start       end   name      score strand</span></span>
+<span><span class="co">#&gt;      &lt;char&gt;     &lt;int&gt;     &lt;int&gt; &lt;char&gt;      &lt;num&gt; &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1:     chr2 231109795 231110578  link1 0.23729710      +</span></span>
+<span><span class="co">#&gt; 2:     chr2 231109795 231112631  link2 0.02362313      +</span></span>
+<span><span class="co">#&gt; 3:     chr2 231110655 231112631  link3 0.32665704      +</span></span>
+<span><span class="co">#&gt; 4:     chr2 231112780 231113600  link4 0.31368420      +</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_sashimi.html">ez_sashimi</a></span><span class="op">(</span></span>
+<span>  coverage_data <span class="op">=</span> <span class="va">bw0</span>,</span>
+<span>  junction_data <span class="op">=</span> <span class="va">link0</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="va">score</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  linewidth_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  height_factor <span class="op">=</span> <span class="fl">0.03</span>,</span>
+<span>  region <span class="op">=</span> <span class="st">"chr2:231107879-231115507"</span>,</span>
+<span>  junction_curvature <span class="op">=</span> <span class="fl">0.03</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="tracks_sashimi_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<p>We can plot multiple track together as we do for
+<code>ez_coverage</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_sashimi.html">ez_sashimi</a></span><span class="op">(</span></span>
+<span>  coverage_data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
+<span>  junction_data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="va">link0</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="va">score</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="va">link1</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="va">score</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="va">link2</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="va">score</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  linewidth_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>  height_factor <span class="op">=</span> <span class="fl">0.03</span>,</span>
+<span>  region <span class="op">=</span> <span class="st">"chr2:231107879-231115507"</span>,</span>
+<span>  junction_curvature <span class="op">=</span> <span class="fl">0.03</span>,</span>
+<span>  colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"purple2"</span>, <span class="st">"orange2"</span>, <span class="st">"blue2"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="tracks_sashimi_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
   </main>
 </div>
 

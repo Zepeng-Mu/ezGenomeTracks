@@ -49,6 +49,7 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/get_single_signal.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/granges_to_df.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/hic_palettes.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/hstack_plot.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/import_genomic_data.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/index.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/interaction_track.html</loc></url>
@@ -59,6 +60,7 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_interaction_data.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_manhattan_input.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_sashimi_data.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_sashimi_input.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_signal_input.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/scale_fill_hic.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/scale_x_genome.html</loc></url>

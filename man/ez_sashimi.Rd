@@ -8,11 +8,12 @@ ez_sashimi(
   coverage_data,
   junction_data,
   region,
-  coverage_fill = "purple3",
+  track_labels = NULL,
+  colors = "purple3",
+  coverage_fill = NULL,
   junction_direction = c("alternate", "up", "down"),
   junction_curvature = 0.05,
   height_factor = 0.05,
-  junction_color = "purple3",
   alpha = 1,
   score_transform = c("identity", "log10", "sqrt"),
   linewidth_range = c(0.1, 1.5),
@@ -20,38 +21,51 @@ ez_sashimi(
   label_size = 3,
   label_color = "black",
   y_axis_style = c("none", "simple", "full"),
+  facet_label_position = c("top", "left"),
+  border = FALSE,
+  show_legend = FALSE,
   ...
 )
 }
 \arguments{
-\item{coverage_data}{Coverage input: a data frame with seqnames, start, end, score columns,
-or a file path to a bedGraph/bigWig file}
+\item{coverage_data}{Coverage input: a GRanges object, data frame, character vector
+of file paths, or named list of data sources. Same input types as \code{\link{ez_coverage}}.
+When a named list is provided, each element becomes a separate faceted track.}
 
-\item{junction_data}{Junction input: a data frame with seqnames, start, end, score columns,
-or a file path to a BED file. start/end represent the splice junction donor/acceptor sites.}
+\item{junction_data}{Junction input that must match the structure of coverage_data:
+\itemize{
+\item If coverage_data is a single source (GRanges, data.frame, or file path),
+junction_data must also be a single source.
+\item If coverage_data is a named list, junction_data must be a named list with
+the same names.
+}}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
 
-\item{coverage_fill}{Fill color for coverage area. Default: "steelblue"}
+\item{track_labels}{Optional vector of track labels (used for unnamed list input)}
+
+\item{colors}{Color(s) for coverage fill and junction arcs. Can be a single color
+or a vector of colors for multiple tracks. If fewer colors than tracks are
+provided, colors will be recycled. Default: "purple3"}
+
+\item{coverage_fill}{Deprecated. Use \code{colors} instead.}
 
 \item{junction_direction}{Direction of junction arcs: "alternate" (default, odd junctions up,
 even down), "up" (all arcs above coverage), or "down" (all arcs below zero line)}
 
 \item{junction_curvature}{Curvature of junction arcs (0-1). Higher values create more
-pronounced curves. Default: 0.5}
+pronounced curves. Default: 0.05}
 
 \item{height_factor}{Height of arcs as proportion of genomic distance span.
-Higher values create taller arcs. Default: 0.15}
+Higher values create taller arcs. Default: 0.05}
 
-\item{junction_color}{Color for junction arcs. Default: "gray50"}
-
-\item{alpha}{Transparency for both coverage and junction arcs (0-1). Default: 0.5}
+\item{alpha}{Transparency for both coverage and junction arcs (0-1). Default: 1}
 
 \item{score_transform}{Transformation for junction scores when mapping to line width:
 "identity" (no transformation), "log10", or "sqrt". Default: "identity"}
 
 \item{linewidth_range}{Range of line widths for junction arcs, mapped from score.
-Default: c(0.5, 3)}
+Default: c(0.1, 1.5)}
 
 \item{show_labels}{Logical, whether to show score labels at arc centers. Default: TRUE}
 
@@ -61,6 +75,13 @@ Default: c(0.5, 3)}
 
 \item{y_axis_style}{Y-axis style: "none", "simple", or "full". Default: "none"}
 
+\item{facet_label_position}{Position of facet labels: "top" or "left" (default: "top").
+Only applies when using multiple tracks via named list input.}
+
+\item{border}{Logical. If \code{TRUE}, adds a black border around the plotting panel (default: FALSE)}
+
+\item{show_legend}{Logical. If \code{TRUE}, displays the legend (default: FALSE)}
+
 \item{...}{Additional arguments passed to geom_coverage}
 }
 \value{
@@ -69,6 +90,7 @@ A ggplot2 object representing the sashimi plot
 \description{
 This function creates a sashimi plot combining coverage tracks with splice junction arcs.
 It is commonly used for RNA-seq data to visualize both read coverage and splicing events.
+Supports the same flexible input types as \code{\link{ez_coverage}}.
 }
 \details{
 Sashimi plots combine two visual elements:
@@ -85,6 +107,10 @@ helps reduce visual overlap.
 
 Junction scores are mapped to line width using the specified transformation.
 Use "log10" or "sqrt" for data with wide score ranges to prevent very thick lines.
+
+For multi-track visualization, provide named lists for both coverage_data and
+junction_data with matching names. Each track will be displayed as a separate
+facet with its own coverage and junction arcs.
 }
 \examples{
 # Basic sashimi plot
@@ -96,4 +122,9 @@ junctions <- data.frame(
   seqnames = "chr1", start = c(30), end = c(50), score = c(15)
 )
 ez_sashimi(coverage, junctions, "chr1:1-100")
+
+# Multi-track sashimi plot with named lists
+cov_list <- list("Sample1" = coverage1, "Sample2" = coverage2)
+junc_list <- list("Sample1" = junctions1, "Sample2" = junctions2)
+ez_sashimi(cov_list, junc_list, "chr1:1-100", colors = c("purple", "orange"))
 }

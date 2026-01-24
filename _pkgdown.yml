@@ -23,6 +23,7 @@ reference:
   - ez_manhattan
   - ez_hic
   - vstack_plot
+  - hstack_plot
 
 - title: "Geom Functions"
   desc: "Low-level geometric objects for genomic data"
@@ -42,6 +43,7 @@ reference:
   - process_gene_data
   - process_interaction_data
   - process_sashimi_data
+  - process_sashimi_input
   - process_manhattan_input
   - process_hic_data
   - import_genomic_data

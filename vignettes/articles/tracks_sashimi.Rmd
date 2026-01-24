@@ -82,7 +82,7 @@ ez_sashimi(
 
 We can plot multiple track together as we do for `ez_coverage`.
 
-```{r, fig.height=4}
+```{r}
 ez_sashimi(
   coverage_data = list(bw0, bw1, bw2),
   junction_data = list(
