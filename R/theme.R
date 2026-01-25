@@ -130,11 +130,12 @@ ez_coverage_theme <- function(y_axis_style = c("none", "simple", "minmax", "full
         plot.margin = ggplot2::margin(12, 5, 5, 5)  # Extra top margin for label
       )
   } else if (y_axis_style == "minmax") {
-    # Minmax style: show only min and max ticks on y-axis
+    # Minmax style: show y-axis line and ticks, but labels are added via geom_text
     theme <- ez_theme(...) +
       ggplot2::theme(
         axis.title.y = ggplot2::element_blank(),
-        plot.margin = ggplot2::margin(5, 5, 5, 5)
+        axis.text.y = ggplot2::element_blank(),
+        plot.margin = ggplot2::margin(5, 5, 5, 25)  # Extra left margin for labels
       )
   } else if (y_axis_style == "full") {
     theme <- ez_theme(...) +

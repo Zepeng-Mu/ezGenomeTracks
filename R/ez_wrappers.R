@@ -269,24 +269,75 @@ ez_coverage <- function(
   # Apply the appropriate theme and scale
   if (y_axis_style == "minmax") {
     if (has_track) {
-      # For multiple tracks, minmax doesn't work well with free_y scales
-      # Use a common y-range if y_range is provided, otherwise use global max
-      if (is.null(y_range)) {
-        global_y_max <- max(plotDt$score, na.rm = TRUE)
-        y_min <- 0
-        y_max <- global_y_max
-      }
+      # For multiple tracks with free_y scales, add per-track min/max labels
+      # Create label data for both min and max values
+      x_offset <- (x_max - x_min) * 0.025
+      y_labels_df <- y_range_df |>
+        dplyr::mutate(
+          min_label = round(y_min, 1),
+          max_label = round(y_max, 1),
+          x_label = x_min - x_offset
+        )
+      p <- p +
+        ez_coverage_theme(y_axis_style = y_axis_style) +
+        scale_x_genome_region(region, oob = scales::oob_keep) +
+        ggplot2::scale_y_continuous(
+          expand = c(0, 0),
+          breaks = function(limits) c(0, limits[2])
+        ) +
+        ggplot2::coord_cartesian(clip = "off") +
+        ggplot2::labs(x = paste0("Chr", chr)) +
+        # Max label at top
+        ggplot2::geom_text(
+          data = y_labels_df,
+          ggplot2::aes(x = .data$x_label, y = .data$y_max, label = .data$max_label),
+          hjust = 0.5,
+          vjust = 0.5,
+          size = 2.5,
+          inherit.aes = FALSE
+        ) +
+        # Min label at bottom
+        ggplot2::geom_text(
+          data = y_labels_df,
+          ggplot2::aes(x = .data$x_label, y = .data$y_min, label = .data$min_label),
+          hjust = 0.5,
+          vjust = 0.5,
+          size = 2.5,
+          inherit.aes = FALSE
+        )
+    } else {
+      # Single track - use annotate for min/max labels
+      x_offset <- (x_max - x_min) * 0.025
+      p <- p +
+        ez_coverage_theme(y_axis_style = y_axis_style) +
+        scale_x_genome_region(region, oob = scales::oob_keep) +
+        ggplot2::scale_y_continuous(
+          expand = c(0, 0),
+          breaks = c(y_min, y_max)
+        ) +
+        ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
+        ggplot2::labs(x = paste0("Chr", chr)) +
+        # Max label at top
+        ggplot2::annotate(
+          "text",
+          x = x_min - x_offset,
+          y = y_max,
+          label = round(y_max, 1),
+          hjust = 0.5,
+          vjust = 0.5,
+          size = 2.5
+        ) +
+        # Min label at bottom
+        ggplot2::annotate(
+          "text",
+          x = x_min - x_offset,
+          y = y_min,
+          label = round(y_min, 1),
+          hjust = 0.5,
+          vjust = 0.5,
+          size = 2.5
+        )
     }
-    p <- p +
-      ez_coverage_theme(y_axis_style = y_axis_style) +
-      scale_x_genome_region(region) +
-      ggplot2::scale_y_continuous(
-        expand = c(0, 0),
-        breaks = c(y_min, y_max),
-        labels = function(x) round(x, 1)
-      ) +
-      ggplot2::coord_cartesian(ylim = c(y_min, y_max)) +
-      ggplot2::labs(x = paste0("Chr", chr))
   } else if (y_axis_style == "simple") {
     if (has_track) {
       # Use geom_text for per-track labels
