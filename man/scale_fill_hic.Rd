@@ -8,7 +8,7 @@ scale_fill_hic(
   palette = c("cooler", "ylgnbu", "viridis", "bwr"),
   trans = "identity",
   limits = NULL,
-  na.value = "grey50",
+  na.value = "#f7f7f7",
   midpoint = 0,
   oob = scales::squish,
   ...

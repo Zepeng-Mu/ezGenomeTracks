@@ -14,6 +14,8 @@ geom_hic(
   ...,
   resolution = NULL,
   na.rm = FALSE,
+  rasterize = FALSE,
+  rasterize_dpi = 300,
   show.legend = NA,
   inherit.aes = TRUE
 )
@@ -41,7 +43,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used to override the default coupling between geoms and
+argument can be used the override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -72,18 +74,21 @@ If NULL, attempts to infer from data (default: NULL)}
 
 \item{na.rm}{If \code{TRUE}, silently remove missing values.}
 
+\item{rasterize}{Logical. If TRUE and ggrastr package is available, rasterize
+the layer for better performance with large matrices. Default: FALSE}
+
+\item{rasterize_dpi}{Resolution for rasterization in dots per inch. Default: 300}
+
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display. To include legend keys for all levels, even
-when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
-but unobserved levels are omitted.}
+display.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \value{
 A ggplot2 layer that can be added to a plot.
@@ -104,6 +109,11 @@ hic_df <- data.frame(
 )
 ggplot(hic_df, aes(x = x, y = y, fill = score)) +
   geom_hic(resolution = 10000) +
+  scale_fill_hic()
+
+# With rasterization for large matrices
+ggplot(hic_df, aes(x = x, y = y, fill = score)) +
+  geom_hic(resolution = 10000, rasterize = TRUE, rasterize_dpi = 300) +
   scale_fill_hic()
 }
 }

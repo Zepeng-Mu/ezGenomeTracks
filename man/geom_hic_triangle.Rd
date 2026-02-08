@@ -15,6 +15,8 @@ geom_hic_triangle(
   resolution = NULL,
   max_distance = NULL,
   na.rm = FALSE,
+  rasterize = FALSE,
+  rasterize_dpi = 300,
   show.legend = NA,
   inherit.aes = TRUE
 )
@@ -42,7 +44,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used to override the default coupling between geoms and
+argument can be used the override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -75,18 +77,21 @@ If NULL, attempts to infer from data (default: NULL)}
 
 \item{na.rm}{If \code{TRUE}, silently remove missing values.}
 
+\item{rasterize}{Logical. If TRUE and ggrastr package is available, rasterize
+the layer for better performance with large matrices. Default: FALSE}
+
+\item{rasterize_dpi}{Resolution for rasterization in dots per inch. Default: 300}
+
 \item{show.legend}{logical. Should this layer be included in the legends?
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display. To include legend keys for all levels, even
-when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
-but unobserved levels are omitted.}
+display.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 }
 \value{
 A ggplot2 layer that can be added to a plot.
@@ -102,8 +107,10 @@ The triangle view transforms Hi-C data so that:
 \item x-axis represents the midpoint of interacting bins: (pos1 + pos2) / 2
 \item y-axis represents the interaction distance: pos2 - pos1
 }
-Each contact is rendered as a diamond (rotated square). Use with
-\code{coord_fixed(ratio = 0.5)} for proper aspect ratio.
+The triangle points UPWARD with the diagonal (self-interactions) at y=0 at the
+bottom, and the apex at the top showing maximum interaction distance. Each contact
+is rendered as a diamond (rotated square). Use with \code{coord_fixed(ratio = 1)} for
+a proper half-square aspect ratio where the triangle forms 45-degree edges.
 }
 \examples{
 \dontrun{
@@ -119,7 +126,13 @@ hic_df$score <- runif(nrow(hic_df))
 ggplot(hic_df, aes(x = pos1, y = pos2, fill = score)) +
   geom_hic_triangle(resolution = 10000) +
   scale_fill_hic() +
-  coord_fixed(ratio = 0.5)
+  coord_fixed(ratio = 1)
+
+# With rasterization for large matrices
+ggplot(hic_df, aes(x = pos1, y = pos2, fill = score)) +
+  geom_hic_triangle(resolution = 10000, rasterize = TRUE) +
+  scale_fill_hic() +
+  coord_fixed(ratio = 1)
 }
 }
 \keyword{datasets}
