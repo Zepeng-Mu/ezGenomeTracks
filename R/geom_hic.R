@@ -8,6 +8,9 @@
 #' @param resolution Resolution of Hi-C bins in base pairs. Used to calculate tile width/height.
 #'   If NULL, attempts to infer from data (default: NULL)
 #' @param na.rm If `TRUE`, silently remove missing values.
+#' @param rasterize Logical. If TRUE and ggrastr package is available, rasterize
+#'   the layer for better performance with large matrices. Default: FALSE
+#' @param rasterize_dpi Resolution for rasterization in dots per inch. Default: 300
 #' @param ... Additional arguments passed to [ggplot2::layer()]
 #'
 #' @return A ggplot2 layer that can be added to a plot.
@@ -28,6 +31,11 @@
 #' ggplot(hic_df, aes(x = x, y = y, fill = score)) +
 #'   geom_hic(resolution = 10000) +
 #'   scale_fill_hic()
+#'
+#' # With rasterization for large matrices
+#' ggplot(hic_df, aes(x = x, y = y, fill = score)) +
+#'   geom_hic(resolution = 10000, rasterize = TRUE, rasterize_dpi = 300) +
+#'   scale_fill_hic()
 #' }
 geom_hic <- function(
   mapping = NULL,
@@ -37,10 +45,12 @@ geom_hic <- function(
   ...,
   resolution = NULL,
   na.rm = FALSE,
+  rasterize = FALSE,
+  rasterize_dpi = 300,
   show.legend = NA,
   inherit.aes = TRUE
 ) {
-  ggplot2::layer(
+  layer_obj <- layer_obj <- ggplot2::layer(
     data = data,
     mapping = mapping,
     stat = stat,
@@ -54,6 +64,20 @@ geom_hic <- function(
       ...
     )
   )
+
+  # Apply rasterization if requested
+  if (rasterize) {
+    if (!requireNamespace("ggrastr", quietly = TRUE)) {
+      warning(
+        "Package 'ggrastr' is required for rasterization. ",
+        "Install with install.packages('ggrastr')"
+      )
+      return(layer_obj)
+    }
+    layer_obj <- ggrastr::rasterise(layer_obj, dpi = rasterize_dpi)
+  }
+
+  layer_obj
 }
 
 #' @rdname geom_hic
@@ -138,6 +162,9 @@ GeomHic <- ggproto(
 #'   If NULL, attempts to infer from data (default: NULL)
 #' @param max_distance Maximum interaction distance to display in base pairs (default: NULL, show all)
 #' @param na.rm If `TRUE`, silently remove missing values.
+#' @param rasterize Logical. If TRUE and ggrastr package is available, rasterize
+#'   the layer for better performance with large matrices. Default: FALSE
+#' @param rasterize_dpi Resolution for rasterization in dots per inch. Default: 300
 #' @param ... Additional arguments passed to [ggplot2::layer()]
 #'
 #' @details
@@ -146,8 +173,10 @@ GeomHic <- ggproto(
 #'   \item x-axis represents the midpoint of interacting bins: (pos1 + pos2) / 2
 #'   \item y-axis represents the interaction distance: pos2 - pos1
 #' }
-#' Each contact is rendered as a diamond (rotated square). Use with
-#' `coord_fixed(ratio = 0.5)` for proper aspect ratio.
+#' The triangle points UPWARD with the diagonal (self-interactions) at y=0 at the
+#' bottom, and the apex at the top showing maximum interaction distance. Each contact
+#' is rendered as a diamond (rotated square). Use with `coord_fixed(ratio = 1)` for
+#' a proper half-square aspect ratio where the triangle forms 45-degree edges.
 #'
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
@@ -169,7 +198,13 @@ GeomHic <- ggproto(
 #' ggplot(hic_df, aes(x = pos1, y = pos2, fill = score)) +
 #'   geom_hic_triangle(resolution = 10000) +
 #'   scale_fill_hic() +
-#'   coord_fixed(ratio = 0.5)
+#'   coord_fixed(ratio = 1)
+#'
+#' # With rasterization for large matrices
+#' ggplot(hic_df, aes(x = pos1, y = pos2, fill = score)) +
+#'   geom_hic_triangle(resolution = 10000, rasterize = TRUE) +
+#'   scale_fill_hic() +
+#'   coord_fixed(ratio = 1)
 #' }
 geom_hic_triangle <- function(
   mapping = NULL,
@@ -180,10 +215,12 @@ geom_hic_triangle <- function(
   resolution = NULL,
   max_distance = NULL,
   na.rm = FALSE,
+  rasterize = FALSE,
+  rasterize_dpi = 300,
   show.legend = NA,
   inherit.aes = TRUE
 ) {
-  ggplot2::layer(
+  layer_obj <- layer_obj <- ggplot2::layer(
     data = data,
     mapping = mapping,
     stat = stat,
@@ -198,6 +235,20 @@ geom_hic_triangle <- function(
       ...
     )
   )
+
+  # Apply rasterization if requested
+  if (rasterize) {
+    if (!requireNamespace("ggrastr", quietly = TRUE)) {
+      warning(
+        "Package 'ggrastr' is required for rasterization. ",
+        "Install with install.packages('ggrastr')"
+      )
+      return(layer_obj)
+    }
+    layer_obj <- ggrastr::rasterise(layer_obj, dpi = rasterize_dpi)
+  }
+
+  layer_obj
 }
 
 #' @rdname geom_hic_triangle
@@ -238,11 +289,11 @@ GeomHicTriangle <- ggproto(
 
     # Transform to triangle coordinates
     # x_new = midpoint = (pos1 + pos2) / 2
-    # y_new = distance = pos2 - pos1
+    # y_new = distance = pos2 - pos1 (positive, triangle points UPWARD)
     data$x_orig <- data$x
     data$y_orig <- data$y
     data$x <- (data$x_orig + data$y_orig) / 2
-    data$y <- data$y_orig - data$x_orig
+    data$y <- data$y_orig - data$x_orig # Positive distance, apex at top
 
     data
   },
@@ -280,17 +331,18 @@ GeomHicTriangle <- ggproto(
 
     # For each point, create 4 vertices
     # Note: For points on the diagonal (distance = 0), we draw triangles instead
+    # Triangle points UPWARD (y is positive distance, apex at top)
     grobs <- lapply(seq_len(n), function(i) {
       row <- data[i, ]
       cx <- row$x
       cy <- row$y
 
       if (cy == 0) {
-        # On diagonal: draw triangle (top half of diamond)
+        # On diagonal: draw triangle (top half of diamond, pointing up)
         xs <- c(cx - half_res, cx, cx + half_res)
         ys <- c(cy, cy + half_res, cy)
       } else {
-        # Off diagonal: draw full diamond
+        # Off diagonal: draw full diamond (y is positive)
         xs <- c(cx, cx + half_res, cx, cx - half_res)
         ys <- c(cy + half_res, cy, max(0, cy - half_res), cy)
       }
@@ -441,6 +493,19 @@ process_hic_data <- function(
       if (!"score" %in% names(hic_df) && "count" %in% names(hic_df)) {
         hic_df$score <- hic_df$count
       }
+
+      # Filter to region if specified
+      if (!is.null(region)) {
+        region_gr <- parse_region(region)
+        start_pos <- GenomicRanges::start(region_gr)
+        end_pos <- GenomicRanges::end(region_gr)
+        hic_df <- hic_df[
+          hic_df$pos1 >= start_pos &
+            hic_df$pos1 <= end_pos &
+            hic_df$pos2 >= start_pos &
+            hic_df$pos2 <= end_pos,
+        ]
+      }
     } else if (all(c("bin1", "bin2") %in% names(data))) {
       # Has bin indices, convert to genomic coordinates
       if (!is.null(region)) {
@@ -472,196 +537,17 @@ process_hic_data <- function(
     stop("data must be a file path, matrix, or data frame")
   }
 
+  # Complete the grid: fill missing bin pairs with score = 0
+  # This ensures all bins in the plotting region are represented
+  all_positions <- sort(unique(c(hic_df$pos1, hic_df$pos2)))
+  complete_grid <- expand.grid(pos1 = all_positions, pos2 = all_positions)
+  hic_df <- merge(complete_grid, hic_df, by = c("pos1", "pos2"), all.x = TRUE)
+  hic_df$score[is.na(hic_df$score)] <- 0
+
   # Filter to upper triangle if requested
   if (upper_triangle) {
     hic_df <- hic_df[hic_df$pos1 <= hic_df$pos2, ]
   }
 
-  # Remove NA values
-  hic_df <- hic_df[!is.na(hic_df$score), ]
-
   return(hic_df)
-}
-
-#' Easy Hi-C track visualization
-#'
-#' This function creates a Hi-C contact matrix visualization from various input types.
-#' It provides a high-level interface supporting both square heatmap and triangle
-#' (rotated) views commonly used in genome browsers.
-#'
-#' @param data Input data. Can be:
-#'   \itemize{
-#'     \item A matrix: Dense contact matrix
-#'     \item A data frame: Sparse format with (pos1, pos2, score) or (bin1, bin2, score)
-#'     \item A file path: Tab-delimited matrix file
-#'   }
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
-#' @param resolution Resolution of the Hi-C data in base pairs (default: 10000)
-#' @param style Visualization style: "triangle" (default, rotated view) or "square"
-#' @param palette Color palette: "cooler" (red, default), "ylgnbu", "viridis", or "bwr"
-#' @param trans Scale transformation: "identity" (linear), "log10" (default), "log2", "sqrt"
-#' @param limits Numeric vector of length 2 for color scale limits (default: NULL, auto)
-#' @param max_distance Maximum interaction distance to show in base pairs (default: NULL, show all).
-#'   Only applies to triangle style.
-#' @param rasterize Logical. If TRUE and ggrastr package is available, rasterize the plot
-#'   for better performance with large matrices. Default: FALSE
-#' @param show_diagonal Logical. If TRUE, show the diagonal (self-interactions). Default: TRUE
-#' @param ... Additional arguments passed to geom_hic or geom_hic_triangle
-#'
-#' @return A ggplot2 object
-#' @export
-#' @importFrom ggplot2 ggplot aes coord_fixed coord_cartesian labs scale_y_continuous
-#' @examples
-#' \dontrun{
-#' # Create example data
-#' mat <- matrix(runif(2500), nrow = 50)
-#' mat <- mat + t(mat)  # Make symmetric
-#' diag(mat) <- diag(mat) * 2  # Stronger diagonal
-#'
-#' # Triangle view (default)
-#' ez_hic(mat, "chr1:1000000-1500000", resolution = 10000)
-#'
-#' # Square heatmap view
-#' ez_hic(mat, "chr1:1000000-1500000", resolution = 10000, style = "square")
-#'
-#' # With log10 transformation and custom palette
-#' ez_hic(mat, "chr1:1000000-1500000",
-#'   resolution = 10000,
-#'   trans = "log10",
-#'   palette = "ylgnbu"
-#' )
-#'
-#' # Limit maximum distance shown
-#' ez_hic(mat, "chr1:1000000-1500000",
-#'   resolution = 10000,
-#'   max_distance = 200000
-#' )
-#' }
-ez_hic <- function(
-  data,
-  region,
-  resolution = 10000,
-  style = c("triangle", "square"),
-  palette = c("cooler", "ylgnbu", "viridis", "bwr"),
-  trans = "log10",
-  limits = NULL,
-  max_distance = NULL,
-  rasterize = FALSE,
-  show_diagonal = TRUE,
-  ...
-) {
-  style <- match.arg(style)
-  palette <- match.arg(palette)
-
-  # Process the input data
-  upper_triangle <- (style == "triangle")
-  hic_df <- process_hic_data(
-    data = data,
-    region = region,
-    resolution = resolution,
-    upper_triangle = upper_triangle
-  )
-
-  # Filter out diagonal if requested
-  if (!show_diagonal && style == "triangle") {
-    hic_df <- hic_df[hic_df$pos1 != hic_df$pos2, ]
-  }
-
-  # Filter by max_distance for triangle view
-  if (!is.null(max_distance) && style == "triangle") {
-    hic_df <- hic_df[(hic_df$pos2 - hic_df$pos1) <= max_distance, ]
-  }
-
-  # Parse region for x-axis limits
-  region_gr <- parse_region(region)
-  chr <- as.character(GenomicRanges::seqnames(region_gr))
-  start_pos <- GenomicRanges::start(region_gr)
-  end_pos <- GenomicRanges::end(region_gr)
-
-  # Create the plot based on style
-  if (style == "triangle") {
-    # Triangle view: x = midpoint, y = distance
-    p <- ggplot2::ggplot(
-      hic_df,
-      ggplot2::aes(x = .data$pos1, y = .data$pos2, fill = .data$score)
-    ) +
-      geom_hic_triangle(
-        resolution = resolution,
-        max_distance = max_distance,
-        ...
-      )
-  } else {
-    # Square heatmap view
-    p <- ggplot2::ggplot(
-      hic_df,
-      ggplot2::aes(x = .data$pos1, y = .data$pos2, fill = .data$score)
-    ) +
-      geom_hic(resolution = resolution, ...)
-  }
-
-  # Add color scale
-  p <- p + scale_fill_hic(palette = palette, trans = trans, limits = limits)
-
-  # Add appropriate scales and theme
-  if (style == "triangle") {
-    # For triangle, x-axis is genomic position, y-axis is distance
-    # Calculate y-axis limit based on max_distance or region span
-    y_max <- if (!is.null(max_distance)) max_distance else (end_pos - start_pos)
-
-    p <- p +
-      scale_x_genome_region(region) +
-      ggplot2::scale_y_continuous(
-        expand = c(0, 0),
-        limits = c(0, y_max),
-        labels = function(x) format_genomic_coord(x)
-      ) +
-      ggplot2::coord_fixed(ratio = 0.5, clip = "off") +
-      ggplot2::labs(x = paste0("Chr", chr), y = "Distance", fill = "Score") +
-      ez_theme()
-  } else {
-    # Square view: both axes are genomic positions
-    p <- p +
-      scale_x_genome_region(region) +
-      ggplot2::scale_y_continuous(
-        expand = c(0, 0),
-        limits = c(start_pos, end_pos),
-        labels = function(x) format_genomic_coord(x)
-      ) +
-      ggplot2::coord_fixed(ratio = 1) +
-      ggplot2::labs(
-        x = paste0("Chr", chr),
-        y = paste0("Chr", chr),
-        fill = "Score"
-      ) +
-      ez_theme()
-  }
-
-  # Optional rasterization for large matrices
-  if (rasterize && requireNamespace("ggrastr", quietly = TRUE)) {
-    p <- ggrastr::rasterise(p, dpi = 300)
-  }
-
-  return(p)
-}
-
-#' Hi-C theme
-#'
-#' A minimal theme optimized for Hi-C track visualization.
-#'
-#' @param base_size Base font size (default: 11)
-#' @param ... Additional arguments passed to theme
-#'
-#' @return A ggplot2 theme object
-#' @export
-#' @importFrom ggplot2 theme element_blank element_line element_rect element_text
-ez_hic_theme <- function(base_size = 11, ...) {
-  ggplot2::theme_minimal(base_size = base_size) +
-    ggplot2::theme(
-      panel.grid = ggplot2::element_blank(),
-      panel.background = ggplot2::element_rect(fill = "white", colour = NA),
-      axis.line = ggplot2::element_line(colour = "black", linewidth = 0.5),
-      axis.ticks = ggplot2::element_line(colour = "black", linewidth = 0.25),
-      legend.position = "right",
-      ...
-    )
 }

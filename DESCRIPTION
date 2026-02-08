@@ -1,6 +1,6 @@
 Package: ezGenomeTracks
 Title: A ggplot2-based R package for plotting genome browser tracks easily.
-Version: 0.0.1
+Version: 0.0.2
 Authors@R:
     person("Zepeng", "Mu", , "zmu@broadinstitute.org", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-7717-3247"))
@@ -36,7 +36,8 @@ Suggests:
     GenomicFeatures,
     covr,
     withr,
-    mockr
+    mockr,
+    ggrastr
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BiocViews: Visualization, Sequencing, HiC

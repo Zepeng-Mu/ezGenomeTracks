@@ -61,9 +61,10 @@ scale_x_genome <- function(
 #' }
 hic_palette_cooler <- function(n = 256) {
   grDevices::colorRampPalette(c(
-    "white",
-    "#fee5d9",
-    "#fcae91",
+    "#fff5f0",
+    "#fee0d2",
+    "#fcbba1",
+    "#fc9272",
     "#fb6a4a",
     "#de2d26",
     "#a50f15"
@@ -74,8 +75,7 @@ hic_palette_cooler <- function(n = 256) {
 #' @export
 hic_palette_ylgnbu <- function(n = 256) {
   grDevices::colorRampPalette(c(
-    "#ffffd9",
-    "#edf8b1",
+    "#ffffcc",
     "#c7e9b4",
     "#7fcdbb",
     "#41b6c4",
@@ -103,7 +103,7 @@ hic_palette_bwr <- function(n = 256) {
     "#2166ac",
     "#67a9cf",
     "#d1e5f0",
-    "white",
+    "#f7f7f7",
     "#fddbc7",
     "#ef8a62",
     "#b2182b"
@@ -160,7 +160,7 @@ scale_fill_hic <- function(
   palette = c("cooler", "ylgnbu", "viridis", "bwr"),
   trans = "identity",
   limits = NULL,
-  na.value = "grey50",
+  na.value = "#f7f7f7",
   midpoint = 0,
   oob = scales::squish,
   ...

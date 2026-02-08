@@ -98,7 +98,7 @@ reference:
 
 navbar:
   structure:
-    left: [intro, tracks, reference, news]
+    left: [intro, tracks, examples, reference, news]
     right: [github]
   components:
     intro:
@@ -115,6 +115,11 @@ navbar:
         href: articles/tracks_sashimi.html
       - text: Manhattan
         href: articles/tracks_manhattan.html
+    examples:
+      text: Examples
+      menu:
+      - text: abc
+        href: articles/examples_abc.html
     github:
       icon: fab fa-github fa-lg
       href: https://github.com/Zepeng-Mu/ezGenomeTracks

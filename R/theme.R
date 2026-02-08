@@ -306,3 +306,30 @@ ez_sashimi_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
 
   return(theme)
 }
+
+
+#' Hi-C theme
+#'
+#' A minimal theme optimized for Hi-C track visualization.
+#'
+#' @param base_size Base font size (default: 11)
+#' @param ... Additional arguments passed to theme
+#'
+#' @return A ggplot2 theme object
+#' @export
+#' @importFrom ggplot2 theme element_blank element_line element_rect element_text
+ez_hic_theme <- function(base_size = 11, ...) {
+  ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme(
+      panel.grid = ggplot2::element_blank(),
+      panel.background = ggplot2::element_rect(fill = "white", colour = NA),
+      axis.line.y = ggplot2::element_blank(),
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.text.y = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      axis.line.x = ggplot2::element_line(colour = "black", linewidth = 0.5),
+      axis.ticks.x = ggplot2::element_line(colour = "black", linewidth = 0.25),
+      legend.position = "right",
+      ...
+    )
+}
