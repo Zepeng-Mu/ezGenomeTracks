@@ -67,7 +67,7 @@ test_that("geom_feature creates feature tracks", {
 
   # Test with custom mapping
   p2 <- ggplot2::ggplot(test_data) +
-    geom_feature(ggplot2::aes(xmin = start, xmax = end, fill = score))
+    geom_feature(ggplot2::aes(start = start, end = end, fill = score))
   expect_s3_class(p2, "ggplot")
   expect_true(length(p2$layers) > 0)
 

@@ -4,11 +4,12 @@
 #' ATAC-seq features, or any interval-based features. It displays the features as rectangles.
 #'
 #' @inheritParams ggplot2::layer
-#' @param mapping Aesthetic mappings (default: NULL). xmin, xmax are required.
+#' @param mapping Aesthetic mappings. Required: start, end. Optional: fill, color, alpha.
+#'   The geom expects data with 'start' and 'end' columns (genomic coordinates).
 #' @param data Dataset (default: NULL)
 #' @param stat Statistic to use (default: "identity")
 #' @param position Position adjustment (default: "identity")
-#' @param height Height of the features (default: 0.8)
+#' @param height Height of the features as proportion of y-axis range (default: 0.8)
 #' @param color Border color of the features (default: "#05b1d3")
 #' @param fill Fill color of the features (default: "#05b1d3")
 #' @param alpha Transparency (default: 0.7)
@@ -22,7 +23,7 @@
 #' \dontrun{
 #' library(ggplot2)
 #' p <- ggplot(feature_data) +
-#'   geom_feature(aes(xmin = start, xmax = end, fill = score))
+#'   geom_feature(aes(fill = score))
 #' }
 geom_feature <- function(
   mapping = NULL,
@@ -38,7 +39,7 @@ geom_feature <- function(
   show.legend = NA,
   inherit.aes = TRUE
 ) {
-  # Default mapping for features
+  # Default mapping: use start/end columns from data
   default_aes <- aes(
     xmin = .data$start,
     xmax = .data$end,
@@ -76,6 +77,14 @@ GeomFeature <- ggproto(
   "GeomFeature",
   GeomRect,
   required_aes = c("xmin", "xmax"),
+  optional_aes = c("ymin", "ymax"),
+  default_aes = aes(
+    colour = "#05b1d3",
+    fill = "#05b1d3",
+    linewidth = 0.5,
+    linetype = 1,
+    alpha = 0.7
+  ),
   setup_data = function(data, params) {
     # If ymin and ymax are not provided, set them based on height
     if (!all(c("ymin", "ymax") %in% names(data))) {
@@ -83,12 +92,5 @@ GeomFeature <- ggproto(
       data$ymax <- params$height
     }
     data
-  },
-  default_aes = aes(
-    colour = "#05b1d3",
-    fill = "#05b1d3",
-    linewidth = 0.5,
-    linetype = 1,
-    alpha = 0.7
-  )
+  }
 )

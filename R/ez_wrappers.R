@@ -497,10 +497,11 @@ ez_feature <- function(
     ))
   } else if (is.data.frame(input)) {
     # It's a data frame, create the plot directly
+    # Note: geom_feature's default_aes already maps start->xmin, end->xmax
     if (use_score && "score" %in% colnames(input)) {
       p <- ggplot2::ggplot(input) +
         geom_feature(
-          ggplot2::aes(xmin = start, xmax = end, fill = score),
+          ggplot2::aes(fill = score),
           color = color,
           alpha = alpha,
           height = height,
@@ -510,7 +511,6 @@ ez_feature <- function(
     } else {
       p <- ggplot2::ggplot(input) +
         geom_feature(
-          ggplot2::aes(xmin = start, xmax = end),
           color = color,
           fill = fill,
           alpha = alpha,
