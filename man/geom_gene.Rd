@@ -102,8 +102,8 @@ Key features:
 
 The following aesthetics are required:
 \itemize{
-\item \code{xstart}: Start position of the feature (genomic coordinate)
-\item \code{xend}: End position of the feature (genomic coordinate)
+\item \code{start}: Start position of the feature (genomic coordinate)
+\item \code{end}: End position of the feature (genomic coordinate)
 \item \code{type}: Type of feature ("gene" or "exon")
 }
 
@@ -118,7 +118,7 @@ Optional aesthetics:
 
 The following aesthetics are used by the geom:
 \itemize{
-\item \code{xstart}, \code{xend}: Start and end genomic coordinates
+\item \code{start}, \code{end}: Start and end genomic coordinates
 \item \code{type}: Feature type ("gene" or "exon")
 \item \code{strand}: Strand information ("+" or "-")
 \item \code{y}: Optional y-axis grouping
@@ -137,13 +137,12 @@ The function expects a data frame with the following columns:
 \itemize{
 \item Required:
 \itemize{
-\item \code{xstart}, \code{xend}: Genomic coordinates of features
+\item \code{start}, \code{end}: Genomic coordinates of features
 \item \code{type}: Either "gene" (for introns) or "exon"
 }
 \item Optional:
 \itemize{
 \item \code{strand}: "+" or "-" for forward/reverse strand
-\item \code{exon_start}, \code{exon_end}: For long-format exon data
 \item Any additional columns for aesthetics (e.g., gene names, biotypes)
 }
 }
@@ -178,14 +177,14 @@ library(ggplot2)
 # Example 1: Basic usage with automatic strand separation
 ggplot(gene_data) +
   geom_gene(aes(
-    xstart = start, xend = end,
+    start = start, end = end,
     type = feature, color = gene_name
   ))
 
 # Example 2: Custom y-axis grouping by biotype
 ggplot(gene_data) +
   geom_gene(aes(
-    xstart = start, xend = end,
+    start = start, end = end,
     type = feature, y = biotype,
     fill = gene_name
   ))
@@ -193,7 +192,7 @@ ggplot(gene_data) +
 # Example 3: Styling options
 ggplot(gene_data) +
   geom_gene(
-    aes(xstart = start, xend = end, type = feature),
+    aes(start = start, end = end, type = feature),
     exon_fill = "steelblue",
     exon_color = "navy",
     intron_color = "darkblue",

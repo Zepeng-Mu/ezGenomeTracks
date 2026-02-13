@@ -5,22 +5,40 @@
 \title{Easy interaction track visualization}
 \usage{
 ez_link(
-  data,
+  input,
   region,
+  track_labels = NULL,
+  group_var = NULL,
+  color_by = c("group", "track"),
+  colors = "gray50",
   curvature = 0.5,
   height_factor = 0.15,
   direction = c("down", "up"),
-  color = "gray50",
   size = 0.5,
   alpha = 0.7,
   use_score = FALSE,
+  facet_label_position = c("top", "left"),
+  border = FALSE,
+  show_legend = FALSE,
   ...
 )
 }
 \arguments{
-\item{data}{A BEDPE file path or data frame with interaction data}
+\item{input}{A GRanges, GInteractions, data frame, character vector of file paths,
+or named list of data sources with interaction data.}
 
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+
+\item{track_labels}{Optional vector of track labels (used for character vector input)}
+
+\item{group_var}{Column name for grouping data within a single data frame (default: NULL)}
+
+\item{color_by}{Whether colors distinguish "group" or "track" (default: "group")}
+
+\item{colors}{Color(s) for the arcs. Can be a single color (e.g., "gray50") or
+a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
+If fewer colors than tracks/groups are provided, colors will be recycled.
+Default is "gray50".}
 
 \item{curvature}{Numeric value controlling the arc curvature (0-1).
 Higher values create more pronounced curves. Default: 0.5}
@@ -31,9 +49,6 @@ Higher values create taller arcs. Default: 0.15}
 \item{direction}{Direction of curve arcs: "down" (negative y, default) or "up" (positive y).
 Default: "down"}
 
-\item{color}{Color of the arcs. This is used when \code{use_score = FALSE}.
-Default: "gray50"}
-
 \item{size}{Line width of the arcs. Default: 0.5}
 
 \item{alpha}{Transparency level of the arcs (0 = transparent, 1 = opaque).
@@ -43,27 +58,37 @@ Default: 0.7}
 arc coloring. If TRUE, a color gradient will be applied based on the
 interaction scores. Default: FALSE}
 
+\item{facet_label_position}{Position of facet labels: "top" or "left" (default: "top")}
+
+\item{border}{Logical. If \code{TRUE}, adds a black border around the plotting panel (default: FALSE)}
+
+\item{show_legend}{Logical. If \code{TRUE}, displays the legend (default: FALSE)}
+
 \item{...}{Additional arguments passed to \code{geom_link()}}
 }
 \value{
 A ggplot2 object representing the link track.
 }
 \description{
-This function creates an interaction track visualization from a BEDPE file or data frame.
-It is a wrapper around geom_link that provides a simpler interface.
+This function creates an interaction track visualization from various input types.
+It provides a flexible interface with support for grouping and multiple tracks,
+similar to \code{\link{ez_coverage}}.
 }
 \details{
 The function automatically handles different input types:
 \itemize{
-\item For BEDPE files: Uses \code{interaction_track} to read and process the data
-\item For data frames: Expects columns for interaction coordinates (chr1, start1, end1, chr2, start2, end2)
+\item For BEDPE files: Reads and processes the interaction data
+\item For data frames: Expects columns for interaction coordinates (start1, end1, start2, end2)
 and optionally a 'score' column if \code{use_score = TRUE}
+\item For named lists: Creates multiple faceted tracks
+\item With group_var: Groups interactions within a single data frame for overlaid visualization
 }
 
 The visualization includes:
 \itemize{
 \item Arcs connecting interaction anchors
 \item Optional score-based coloring
+\item Support for grouping and faceting
 \item Automatic scaling to fit the specified genomic region
 }
 }
@@ -73,8 +98,18 @@ data(example_interactions)
 ez_link(
   example_interactions,
   "chr1:1-15000",
-  color = "darkblue",
+  colors = "darkblue",
   size = 1,
   alpha = 0.8
 )
+
+# Single data frame with grouping
+df <- data.frame(
+  start1 = c(1000, 2000, 5000, 6000),
+  end1 = c(1500, 2500, 5500, 6500),
+  start2 = c(3000, 4000, 8000, 9000),
+  end2 = c(3500, 4500, 8500, 9500),
+  sample = c("A", "A", "B", "B")
+)
+ez_link(df, "chr1:1-10000", group_var = "sample", colors = c("blue", "orange"))
 }

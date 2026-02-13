@@ -7,8 +7,8 @@
 #'
 #' @section Aesthetics:
 #' The following aesthetics are required:
-#' - `xstart`: Start position of the feature (genomic coordinate)
-#' - `xend`: End position of the feature (genomic coordinate)
+#' - `start`: Start position of the feature (genomic coordinate)
+#' - `end`: End position of the feature (genomic coordinate)
 #' - `type`: Type of feature ("gene" or "exon")
 #'
 #' Optional aesthetics:
@@ -20,11 +20,10 @@
 #' @section Data Format:
 #' The function expects a data frame with the following columns:
 #' - Required:
-#'   - `xstart`, `xend`: Genomic coordinates of features
+#'   - `start`, `end`: Genomic coordinates of features
 #'   - `type`: Either "gene" (for introns) or "exon"
 #' - Optional:
 #'   - `strand`: "+" or "-" for forward/reverse strand
-#'   - `exon_start`, `exon_end`: For long-format exon data
 #'   - Any additional columns for aesthetics (e.g., gene names, biotypes)
 #'
 #' @section Features:
@@ -82,14 +81,14 @@
 #' # Example 1: Basic usage with automatic strand separation
 #' ggplot(gene_data) +
 #'   geom_gene(aes(
-#'     xstart = start, xend = end,
+#'     start = start, end = end,
 #'     type = feature, color = gene_name
 #'   ))
 #'
 #' # Example 2: Custom y-axis grouping by biotype
 #' ggplot(gene_data) +
 #'   geom_gene(aes(
-#'     xstart = start, xend = end,
+#'     start = start, end = end,
 #'     type = feature, y = biotype,
 #'     fill = gene_name
 #'   ))
@@ -97,7 +96,7 @@
 #' # Example 3: Styling options
 #' ggplot(gene_data) +
 #'   geom_gene(
-#'     aes(xstart = start, xend = end, type = feature),
+#'     aes(start = start, end = end, type = feature),
 #'     exon_fill = "steelblue",
 #'     exon_color = "navy",
 #'     intron_color = "darkblue",
@@ -127,8 +126,8 @@ geom_gene <- function(
 ) {
   # Provide defaults so users don't have to map y; draw at fixed vertical band
   default_aes <- ggplot2::aes(
-    xstart = .data$xstart,
-    xend = .data$xend,
+    start = .data$start,
+    end = .data$end,
     type = .data$type,
     y = .data$strand,
   )
@@ -179,7 +178,7 @@ geom_gene <- function(
 #'
 #' @section Aesthetics:
 #' The following aesthetics are used by the geom:
-#' - `xstart`, `xend`: Start and end genomic coordinates
+#' - `start`, `end`: Start and end genomic coordinates
 #' - `type`: Feature type ("gene" or "exon")
 #' - `strand`: Strand information ("+" or "-")
 #' - `y`: Optional y-axis grouping
@@ -201,7 +200,7 @@ geom_gene <- function(
 GeomGene <- ggplot2::ggproto(
   "GeomGene",
   ggplot2::Geom,
-  required_aes = c("xstart", "xend", "type"),
+  required_aes = c("start", "end", "type"),
   optional_aes = c("strand", "y"),
   setup_data = function(self, data, params) {
     # Create discrete y levels based on strand if y is not provided
@@ -227,33 +226,12 @@ GeomGene <- ggplot2::ggproto(
     # Clip features to visible region (similar to coord_cartesian behavior)
     # This ensures partially overlapping genes are still displayed
     if (!is.null(params$clip_to_region) && length(params$clip_to_region) == 2) {
-      # Clip main gene coordinates
-      data$xstart <- pmax(data$xstart, params$clip_to_region[1], na.rm = TRUE)
-      data$xend <- pmin(data$xend, params$clip_to_region[2], na.rm = TRUE)
+      # Clip coordinates to region boundaries
+      data$start <- pmax(data$start, params$clip_to_region[1], na.rm = TRUE)
+      data$end <- pmin(data$end, params$clip_to_region[2], na.rm = TRUE)
 
-      # Clip exon coordinates if present
-      if ("exon_start" %in% names(data)) {
-        data$exon_start <- pmax(
-          data$exon_start,
-          params$clip_to_region[1],
-          na.rm = TRUE
-        )
-      }
-      if ("exon_end" %in% names(data)) {
-        data$exon_end <- pmin(
-          data$exon_end,
-          params$clip_to_region[2],
-          na.rm = TRUE
-        )
-      }
-
-      # Remove features that are completely outside the region (where xstart >= xend after clipping)
-      data <- data[data$xstart < data$xend, ]
-
-      # Keep only exons that still have valid ranges after clipping
-      if ("exon_start" %in% names(data) && "exon_end" %in% names(data)) {
-        data <- data[is.na(data$exon_start) | data$exon_start < data$exon_end, ]
-      }
+      # Remove features that are completely outside the region (where start >= end after clipping)
+      data <- data[data$start < data$end, ]
     }
 
     # Convert y to numeric if it's a factor (discrete y-axis)
@@ -307,74 +285,43 @@ GeomGene <- ggplot2::ggproto(
 
     # Draw exons (rectangles) for exon type
     if (nrow(exon_data) > 0) {
-      if (all(c("exon_start", "exon_end") %in% names(exon_data))) {
-        exons <- transform(
-          exon_data,
-          xmin = exon_start,
-          xmax = exon_end,
-          ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
-          ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
-        )
-        # Handle exon border color: use mapped colour, or fill aesthetic, or exon_color parameter
-        if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
-          exons$colour <- exon_data$colour
-        } else if (!is.null(exon_color)) {
-          exons$colour <- exon_color
-        }
-        # Handle exon fill: use mapped fill, or colour aesthetic, or exon_fill parameter
-        if ("fill" %in% names(exon_data) && !is.na(exon_data$fill[1])) {
-          exons$fill <- exon_data$fill
-        } else if (
-          "colour" %in% names(exon_data) && !is.na(exon_data$colour[1])
-        ) {
-          exons$fill <- exon_data$colour
-        } else if (!is.null(exon_fill)) {
-          exons$fill <- exon_fill
-        }
-        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
-          exons,
-          panel_params,
-          coord
-        )
-      } else {
-        # If no exon_start/exon_end, use xstart/xend for exon boundaries
-        exons <- transform(
-          exon_data,
-          xmin = xstart,
-          xmax = xend,
-          ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
-          ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
-        )
-        # Handle exon border color: use mapped colour, or fill aesthetic, or exon_color parameter
-        if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
-          exons$colour <- exon_data$colour
-        } else if (!is.null(exon_color)) {
-          exons$colour <- exon_color
-        }
-        # Handle exon fill: use mapped fill, or colour aesthetic, or exon_fill parameter
-        if ("fill" %in% names(exon_data) && !is.na(exon_data$fill[1])) {
-          exons$fill <- exon_data$fill
-        } else if (
-          "colour" %in% names(exon_data) && !is.na(exon_data$colour[1])
-        ) {
-          exons$fill <- exon_data$colour
-        } else if (!is.null(exon_fill)) {
-          exons$fill <- exon_fill
-        }
-        grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
-          exons,
-          panel_params,
-          coord
-        )
+      # Use start/end directly for exon boundaries
+      exons <- transform(
+        exon_data,
+        xmin = start,
+        xmax = end,
+        ymin = ymin + (ymax - ymin) * (1 - exon_height) / 2,
+        ymax = ymax - (ymax - ymin) * (1 - exon_height) / 2
+      )
+      # Handle exon border color: use mapped colour, or fill aesthetic, or exon_color parameter
+      if ("colour" %in% names(exon_data) && !is.na(exon_data$colour[1])) {
+        exons$colour <- exon_data$colour
+      } else if (!is.null(exon_color)) {
+        exons$colour <- exon_color
       }
+      # Handle exon fill: use mapped fill, or colour aesthetic, or exon_fill parameter
+      if ("fill" %in% names(exon_data) && !is.na(exon_data$fill[1])) {
+        exons$fill <- exon_data$fill
+      } else if (
+        "colour" %in% names(exon_data) && !is.na(exon_data$colour[1])
+      ) {
+        exons$fill <- exon_data$colour
+      } else if (!is.null(exon_fill)) {
+        exons$fill <- exon_fill
+      }
+      grobs[[length(grobs) + 1]] <- ggplot2::GeomRect$draw_panel(
+        exons,
+        panel_params,
+        coord
+      )
     }
 
     # Draw gene body (line) for gene type
     if (nrow(gene_data) > 0) {
       body_data <- transform(
         gene_data,
-        x = xstart,
-        xend = xend,
+        x = start,
+        xend = end,
         y = y,
         yend = y
       )
@@ -521,34 +468,15 @@ process_gene_data <- function(
       gr_df[[type]] == "exon",
       c(gene_id, gene_name, "strand", "start", "end")
     ]
-    names(exons)[names(exons) == "start"] <- "exon_start"
-    names(exons)[names(exons) == "end"] <- "exon_end"
     exons$type <- "exon"
 
-    # Create exon rows with gene coordinates
-    exon_rows <- merge(
-      genes[, c(gene_id, gene_name, "strand", "start", "end")],
-      exons,
-      by = c(gene_id, gene_name, "strand"),
-      all.y = TRUE
-    )
-    exon_rows$type <- "exon"
-    exon_rows$xstart <- exon_rows$start
-    exon_rows$xend <- exon_rows$end
-
-    # Keep gene body rows separate (type = "gene", no exon coordinates)
+    # gene body rows (type = "gene")
     gene_rows <- genes
-    gene_rows$exon_start <- NA
-    gene_rows$exon_end <- NA
-    gene_rows$xstart <- gene_rows$start
-    gene_rows$xend <- gene_rows$end
 
     # Combine gene body rows and exon rows
-    result <- rbind(gene_rows, exon_rows)
+    result <- rbind(gene_rows, exons)
     return(result)
   } else {
-    genes$xstart <- genes$start
-    genes$xend <- genes$end
     return(genes)
   }
 }
@@ -686,20 +614,16 @@ extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
   })
   exon_df <- do.call(rbind, exon_list[!sapply(exon_list, is.null)])
 
-  # 6. Combine and add required columns for geom_gene
+  # 6. Combine gene body and exon rows
   if (nrow(exon_df) > 0) {
     result <- rbind(gene_df, exon_df)
   } else {
     result <- gene_df
   }
 
-  # Add required columns for geom_gene
-  result$xstart <- result$start
-  result$xend <- result$end
-
   return(result)
 }
 
 
 # globals used in examples/aes mappings within this file
-utils::globalVariables(c(".data", "xstart", "xend", "strand"))
+utils::globalVariables(c(".data", "start", "end", "strand"))

@@ -1068,24 +1068,15 @@ ez_gene <- function(
       lapply(
         split(exon_rows, exon_rows[[gene_id]]),
         function(g) {
-          # Get the min/max coordinates across all exon-related columns
-          x_min <- min(c(g$xstart, g$exon_start), na.rm = TRUE)
-          x_max <- max(c(g$xend, g$exon_end), na.rm = TRUE)
+          # Get the min/max coordinates across all exons
+          x_min <- min(g$start, na.rm = TRUE)
+          x_max <- max(g$end, na.rm = TRUE)
 
           # Create a single gene body row
           body_row <- g[1, , drop = FALSE]
           body_row$type <- "gene"
-          body_row$xstart <- x_min
-          body_row$xend <- x_max
           body_row$start <- x_min
           body_row$end <- x_max
-          # Clear exon-specific columns for gene body
-          if ("exon_start" %in% names(body_row)) {
-            body_row$exon_start <- NA
-          }
-          if ("exon_end" %in% names(body_row)) {
-            body_row$exon_end <- NA
-          }
           body_row
         }
       )
@@ -1097,11 +1088,11 @@ ez_gene <- function(
   # This ensures intron lines span the visible region for partial overlaps
   gene_idx <- gene_data$type == "gene"
   if (any(gene_idx)) {
-    gene_data$xstart[gene_idx] <- pmax(
-      gene_data$xstart[gene_idx],
+    gene_data$start[gene_idx] <- pmax(
+      gene_data$start[gene_idx],
       region_limits[1]
     )
-    gene_data$xend[gene_idx] <- pmin(gene_data$xend[gene_idx], region_limits[2])
+    gene_data$end[gene_idx] <- pmin(gene_data$end[gene_idx], region_limits[2])
   }
 
   # Create the plot with strand-based coloring or uniform colors
@@ -1134,8 +1125,8 @@ ez_gene <- function(
       c(
         list(
           mapping = ggplot2::aes(
-            xstart = xstart,
-            xend = xend,
+            start = start,
+            end = end,
             y = .data[[y]],
             type = type,
             colour = strand_color,
@@ -1161,8 +1152,8 @@ ez_gene <- function(
       c(
         list(
           mapping = ggplot2::aes(
-            xstart = xstart,
-            xend = xend,
+            start = start,
+            end = end,
             y = .data[[y]],
             type = type
           ),
@@ -1192,7 +1183,7 @@ ez_gene <- function(
     }
 
     # Calculate label positions (middle of gene)
-    label_data$label_x <- (label_data$xstart + label_data$xend) / 2
+    label_data$label_x <- (label_data$start + label_data$end) / 2
 
     # Convert y to numeric for offset calculation
     # The discrete y-axis maps factor levels to integers (1, 2, 3, ...)
