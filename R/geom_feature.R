@@ -41,8 +41,8 @@ geom_feature <- function(
 ) {
   # Default mapping: use start/end columns from data
   default_aes <- aes(
-    xmin = .data$start,
-    xmax = .data$end,
+    start = .data$start,
+    end = .data$end,
     ymin = 0,
     ymax = height
   )
@@ -76,7 +76,7 @@ geom_feature <- function(
 GeomFeature <- ggproto(
   "GeomFeature",
   GeomRect,
-  required_aes = c("xmin", "xmax"),
+  required_aes = c("start", "end"),
   optional_aes = c("ymin", "ymax"),
   default_aes = aes(
     colour = "#05b1d3",
@@ -86,6 +86,10 @@ GeomFeature <- ggproto(
     alpha = 0.7
   ),
   setup_data = function(data, params) {
+    # Transform start/end to xmin/xmax for GeomRect
+    data$xmin <- data$start
+    data$xmax <- data$end
+
     # If ymin and ymax are not provided, set them based on height
     if (!all(c("ymin", "ymax") %in% names(data))) {
       data$ymin <- 0

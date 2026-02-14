@@ -44,7 +44,7 @@ library(ezGenomeTracks)
 
 # `signal_df` is a data frame with columns `seqnames`, `start`, `end`, `score`
 ggplot(signal_df) +
-  geom_coverage(aes(xmin = start, xmax = end, y = score)) +
+  geom_coverage() +
   scale_x_genome_region(region = "chr1:100000-101000")
 ```
 

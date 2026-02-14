@@ -116,19 +116,19 @@ df <- data.frame(
 
 # Basic link plot (curves extend downward by default)
 ggplot(df) +
-  geom_link(aes(x = start1, y = 0, xend = start2, yend = 0)) +
+  geom_link(aes(start1 = start1, start2 = start2)) +
   coord_cartesian(clip = "off")
 
 # Upward curves with custom height
 ggplot(df) +
-  geom_link(aes(x = start1, y = 0, xend = start2, yend = 0),
+  geom_link(aes(start1 = start1, start2 = start2),
     height_factor = 0.2, direction = "up"
   ) +
   coord_cartesian(clip = "off")
 
 # With curvature, score coloring, and arrows
 ggplot(df) +
-  geom_link(aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
+  geom_link(aes(start1 = start1, start2 = start2, color = score),
     curvature = 0.8, height_factor = 0.15, arrow_length = 0.1
   ) +
   coord_cartesian(clip = "off")

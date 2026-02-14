@@ -53,15 +53,15 @@ geom_coverage <- function(
   type <- match.arg(type, c("area", "line", "heatmap"))
   if (type == "area") {
     default_aes <- aes(
-      xmin = .data$start,
-      xmax = .data$end,
+      start = .data$start,
+      end = .data$end,
       ymin = 0,
       ymax = .data$score
     )
   } else if (type == "line") {
     default_aes <- aes(
-      xmin = .data$start,
-      xmax = .data$end,
+      start = .data$start,
+      end = .data$end,
       ymin = .data$score,
       ymax = .data$score
     )
@@ -110,7 +110,7 @@ geom_coverage <- function(
 GeomCoverage <- ggproto(
   "GeomCoverage",
   Geom,
-  required_aes = c("xmin", "xmax", "ymin", "ymax"),
+  required_aes = c("start", "end", "ymin", "ymax"),
   setup_params = function(data, params) {
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params
@@ -122,6 +122,10 @@ GeomCoverage <- ggproto(
     type = "area",
     na.rm = FALSE
   ) {
+    # Transform start/end to xmin/xmax for drawing
+    data$xmin <- data$start
+    data$xmax <- data$end
+
     if (type == "heatmap") {
       # For heatmap, transform xmin/xmax to x and keep y/height
       data$x <- (data$xmin + data$xmax) / 2

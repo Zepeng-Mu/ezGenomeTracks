@@ -32,19 +32,19 @@
 #'
 #' # Basic link plot (curves extend downward by default)
 #' ggplot(df) +
-#'   geom_link(aes(x = start1, y = 0, xend = start2, yend = 0)) +
+#'   geom_link(aes(start1 = start1, start2 = start2)) +
 #'   coord_cartesian(clip = "off")
 #'
 #' # Upward curves with custom height
 #' ggplot(df) +
-#'   geom_link(aes(x = start1, y = 0, xend = start2, yend = 0),
+#'   geom_link(aes(start1 = start1, start2 = start2),
 #'     height_factor = 0.2, direction = "up"
 #'   ) +
 #'   coord_cartesian(clip = "off")
 #'
 #' # With curvature, score coloring, and arrows
 #' ggplot(df) +
-#'   geom_link(aes(x = start1, y = 0, xend = start2, yend = 0, color = score),
+#'   geom_link(aes(start1 = start1, start2 = start2, color = score),
 #'     curvature = 0.8, height_factor = 0.15, arrow_length = 0.1
 #'   ) +
 #'   coord_cartesian(clip = "off")
@@ -71,23 +71,17 @@ geom_link <- function(
   }
 
   # Default mapping for links if not provided
-  # We can't easily guess column names if mapping is NULL and data is a generic DF,
-  # but if it came from process_interaction_data, it has start1/start2.
-  # However, the user requirement says input should be x, x_end, y, y_end.
-  # We will leave mapping as NULL if not provided, but we can provide a hint or default
-  # if the data looks like it has standard columns.
-
-  # If data came from our helper, it has start1, start2.
+  # If data came from our helper, it has start1/end1/start2/end2.
   if (
     is.null(mapping) &&
       !is.null(data) &&
-      all(c("start1", "start2") %in% names(data))
+      all(c("start1", "end1", "start2", "end2") %in% names(data))
   ) {
     default_aes <- aes(
-      x = .data$start1,
-      y = 0,
-      xend = .data$start2,
-      yend = 0
+      start1 = .data$start1,
+      end1 = .data$end1,
+      start2 = .data$start2,
+      end2 = .data$end2
     )
     mapping <- default_aes
   }
@@ -118,7 +112,7 @@ geom_link <- function(
 GeomLink <- ggproto(
   "GeomLink",
   Geom,
-  required_aes = c("x", "y", "xend", "yend"),
+  required_aes = c("start1", "end1", "start2", "end2"),
   setup_params = function(data, params) {
     # Set up arrow if requested
     if (params$arrow_length > 0) {
@@ -132,6 +126,18 @@ GeomLink <- ggproto(
     params
   },
   setup_data = function(data, params) {
+    # Use midpoints of each anchor for the arc endpoints
+    data$x <- (data$start1 + data$end1) / 2
+    data$xend <- (data$start2 + data$end2) / 2
+
+    # Set y coordinates (interactions are typically drawn at baseline)
+    if (!"y" %in% names(data)) {
+      data$y <- 0
+    }
+    if (!"yend" %in% names(data)) {
+      data$yend <- 0
+    }
+
     # Calculate arc height for each link based on genomic distance
     x_span <- abs(data$xend - data$x)
     arc_height <- x_span * params$height_factor

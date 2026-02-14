@@ -22,7 +22,8 @@ geom_feature(
 )
 }
 \arguments{
-\item{mapping}{Aesthetic mappings (default: NULL). xmin, xmax are required.}
+\item{mapping}{Aesthetic mappings. Required: start, end. Optional: fill, color, alpha.
+The geom expects data with 'start' and 'end' columns (genomic coordinates).}
 
 \item{data}{Dataset (default: NULL)}
 
@@ -33,7 +34,7 @@ geom_feature(
 \item{...}{Other arguments passed on to \code{\link[ggplot2]{layer}}. These are
 often aesthetics, used to set an aesthetic to a fixed value.}
 
-\item{height}{Height of the features (default: 0.8)}
+\item{height}{Height of the features as proportion of y-axis range (default: 0.8)}
 
 \item{color}{Border color of the features (default: "#05b1d3")}
 
@@ -65,7 +66,7 @@ ATAC-seq features, or any interval-based features. It displays the features as r
 \dontrun{
 library(ggplot2)
 p <- ggplot(feature_data) +
-  geom_feature(aes(xmin = start, xmax = end, fill = score))
+  geom_feature(aes(fill = score))
 }
 }
 \keyword{datasets}

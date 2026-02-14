@@ -103,8 +103,8 @@ ez_coverage <- function(
       # Multiple tracks with grouping
       if (color_by == "group") {
         aes_mapping <- ggplot2::aes(
-          xmin = start,
-          xmax = end,
+          start = start,
+          end = end,
           ymin = 0,
           ymax = score,
           fill = .data[[group_var]]
@@ -113,8 +113,8 @@ ez_coverage <- function(
         legend_name <- group_var
       } else {
         aes_mapping <- ggplot2::aes(
-          xmin = start,
-          xmax = end,
+          start = start,
+          end = end,
           ymin = 0,
           ymax = score,
           fill = track
@@ -125,8 +125,8 @@ ez_coverage <- function(
     } else {
       # Single track with grouping
       aes_mapping <- ggplot2::aes(
-        xmin = start,
-        xmax = end,
+        start = start,
+        end = end,
         ymin = 0,
         ymax = score,
         fill = .data[[group_var]]
@@ -154,8 +154,8 @@ ez_coverage <- function(
     if (has_track) {
       # Multiple tracks without grouping
       aes_mapping <- ggplot2::aes(
-        xmin = start,
-        xmax = end,
+        start = start,
+        end = end,
         ymin = 0,
         ymax = score,
         fill = track
@@ -181,7 +181,7 @@ ez_coverage <- function(
       # Single track without grouping
       p <- ggplot2::ggplot(
         plotDt,
-        ggplot2::aes(xmin = start, xmax = end, ymin = 0, ymax = score)
+        ggplot2::aes(start = start, end = end, ymin = 0, ymax = score)
       ) +
         geom_coverage(
           type = type,
@@ -1436,10 +1436,10 @@ ez_link <- function(
     p <- ggplot2::ggplot(plotDt) +
       geom_link(
         ggplot2::aes(
-          x = start1,
-          y = 0,
-          xend = start2,
-          yend = 0,
+          start1 = start1,
+          end1 = end1,
+          start2 = start2,
+          end2 = end2,
           color = score
         ),
         curvature = curvature,
@@ -1460,20 +1460,20 @@ ez_link <- function(
       # Multiple tracks with grouping
       if (color_by == "group") {
         aes_mapping <- ggplot2::aes(
-          x = start1,
-          y = 0,
-          xend = start2,
-          yend = 0,
+          start1 = start1,
+          end1 = end1,
+          start2 = start2,
+          end2 = end2,
           color = .data[[group_var]]
         )
         color_values <- unique(plotDt[[group_var]])
         legend_name <- group_var
       } else {
         aes_mapping <- ggplot2::aes(
-          x = start1,
-          y = 0,
-          xend = start2,
-          yend = 0,
+          start1 = start1,
+          end1 = end1,
+          start2 = start2,
+          end2 = end2,
           color = track
         )
         color_values <- unique(plotDt$track)
@@ -1482,10 +1482,10 @@ ez_link <- function(
     } else {
       # Single track with grouping
       aes_mapping <- ggplot2::aes(
-        x = start1,
-        y = 0,
-        xend = start2,
-        yend = 0,
+        start1 = start1,
+        end1 = end1,
+        start2 = start2,
+        end2 = end2,
         color = .data[[group_var]]
       )
       color_values <- unique(plotDt[[group_var]])
@@ -1518,10 +1518,10 @@ ez_link <- function(
     if (has_track) {
       # Multiple tracks without grouping
       aes_mapping <- ggplot2::aes(
-        x = start1,
-        y = 0,
-        xend = start2,
-        yend = 0,
+        start1 = start1,
+        end1 = end1,
+        start2 = start2,
+        end2 = end2,
         color = track
       )
       color_values <- unique(plotDt$track)
@@ -1552,7 +1552,7 @@ ez_link <- function(
       # Single track without grouping
       p <- ggplot2::ggplot(
         plotDt,
-        ggplot2::aes(x = start1, y = 0, xend = start2, yend = 0)
+        ggplot2::aes(start1 = start1, end1 = end1, start2 = start2, end2 = end2)
       ) +
         geom_link(
           curvature = curvature,
@@ -1800,8 +1800,8 @@ ez_sashimi <- function(
       geom_coverage(
         data = coverage_df,
         ggplot2::aes(
-          xmin = start,
-          xmax = end,
+          start = start,
+          end = end,
           ymin = 0,
           ymax = score,
           fill = track
@@ -1831,10 +1831,10 @@ ez_sashimi <- function(
             geom_link(
               data = junctions_up,
               ggplot2::aes(
-                x = start1,
-                y = y_start,
-                xend = start2,
-                yend = y_end,
+                start1 = start1,
+                end1 = end1,
+                start2 = start2,
+                end2 = end2,
                 linewidth = score_transformed
               ),
               curvature = junction_curvature,
@@ -1850,10 +1850,10 @@ ez_sashimi <- function(
             geom_link(
               data = junctions_down,
               ggplot2::aes(
-                x = start1,
-                y = y_start,
-                xend = start2,
-                yend = y_end,
+                start1 = start1,
+                end1 = end1,
+                start2 = start2,
+                end2 = end2,
                 linewidth = score_transformed
               ),
               curvature = junction_curvature,
@@ -1890,7 +1890,7 @@ ez_sashimi <- function(
     p <- ggplot2::ggplot() +
       geom_coverage(
         data = coverage_df,
-        ggplot2::aes(xmin = start, xmax = end, ymin = 0, ymax = score),
+        ggplot2::aes(start = start, end = end, ymin = 0, ymax = score),
         fill = plot_colors,
         alpha = alpha,
         ...
@@ -1906,10 +1906,10 @@ ez_sashimi <- function(
           geom_link(
             data = junctions_up,
             ggplot2::aes(
-              x = start1,
-              y = y_start,
-              xend = start2,
-              yend = y_end,
+              start1 = start1,
+              end1 = end1,
+              start2 = start2,
+              end2 = end2,
               linewidth = score_transformed
             ),
             curvature = junction_curvature,
@@ -1925,10 +1925,10 @@ ez_sashimi <- function(
           geom_link(
             data = junctions_down,
             ggplot2::aes(
-              x = start1,
-              y = y_start,
-              xend = start2,
-              yend = y_end,
+              start1 = start1,
+              end1 = end1,
+              start2 = start2,
+              end2 = end2,
               linewidth = score_transformed
             ),
             curvature = junction_curvature,
