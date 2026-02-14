@@ -202,24 +202,7 @@ ez_coverage <- function(
         call. = FALSE
       )
     }
-    if (facet_label_position == "left") {
-      p <- p +
-        ggplot2::facet_wrap(
-          ~track,
-          ncol = 1,
-          scales = "free_y",
-          strip.position = "left",
-        ) +
-        ggplot2::theme(
-          strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
-          strip.placement = "inside",
-          panel.spacing.y = ggplot2::unit(0, "pt")
-        )
-    } else {
-      p <- p +
-        ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
-        ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
-    }
+    p <- apply_facet_position(p, facet_label_position, strip_placement = "inside")
   }
 
   # Apply binning if requested
@@ -380,7 +363,6 @@ ez_coverage <- function(
           y = y_max * 0.95,
           label = y_label,
           hjust = 0,
-          vjust = 1,
           vjust = 0,
           size = 3
         )
@@ -396,14 +378,7 @@ ez_coverage <- function(
 
   # Apply border after theme (so it doesn't get overwritten)
   if (border) {
-    p <- p +
-      ggplot2::theme(
-        panel.border = ggplot2::element_rect(
-          colour = "black",
-          fill = NA,
-          linewidth = 0.5
-        )
-      )
+    p <- apply_border_theme(p)
   }
 
   # Remove spacing between facet panels (applied last to avoid being overwritten)
@@ -484,18 +459,12 @@ ez_feature <- function(
 ) {
   # Check if data is a file path or data frame
   if (is.character(input) && length(input) == 1) {
-    # It's a file path, use peak_track
-    return(peak_track(
-      input,
-      region,
-      color = color,
-      fill = fill,
-      alpha = alpha,
-      height = height,
-      use_score = use_score,
-      ...
-    ))
-  } else if (is.data.frame(input)) {
+    # It's a file path, import it as a data frame
+    region_gr <- parse_region(region)
+    input <- import_genomic_data(input, which = region_gr)
+  }
+
+  if (is.data.frame(input)) {
     # It's a data frame, create the plot directly
     # Note: geom_feature's default_aes already maps start->xmin, end->xmax
     if (use_score && "score" %in% colnames(input)) {
@@ -527,7 +496,7 @@ ez_feature <- function(
 
     return(p)
   } else {
-    stop("Data must be a file path or data frame")
+    stop("Input must be a file path or data frame")
   }
 }
 
@@ -668,22 +637,6 @@ ez_manhattan <- function(
   # Validate inputs
   y_axis_style <- match.arg(y_axis_style)
   facet_label_position <- match.arg(facet_label_position)
-
-  # Auto-detect column names helper
-  detect_column <- function(data, candidates, param_name, required = TRUE) {
-    for (col in candidates) {
-      if (col %in% colnames(data)) return(col)
-    }
-    if (required) {
-      stop(paste0(
-        "Could not find ",
-        param_name,
-        " column. Expected one of: ",
-        paste(candidates, collapse = ", ")
-      ))
-    }
-    return(NULL)
-  }
 
   # Default color palette function (same as ez_coverage)
   get_default_colors <- function(n) {
@@ -1568,24 +1521,7 @@ ez_link <- function(
 
   # Add faceting if multiple tracks
   if (has_track) {
-    if (facet_label_position == "left") {
-      p <- p +
-        ggplot2::facet_wrap(
-          ~track,
-          ncol = 1,
-          scales = "free_y",
-          strip.position = "left"
-        ) +
-        ggplot2::theme(
-          strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
-          strip.placement = "inside",
-          panel.spacing.y = ggplot2::unit(0, "pt")
-        )
-    } else {
-      p <- p +
-        ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
-        ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
-    }
+    p <- apply_facet_position(p, facet_label_position, strip_placement = "inside")
   }
 
   # Apply the appropriate theme and scale with automatic clipping prevention
@@ -1605,14 +1541,7 @@ ez_link <- function(
 
   # Apply border after theme (so it doesn't get overwritten)
   if (border) {
-    p <- p +
-      ggplot2::theme(
-        panel.border = ggplot2::element_rect(
-          colour = "black",
-          fill = NA,
-          linewidth = 0.5
-        )
-      )
+    p <- apply_border_theme(p)
   }
 
   # Remove spacing between facet panels (applied last to avoid being overwritten)
@@ -2028,14 +1957,7 @@ ez_sashimi <- function(
 
   # Apply border after theme
   if (border) {
-    p <- p +
-      ggplot2::theme(
-        panel.border = ggplot2::element_rect(
-          colour = "black",
-          fill = NA,
-          linewidth = 0.5
-        )
-      )
+    p <- apply_border_theme(p)
   }
 
   # Remove spacing between facet panels (applied last)
@@ -2220,33 +2142,3 @@ ez_hic <- function(
 
   return(p)
 }
-
-# Declare global variables used in aes() mappings to avoid R CMD check notes
-utils::globalVariables(c(
-  "type",
-  "label_x",
-  "label_y",
-  "start1",
-  "start2",
-  "score",
-  "score_transformed",
-  "y_start",
-  "y_end",
-  "arc_direction",
-  "arc_span",
-  "arc_peak",
-  "label_vjust",
-  "resolution",
-  "log_transform",
-  "low",
-  "high",
-  "pos1",
-  "pos2",
-  "count",
-  "track",
-  "start",
-  "end",
-  "strand_color",
-  "xstart",
-  "xend"
-))

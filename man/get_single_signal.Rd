@@ -2,7 +2,8 @@
 % Please edit documentation in R/helpers.R
 \name{get_single_signal}
 \alias{get_single_signal}
-\title{Extract signal data for a single input element}
+\title{Extract signal data for a single input element
+Extract signal data for a single input element}
 \usage{
 get_single_signal(input, region, name = NULL)
 }

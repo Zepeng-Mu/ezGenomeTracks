@@ -111,19 +111,6 @@ geom_manhattan <- function(
     stop("Data cannot be NULL.")
   }
 
-  # Auto-detect column names with support for both GWAS and GRanges conventions
-  detect_column <- function(data, candidates, param_name) {
-    for (col in candidates) {
-      if (col %in% colnames(data)) return(col)
-    }
-    stop(paste0(
-      "Could not find ",
-      param_name,
-      " column. Expected one of: ",
-      paste(candidates, collapse = ", ")
-    ))
-  }
-
   # Set column names with auto-detection
   if (is.null(chr)) {
     chr <- detect_column(
@@ -148,13 +135,12 @@ geom_manhattan <- function(
   }
   if (is.null(snp)) {
     # SNP column is optional
-    snp_candidates <- c("SNP", "snp", "rsid", "id", "variant_id", "marker")
-    for (col in snp_candidates) {
-      if (col %in% colnames(data)) {
-        snp <- col
-        break
-      }
-    }
+    snp <- detect_column(
+      data,
+      c("SNP", "snp", "rsid", "id", "variant_id", "marker"),
+      "SNP",
+      required = FALSE
+    )
   }
 
   # Validate required columns exist
