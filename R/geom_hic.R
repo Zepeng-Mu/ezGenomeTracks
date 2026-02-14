@@ -92,6 +92,7 @@ GeomHic <- ggproto(
     alpha = 1,
     colour = NA
   ),
+  draw_key = ggplot2::draw_key_polygon,
   setup_data = function(data, params) {
     # Calculate tile width/height from resolution or infer from data
     if (!is.null(params$resolution)) {
@@ -263,6 +264,7 @@ GeomHicTriangle <- ggproto(
     alpha = 1,
     colour = NA
   ),
+  draw_key = ggplot2::draw_key_polygon,
   setup_data = function(data, params) {
     # Ensure we have pos1 and pos2 (or x/y representing bin positions)
     # The user should provide x = pos1, y = pos2 where pos1 <= pos2
