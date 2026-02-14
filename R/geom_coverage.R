@@ -115,6 +115,20 @@ GeomCoverage <- ggproto(
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params
   },
+  draw_key = function(data, params, size) {
+    # Determine the type from params (set in setup_params)
+    type <- params$type %||% "area"
+
+    if (type == "line") {
+      # For line type: draw a line using fill as the colour
+      # This matches the logic in draw_panel where fill is converted to line colour
+      data$colour <- data$fill %||% "steelblue"
+      ggplot2::draw_key_path(data, params, size)
+    } else {
+      # For area/heatmap type: draw a filled rectangle
+      ggplot2::draw_key_polygon(data, params, size)
+    }
+  },
   draw_panel = function(
     data,
     panel_params,

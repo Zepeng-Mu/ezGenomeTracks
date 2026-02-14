@@ -27,10 +27,14 @@ ezGenomeTracks is designed around three core principles: modular ggplot2 geoms, 
 
 ```{r, eval = FALSE}
 # one-line coverage track from a bigWig or data.frame
-cov <- ez_coverage("inst/extdata/example_signal.bw", colour = "steelblue")
+cov <- ez_coverage(
+  "inst/extdata/example_signal.bedgraph",
+  region = "chr1:1009000-1092000",
+  colour = "steelblue"
+)
 
 # one-line gene model track
-genes <- ez_gene(example_genes)
+genes <- ez_gene(example_genes, region = "chr1:1009000-1092000")
 
 # stack and display
 vstack_plot(list(cov, genes), region = "chr1:100000-101000")

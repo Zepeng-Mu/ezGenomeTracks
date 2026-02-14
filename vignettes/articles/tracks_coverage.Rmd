@@ -94,7 +94,7 @@ In this way, it is clear that the second exon in this plot showed differential u
 
 ## Changing the looks of coverage track
 
-Set y-axis range to all tracks.
+Set y-axis range to all tracks, but hiding y-axis labels.
 
 ```{r, fig.height=4}
 ez_coverage(
