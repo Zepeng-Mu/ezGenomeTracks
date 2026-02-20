@@ -18,6 +18,10 @@ ez_gene(
   label = "gene_name",
   label_size = 3,
   label_color = NULL,
+  label_style = c("auto", "simple", "repel", "none"),
+  max_labels = NULL,
+  label_priority = "length",
+  repel_args = list(),
   ...
 )
 }
@@ -59,6 +63,28 @@ are displayed. Set to a column name (e.g., "gene_name") to show labels.}
 \item{label_color}{Color of text labels. If NULL (default), uses strand-based
 colors when \code{y = "strand"}, otherwise uses exon_fill color.}
 
+\item{label_style}{Strategy for handling overlapping labels. Options:
+\itemize{
+\item "auto" (default): Uses ggrepel if available, otherwise check_overlap
+\item "simple": Standard geom_text with no overlap handling
+\item "repel": Force use of ggrepel (errors if not installed)
+\item "none": No labels displayed
+}}
+
+\item{max_labels}{Maximum number of labels to display. NULL (default) shows all.
+When set, labels are filtered based on label_priority.}
+
+\item{label_priority}{Priority criterion for filtering labels when max_labels is set.
+Options: "length" (default, prioritizes longer genes), "name" (alphabetical),
+or a column name in the data to sort by.}
+
+\item{repel_args}{Named list of additional arguments passed to geom_text_repel()
+when label_style = "repel" or "auto" (with ggrepel installed). Default behavior
+uses horizontal-only repositioning (\code{direction = "x"}) with no connecting lines
+(\code{segment.color = NA}). To show connecting lines, use \code{list(segment.color = "gray50")}.
+Override direction with \code{list(direction = "both")} for vertical repositioning too.
+Other useful options: \code{max.overlaps}, \code{force}, \code{box.padding}, \code{point.padding}.}
+
 \item{...}{Additional arguments passed to \code{geom_gene()}. Note that \code{color}
 and \code{colour} arguments are ignored; use \code{exon_color}, \code{exon_fill}, and
 \code{intron_color} instead.}
@@ -91,9 +117,56 @@ The visualization includes:
 \item Strand information with arrowheads
 \item Automatic y-axis separation by the specified y variable
 }
+
+\strong{Label Overlap Handling:}
+
+The function provides flexible strategies for managing overlapping gene labels:
+\itemize{
+\item \code{label_style = "auto"}: Automatically uses ggrepel if installed, otherwise
+applies check_overlap to hide overlapping labels
+\item \code{label_style = "simple"}: Standard text labels with no overlap handling
+\item \code{label_style = "repel"}: Uses ggrepel to reposition labels. By default, labels
+are repositioned \strong{horizontally only} (\code{direction = "x"}) with no connecting
+lines (\code{segment.color = NA}) to maintain a clean appearance while keeping
+labels horizontally aligned. This can be changed via \code{repel_args}.
+\item \code{label_style = "none"}: Disables all labels
+}
+
+When many genes are present, use \code{max_labels} to limit the number of labels shown,
+prioritized by \code{label_priority} (gene length by default).
 }
 \examples{
 # From a data frame
 data(example_genes)
 ez_gene(example_genes, "chr1:11869-14409")
+
+# Limit labels to top 5 longest genes
+ez_gene(example_genes, "chr1:42100000-42700000", max_labels = 5)
+
+# Use ggrepel for smart label positioning (if installed)
+\dontrun{
+# Default: horizontal-only repositioning, no connecting lines
+ez_gene(example_genes, "chr1:42100000-42700000", label_style = "repel")
+
+# Show connecting lines to original position
+ez_gene(example_genes, "chr1:42100000-42700000",
+        label_style = "repel",
+        repel_args = list(segment.color = "gray50"))
+
+# Allow both horizontal and vertical repositioning
+ez_gene(example_genes, "chr1:42100000-42700000",
+        label_style = "repel",
+        repel_args = list(direction = "both"))
+
+# Custom repel settings for denser regions
+ez_gene(example_genes, "chr1:42100000-42700000",
+        label_style = "repel",
+        repel_args = list(max.overlaps = 30, force = 3))
+}
+
+# Hide overlapping labels automatically
+ez_gene(example_genes, "chr1:42100000-42700000", label_style = "auto")
+
+# No labels
+ez_gene(example_genes, "chr1:11869-14409", label_style = "none")
 }

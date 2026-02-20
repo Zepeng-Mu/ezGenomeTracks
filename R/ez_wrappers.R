@@ -944,6 +944,22 @@ ez_manhattan <- function(
 #' @param label_size Size of text labels. Default: 3
 #' @param label_color Color of text labels. If NULL (default), uses strand-based
 #'   colors when `y = "strand"`, otherwise uses exon_fill color.
+#' @param label_style Strategy for handling overlapping labels. Options:
+#'   - "auto" (default): Uses ggrepel if available, otherwise check_overlap
+#'   - "simple": Standard geom_text with no overlap handling
+#'   - "repel": Force use of ggrepel (errors if not installed)
+#'   - "none": No labels displayed
+#' @param max_labels Maximum number of labels to display. NULL (default) shows all.
+#'   When set, labels are filtered based on label_priority.
+#' @param label_priority Priority criterion for filtering labels when max_labels is set.
+#'   Options: "length" (default, prioritizes longer genes), "name" (alphabetical),
+#'   or a column name in the data to sort by.
+#' @param repel_args Named list of additional arguments passed to geom_text_repel()
+#'   when label_style = "repel" or "auto" (with ggrepel installed). Default behavior
+#'   uses horizontal-only repositioning (`direction = "x"`) with no connecting lines
+#'   (`segment.color = NA`). To show connecting lines, use `list(segment.color = "gray50")`.
+#'   Override direction with `list(direction = "both")` for vertical repositioning too.
+#'   Other useful options: `max.overlaps`, `force`, `box.padding`, `point.padding`.
 #' @param ... Additional arguments passed to `geom_gene()`. Note that `color`
 #'   and `colour` arguments are ignored; use `exon_color`, `exon_fill`, and
 #'   `intron_color` instead.
@@ -962,6 +978,21 @@ ez_manhattan <- function(
 #' - Strand information with arrowheads
 #' - Automatic y-axis separation by the specified y variable
 #'
+#' **Label Overlap Handling:**
+#'
+#' The function provides flexible strategies for managing overlapping gene labels:
+#' - `label_style = "auto"`: Automatically uses ggrepel if installed, otherwise
+#'   applies check_overlap to hide overlapping labels
+#' - `label_style = "simple"`: Standard text labels with no overlap handling
+#' - `label_style = "repel"`: Uses ggrepel to reposition labels. By default, labels
+#'   are repositioned **horizontally only** (`direction = "x"`) with no connecting
+#'   lines (`segment.color = NA`) to maintain a clean appearance while keeping
+#'   labels horizontally aligned. This can be changed via `repel_args`.
+#' - `label_style = "none"`: Disables all labels
+#'
+#' When many genes are present, use `max_labels` to limit the number of labels shown,
+#' prioritized by `label_priority` (gene length by default).
+#'
 #' @export
 #' @importFrom ggplot2 ggplot aes scale_colour_identity scale_fill_identity
 #' @importFrom GenomicFeatures exonsBy transcriptsBy
@@ -974,6 +1005,36 @@ ez_manhattan <- function(
 #' # From a data frame
 #' data(example_genes)
 #' ez_gene(example_genes, "chr1:11869-14409")
+#'
+#' # Limit labels to top 5 longest genes
+#' ez_gene(example_genes, "chr1:42100000-42700000", max_labels = 5)
+#'
+#' # Use ggrepel for smart label positioning (if installed)
+#' \dontrun{
+#' # Default: horizontal-only repositioning, no connecting lines
+#' ez_gene(example_genes, "chr1:42100000-42700000", label_style = "repel")
+#'
+#' # Show connecting lines to original position
+#' ez_gene(example_genes, "chr1:42100000-42700000",
+#'         label_style = "repel",
+#'         repel_args = list(segment.color = "gray50"))
+#'
+#' # Allow both horizontal and vertical repositioning
+#' ez_gene(example_genes, "chr1:42100000-42700000",
+#'         label_style = "repel",
+#'         repel_args = list(direction = "both"))
+#'
+#' # Custom repel settings for denser regions
+#' ez_gene(example_genes, "chr1:42100000-42700000",
+#'         label_style = "repel",
+#'         repel_args = list(max.overlaps = 30, force = 3))
+#' }
+#'
+#' # Hide overlapping labels automatically
+#' ez_gene(example_genes, "chr1:42100000-42700000", label_style = "auto")
+#'
+#' # No labels
+#' ez_gene(example_genes, "chr1:11869-14409", label_style = "none")
 ez_gene <- function(
   data,
   region,
@@ -988,8 +1049,14 @@ ez_gene <- function(
   label = "gene_name",
   label_size = 3,
   label_color = NULL,
+  label_style = c("auto", "simple", "repel", "none"),
+  max_labels = NULL,
+  label_priority = "length",
+  repel_args = list(),
   ...
 ) {
+  # Match label_style argument
+  label_style <- match.arg(label_style)
   # Filter out 'color' and 'colour' from ... to prevent them from overriding
 
   # exon_color, exon_fill, and intron_color
@@ -1173,7 +1240,7 @@ ez_gene <- function(
   }
 
   # Add labels if requested
-  if (!is.null(label) && label %in% names(gene_data)) {
+  if (label_style != "none" && !is.null(label) && label %in% names(gene_data)) {
     # Get unique gene positions for labels (use gene type, not exons)
     label_data <- gene_data[gene_data$type == "gene", ]
 
@@ -1182,84 +1249,187 @@ ez_gene <- function(
       label_data <- label_data[!duplicated(label_data[[gene_id]]), ]
     }
 
-    # Calculate label positions (middle of gene)
-    label_data$label_x <- (label_data$start + label_data$end) / 2
-
-    # Convert y to numeric for offset calculation
-    # The discrete y-axis maps factor levels to integers (1, 2, 3, ...)
-    y_values <- label_data[[y]]
-    if (is.factor(y_values)) {
-      label_data$label_y_num <- as.numeric(y_values)
-    } else {
-      label_data$label_y_num <- as.numeric(as.factor(y_values))
+    # Apply max_labels filtering if specified
+    if (!is.null(max_labels)) {
+      label_data <- filter_labels(
+        label_data,
+        max_labels = max_labels,
+        label_priority = label_priority,
+        start_col = "start",
+        end_col = "end"
+      )
     }
 
-    # Position label directly above the top of exons
-    # Exons are centered on the y-position with height = exon_height * track_height
-    # Track height is 1 in the coordinate system, so top of exon is at y + exon_height/2
-    # Add a small offset (0.05) to create spacing between exon and label
-    label_data$label_y <- label_data$label_y_num + (exon_height / 2) + 0.05
+    # Only proceed if there are labels to show
+    if (nrow(label_data) > 0) {
+      # Calculate label positions (middle of gene)
+      label_data$label_x <- (label_data$start + label_data$end) / 2
 
-    # Handle label color: use explicit label_color, or strand-based colors, or exon_fill
+      # Convert y to numeric for offset calculation
+      # The discrete y-axis maps factor levels to integers (1, 2, 3, ...)
+      y_values <- label_data[[y]]
+      if (is.factor(y_values)) {
+        label_data$label_y_num <- as.numeric(y_values)
+      } else {
+        label_data$label_y_num <- as.numeric(as.factor(y_values))
+      }
 
-    if (!is.null(label_color)) {
-      # Explicit label color provided
+      # Position label directly above the top of exons
+      # Exons are centered on the y-position with height = exon_height * track_height
+      # Track height is 1 in the coordinate system, so top of exon is at y + exon_height/2
+      # Add offset to create spacing between exon and label
+      # Larger offset (0.2) for better clearance and readability
+      label_data$label_y <- label_data$label_y_num + (exon_height / 2) + 0.2
 
-      p <- p +
-        ggplot2::geom_text(
-          data = label_data,
-          ggplot2::aes(
-            x = .data$label_x,
-            y = .data$label_y,
-            label = .data[[label]]
-          ),
-          size = label_size,
-          vjust = 0,
-          color = label_color,
-          fontface = "italic"
+      # Determine which geom to use based on label_style
+      use_repel <- FALSE
+      use_check_overlap <- FALSE
+
+      if (label_style == "repel") {
+        # Force ggrepel usage
+        if (!requireNamespace("ggrepel", quietly = TRUE)) {
+          stop("Package 'ggrepel' is required for label_style = 'repel'. Install it with: install.packages('ggrepel')")
+        }
+        use_repel <- TRUE
+      } else if (label_style == "auto") {
+        # Use ggrepel if available, otherwise check_overlap
+        if (requireNamespace("ggrepel", quietly = TRUE)) {
+          use_repel <- TRUE
+        } else {
+          use_check_overlap <- TRUE
+        }
+      } else if (label_style == "simple") {
+        # No overlap handling
+        use_check_overlap <- FALSE
+      }
+
+      # Prepare default repel arguments for horizontal-only repositioning
+      # This keeps labels horizontally aligned (no vertical nudging)
+      if (use_repel) {
+        default_repel_args <- list(
+          direction = "x",      # Only allow horizontal movement
+          segment.color = NA,   # Hide connecting segments
+          box.padding = 0.3,
+          point.padding = 0.2
         )
-    } else if (use_strand_colors) {
-      # Use strand-based colors for labels
+        # Merge with user-provided repel_args (user args take precedence)
+        repel_call_args_base <- c(default_repel_args, repel_args)
+        # Remove duplicates, keeping last occurrence (user's values)
+        repel_call_args_base <- repel_call_args_base[!duplicated(names(repel_call_args_base), fromLast = TRUE)]
+      }
 
-      label_data$strand_color <- ifelse(
-        label_data$strand == "+",
-        strand_colors["+"],
-        ifelse(
-          label_data$strand == "-",
-          strand_colors["-"],
-          strand_colors["Unknown"]
-        )
+      # Prepare base aesthetic mapping
+      base_aes <- ggplot2::aes(
+        x = .data$label_x,
+        y = .data$label_y,
+        label = .data[[label]]
       )
-      p <- p +
-        ggplot2::geom_text(
-          data = label_data,
-          ggplot2::aes(
-            x = .data$label_x,
-            y = .data$label_y,
-            label = .data[[label]],
-            colour = strand_color
-          ),
-          size = label_size,
-          vjust = 0,
-          fontface = "italic"
-        ) +
-        ggplot2::scale_colour_identity()
-    } else {
-      # Use exon_fill for label color
 
-      p <- p +
-        ggplot2::geom_text(
-          data = label_data,
-          ggplot2::aes(
-            x = .data$label_x,
-            y = .data$label_y,
-            label = .data[[label]]
-          ),
-          size = label_size,
-          vjust = 0,
-          color = exon_fill,
-          fontface = "italic"
+      # Handle label color: use explicit label_color, or strand-based colors, or exon_fill
+      if (!is.null(label_color)) {
+        # Explicit label color provided
+        if (use_repel) {
+          # Use ggrepel with horizontal-only repositioning
+          repel_call_args <- c(
+            list(
+              data = label_data,
+              mapping = base_aes,
+              size = label_size,
+              color = label_color,
+              fontface = "italic"
+            ),
+            repel_call_args_base
+          )
+          p <- p + do.call(ggrepel::geom_text_repel, repel_call_args)
+        } else {
+          # Use geom_text
+          p <- p +
+            ggplot2::geom_text(
+              data = label_data,
+              mapping = base_aes,
+              size = label_size,
+              vjust = 0,
+              color = label_color,
+              fontface = "italic",
+              check_overlap = use_check_overlap
+            )
+        }
+      } else if (use_strand_colors) {
+        # Use strand-based colors for labels
+        label_data$strand_color <- ifelse(
+          label_data$strand == "+",
+          strand_colors["+"],
+          ifelse(
+            label_data$strand == "-",
+            strand_colors["-"],
+            strand_colors["Unknown"]
+          )
         )
+
+        # Add color to aesthetic mapping
+        color_aes <- ggplot2::aes(
+          x = .data$label_x,
+          y = .data$label_y,
+          label = .data[[label]],
+          colour = strand_color
+        )
+
+        if (use_repel) {
+          # Use ggrepel with color mapping and horizontal-only repositioning
+          repel_call_args <- c(
+            list(
+              data = label_data,
+              mapping = color_aes,
+              size = label_size,
+              fontface = "italic"
+            ),
+            repel_call_args_base
+          )
+          p <- p +
+            do.call(ggrepel::geom_text_repel, repel_call_args) +
+            ggplot2::scale_colour_identity()
+        } else {
+          # Use geom_text with color mapping
+          p <- p +
+            ggplot2::geom_text(
+              data = label_data,
+              mapping = color_aes,
+              size = label_size,
+              vjust = 0,
+              fontface = "italic",
+              check_overlap = use_check_overlap
+            ) +
+            ggplot2::scale_colour_identity()
+        }
+      } else {
+        # Use exon_fill for label color
+        if (use_repel) {
+          # Use ggrepel with horizontal-only repositioning
+          repel_call_args <- c(
+            list(
+              data = label_data,
+              mapping = base_aes,
+              size = label_size,
+              color = exon_fill,
+              fontface = "italic"
+            ),
+            repel_call_args_base
+          )
+          p <- p + do.call(ggrepel::geom_text_repel, repel_call_args)
+        } else {
+          # Use geom_text
+          p <- p +
+            ggplot2::geom_text(
+              data = label_data,
+              mapping = base_aes,
+              size = label_size,
+              vjust = 0,
+              color = exon_fill,
+              fontface = "italic",
+              check_overlap = use_check_overlap
+            )
+        }
+      }
     }
   }
 

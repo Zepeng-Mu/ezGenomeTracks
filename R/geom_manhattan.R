@@ -237,7 +237,10 @@ geom_manhattan <- function(
       # Convert chromosome column to factor for discrete scale
       # Use unique values in current order to preserve chromosome ordering
       chr_levels <- unique(plot_data[[color_by]])
-      plot_data[[color_by]] <- factor(plot_data[[color_by]], levels = chr_levels)
+      plot_data[[color_by]] <- factor(
+        plot_data[[color_by]],
+        levels = chr_levels
+      )
     } else {
       color_col_data <- plot_data[[color_by]]
       is_color_discrete <- !is.numeric(color_col_data) ||
@@ -347,7 +350,7 @@ geom_manhattan <- function(
         names(chr_colors) <- chr_levels
         layer_list$color_scale <- ggplot2::scale_color_manual(
           values = chr_colors,
-          guide = "none",  # Hide legend for chromosome coloring
+          guide = "none", # Hide legend for chromosome coloring
           na.value = "grey50"
         )
       } else {

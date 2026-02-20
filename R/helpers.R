@@ -1088,3 +1088,73 @@ process_interaction_input <- function(input, region, track_labels = NULL) {
     stop("Input must be a data frame, GRanges, GInteractions, character vector, or named list")
   }
 }
+
+
+#' Filter gene labels based on priority and maximum count
+#'
+#' This helper function filters gene labels to reduce overlap in crowded plots.
+#' It prioritizes genes based on specified criteria (e.g., length, name) and
+#' returns the top N genes for labeling.
+#'
+#' @param label_data Data frame containing gene information to be labeled
+#' @param max_labels Maximum number of labels to show. If NULL, all labels are kept.
+#' @param label_priority Priority criterion for filtering. Options:
+#'   - "length": Prioritize longer genes (calculated as end - start)
+#'   - "name": Sort alphabetically by gene name
+#'   - A column name in label_data: Sort by that column (descending for numeric, alphabetical for character)
+#' @param start_col Name of the start coordinate column. Default: "start"
+#' @param end_col Name of the end coordinate column. Default: "end"
+#'
+#' @return A filtered data frame with at most max_labels rows
+#'
+#' @keywords internal
+#' @noRd
+filter_labels <- function(
+  label_data,
+  max_labels = NULL,
+  label_priority = "length",
+  start_col = "start",
+  end_col = "end"
+) {
+  # If max_labels is NULL or greater than nrow, return all labels
+  if (is.null(max_labels) || max_labels >= nrow(label_data)) {
+    return(label_data)
+  }
+
+  # Ensure max_labels is positive
+  if (max_labels < 1) {
+    warning("max_labels must be >= 1. Using 1.")
+    max_labels <- 1
+  }
+
+  # Calculate priority scores
+  if (label_priority == "length") {
+    # Prioritize longer genes
+    if (!start_col %in% names(label_data) || !end_col %in% names(label_data)) {
+      stop(sprintf("Columns '%s' and '%s' required for priority='length'", start_col, end_col))
+    }
+    label_data$priority_score <- label_data[[end_col]] - label_data[[start_col]]
+    label_data <- label_data[order(label_data$priority_score, decreasing = TRUE), ]
+  } else if (label_priority == "name") {
+    # Sort alphabetically (ascending)
+    # Assume a column named "gene_name" or similar exists
+    name_col <- if ("gene_name" %in% names(label_data)) "gene_name" else names(label_data)[1]
+    label_data <- label_data[order(label_data[[name_col]]), ]
+  } else if (label_priority %in% names(label_data)) {
+    # Use specified column
+    priority_col <- label_data[[label_priority]]
+    if (is.numeric(priority_col)) {
+      # Sort descending for numeric columns
+      label_data <- label_data[order(priority_col, decreasing = TRUE), ]
+    } else {
+      # Sort ascending for character/factor columns
+      label_data <- label_data[order(priority_col), ]
+    }
+  } else {
+    warning(sprintf("Priority '%s' not recognized or not a column in data. Using default order.", label_priority))
+  }
+
+  # Return top N labels
+  label_data[seq_len(min(max_labels, nrow(label_data))), ]
+}
+
