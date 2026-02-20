@@ -1288,7 +1288,9 @@ ez_gene <- function(
       if (label_style == "repel") {
         # Force ggrepel usage
         if (!requireNamespace("ggrepel", quietly = TRUE)) {
-          stop("Package 'ggrepel' is required for label_style = 'repel'. Install it with: install.packages('ggrepel')")
+          stop(
+            "Package 'ggrepel' is required for label_style = 'repel'. Install it with: install.packages('ggrepel')"
+          )
         }
         use_repel <- TRUE
       } else if (label_style == "auto") {
@@ -1307,15 +1309,17 @@ ez_gene <- function(
       # This keeps labels horizontally aligned (no vertical nudging)
       if (use_repel) {
         default_repel_args <- list(
-          direction = "x",      # Only allow horizontal movement
-          segment.color = NA,   # Hide connecting segments
+          direction = "x", # Only allow horizontal movement
+          segment.color = NA, # Hide connecting segments
           box.padding = 0.3,
           point.padding = 0.2
         )
         # Merge with user-provided repel_args (user args take precedence)
         repel_call_args_base <- c(default_repel_args, repel_args)
         # Remove duplicates, keeping last occurrence (user's values)
-        repel_call_args_base <- repel_call_args_base[!duplicated(names(repel_call_args_base), fromLast = TRUE)]
+        repel_call_args_base <- repel_call_args_base[
+          !duplicated(names(repel_call_args_base), fromLast = TRUE)
+        ]
       }
 
       # Prepare base aesthetic mapping
