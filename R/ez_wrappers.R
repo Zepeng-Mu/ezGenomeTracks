@@ -22,10 +22,12 @@
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
 #' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
-#' @param average Logical. If `TRUE` and input is a character vector of multiple
-#'   files, averages the signal across all files onto a common binned grid
-#'   before plotting, producing a single track. Uses [average_signal()]
-#'   internally. (default: FALSE)
+#' @param average Logical. If `TRUE`, averages overlapping tracks into a single
+#'   track before plotting. Applies when `input` is a character vector of
+#'   multiple file paths (overlapping tracks), or when `input` is a named list
+#'   whose elements are character vectors with multiple files (averages within
+#'   each list element separately, keeping tracks independent).
+#'   Uses [average_signal()] internally. (default: FALSE)
 #' @param summary_fun Summary function used when `average = TRUE`. One of
 #'   `"mean"`, `"median"`, `"max"`, `"min"`, `"sum"`. (default: `"mean"`)
 #' @param average_bin_width Bin width (in bp) for the averaging grid when
@@ -93,7 +95,7 @@ ez_coverage <- function(
   # --- Average signal across samples if requested ---
   if (average) {
     if (is.character(input) && length(input) > 1) {
-      # Multiple file paths: average into a single track
+      # Character vector of multiple files (overlapping tracks): average into one
       plotDt <- average_signal(
         inputs = input,
         region = region,
@@ -101,69 +103,31 @@ ez_coverage <- function(
         summary_fun = summary_fun
       )
     } else if (is.list(input) && !is.data.frame(input)) {
-      # Named list: check if elements are multiple files or data frames
-      # If all elements are data frames, pass directly to average_signal
-      all_dfs <- all(vapply(input, is.data.frame, logical(1)))
-      all_char <- all(vapply(input, is.character, logical(1)))
+      # Named list: each element is an independent track.
+      # Average only within elements that are character vectors with >1 file.
+      track_data_list <- list()
+      for (i in seq_along(input)) {
+        track_name <- names(input)[i]
+        if (is.null(track_name)) track_name <- paste0("Track ", i)
+        track_element <- input[[i]]
 
-      if (all_dfs) {
-        # List of data frames: average them all into one track
-        plotDt <- average_signal(
-          inputs = input,
-          region = region,
-          bin_width = average_bin_width,
-          summary_fun = summary_fun
-        )
-      } else if (all_char) {
-        # Named list of character vectors: average within each track element
-        track_data_list <- list()
-        for (i in seq_along(input)) {
-          track_name <- names(input)[i]
-          if (is.null(track_name)) track_name <- paste0("Track ", i)
-          track_element <- input[[i]]
-
-          if (length(track_element) > 1) {
-            avg_df <- average_signal(
-              inputs = track_element,
-              region = region,
-              bin_width = average_bin_width,
-              summary_fun = summary_fun
-            )
-            avg_df$track <- track_name
-            track_data_list[[i]] <- avg_df
-          } else {
-            # Single file — process normally
-            single_df <- process_signal_input(track_element, region)
-            single_df$track <- track_name
-            track_data_list[[i]] <- single_df
-          }
+        if (is.character(track_element) && length(track_element) > 1) {
+          avg_df <- average_signal(
+            inputs = track_element,
+            region = region,
+            bin_width = average_bin_width,
+            summary_fun = summary_fun
+          )
+          avg_df$track <- track_name
+          track_data_list[[i]] <- avg_df
+        } else {
+          # Single file, data frame, or GRanges — process normally
+          single_df <- process_signal_input(track_element, region)
+          single_df$track <- track_name
+          track_data_list[[i]] <- single_df
         }
-        plotDt <- dplyr::bind_rows(track_data_list)
-      } else {
-        # Mixed list: average within each element where possible
-        track_data_list <- list()
-        for (i in seq_along(input)) {
-          track_name <- names(input)[i]
-          if (is.null(track_name)) track_name <- paste0("Track ", i)
-          track_element <- input[[i]]
-
-          if (is.character(track_element) && length(track_element) > 1) {
-            avg_df <- average_signal(
-              inputs = track_element,
-              region = region,
-              bin_width = average_bin_width,
-              summary_fun = summary_fun
-            )
-            avg_df$track <- track_name
-            track_data_list[[i]] <- avg_df
-          } else {
-            single_df <- process_signal_input(track_element, region)
-            single_df$track <- track_name
-            track_data_list[[i]] <- single_df
-          }
-        }
-        plotDt <- dplyr::bind_rows(track_data_list)
       }
+      plotDt <- dplyr::bind_rows(track_data_list)
     } else {
       warning("average = TRUE has no effect for a single input. Proceeding normally.")
       plotDt <- process_signal_input(input, region, track_labels)

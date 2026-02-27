@@ -214,9 +214,26 @@ test_that(".query_df_bins validates input data frames", {
 # ez_coverage integration
 # ============================================================
 
-test_that("ez_coverage with average = TRUE produces a ggplot", {
+test_that("ez_coverage with average = TRUE and character vector produces a ggplot", {
+  # Create temporary bedGraph files for testing
+  tmp1 <- tempfile(fileext = ".bedGraph")
+  tmp2 <- tempfile(fileext = ".bedGraph")
+  writeLines(c(
+    "chr1\t1000\t1050\t5",
+    "chr1\t1050\t1100\t10",
+    "chr1\t1100\t1150\t15",
+    "chr1\t1150\t1199\t20"
+  ), tmp1)
+  writeLines(c(
+    "chr1\t1000\t1050\t10",
+    "chr1\t1050\t1100\t20",
+    "chr1\t1100\t1150\t30",
+    "chr1\t1150\t1199\t40"
+  ), tmp2)
+  on.exit(unlink(c(tmp1, tmp2)))
+
   result <- ez_coverage(
-    input = list(sample1, sample2),
+    input = c(tmp1, tmp2),
     region = region,
     average = TRUE,
     average_bin_width = 50
@@ -224,6 +241,22 @@ test_that("ez_coverage with average = TRUE produces a ggplot", {
 
   expect_s3_class(result, "gg")
   expect_s3_class(result, "ggplot")
+})
+
+test_that("ez_coverage with average = TRUE and list of data frames does NOT average", {
+  # Lists represent separate tracks — averaging should not collapse them
+  result <- ez_coverage(
+    input = list(track1 = sample1, track2 = sample2),
+    region = region,
+    average = TRUE
+  )
+
+  expect_s3_class(result, "gg")
+  # Should still have multiple tracks (not averaged into one)
+  plot_data <- ggplot2::layer_data(result)
+  # The data should have been processed individually, not collapsed
+  expect_true("track" %in% colnames(result$data))
+  expect_equal(length(unique(result$data$track)), 2)
 })
 
 test_that("ez_coverage with average = TRUE and single input warns", {

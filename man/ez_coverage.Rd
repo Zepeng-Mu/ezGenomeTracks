@@ -63,10 +63,12 @@ Default is "steelblue".}
 
 \item{show_legend}{Logical. If \code{TRUE}, displays the legend (default: FALSE)}
 
-\item{average}{Logical. If \code{TRUE} and input is a character vector of multiple
-files, averages the signal across all files onto a common binned grid
-before plotting, producing a single track. Uses \code{\link[=average_signal]{average_signal()}}
-internally. (default: FALSE)}
+\item{average}{Logical. If \code{TRUE}, averages overlapping tracks into a single
+track before plotting. Applies when \code{input} is a character vector of
+multiple file paths (overlapping tracks), or when \code{input} is a named list
+whose elements are character vectors with multiple files (averages within
+each list element separately, keeping tracks independent).
+Uses \code{\link[=average_signal]{average_signal()}} internally. (default: FALSE)}
 
 \item{summary_fun}{Summary function used when \code{average = TRUE}. One of
 \code{"mean"}, \code{"median"}, \code{"max"}, \code{"min"}, \code{"sum"}. (default: \code{"mean"})}
