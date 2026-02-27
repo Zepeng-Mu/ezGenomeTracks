@@ -19,6 +19,9 @@ ez_coverage(
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
+  average = FALSE,
+  summary_fun = c("mean", "median", "max", "min", "sum"),
+  average_bin_width = 50,
   ...
 )
 }
@@ -59,6 +62,17 @@ Default is "steelblue".}
 \item{border}{Logical. If \code{TRUE}, adds a black border around the plotting panel (default: FALSE)}
 
 \item{show_legend}{Logical. If \code{TRUE}, displays the legend (default: FALSE)}
+
+\item{average}{Logical. If \code{TRUE} and input is a character vector of multiple
+files, averages the signal across all files onto a common binned grid
+before plotting, producing a single track. Uses \code{\link[=average_signal]{average_signal()}}
+internally. (default: FALSE)}
+
+\item{summary_fun}{Summary function used when \code{average = TRUE}. One of
+\code{"mean"}, \code{"median"}, \code{"max"}, \code{"min"}, \code{"sum"}. (default: \code{"mean"})}
+
+\item{average_bin_width}{Bin width (in bp) for the averaging grid when
+\code{average = TRUE}. (default: 50)}
 
 \item{...}{Additional arguments passed to geom_coverage}
 }
