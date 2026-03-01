@@ -209,8 +209,11 @@ GeomCoverage <- ggproto(
 
       GeomPath$draw_panel(path_data, panel_params, coord)
     } else {
-      # Use GeomRect for area type - suppress borders by setting colour = NA
-      data$colour <- NA
+      # Use GeomRect for area type
+      # Set border colour to match fill to eliminate anti-aliasing gaps
+      # between adjacent rectangles (white vertical line artifacts)
+      data$colour <- data$fill
+      data$linewidth <- 0.1
       GeomRect$draw_panel(data, panel_params, coord)
     }
   },

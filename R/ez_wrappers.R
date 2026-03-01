@@ -22,6 +22,16 @@
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
 #' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
+#' @param average Logical. If `TRUE`, averages overlapping tracks into a single
+#'   track before plotting. Applies when `input` is a character vector of
+#'   multiple file paths (overlapping tracks), or when `input` is a named list
+#'   whose elements are character vectors with multiple files (averages within
+#'   each list element separately, keeping tracks independent).
+#'   Uses [average_signal()] internally. (default: FALSE)
+#' @param summary_fun Summary function used when `average = TRUE`. One of
+#'   `"mean"`, `"median"`, `"max"`, `"min"`, `"sum"`. (default: `"mean"`)
+#' @param average_bin_width Bin width (in bp) for the averaging grid when
+#'   `average = TRUE`. (default: 50)
 #' @param border Logical. If `TRUE`, adds a black border around the plotting panel (default: FALSE)
 #' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
 #' @param ... Additional arguments passed to geom_coverage
@@ -60,6 +70,9 @@ ez_coverage <- function(
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
+  average = FALSE,
+  summary_fun = c("mean", "median", "max", "min", "sum"),
+  average_bin_width = 50,
   ...
 ) {
   # Validate inputs
@@ -67,6 +80,8 @@ ez_coverage <- function(
   y_axis_style <- match.arg(y_axis_style)
   color_by <- match.arg(color_by)
   facet_label_position <- match.arg(facet_label_position)
+
+  summary_fun <- match.arg(summary_fun)
 
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
@@ -77,8 +92,50 @@ ez_coverage <- function(
 
   chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
 
-  # Process input using helper function (handles GRanges, data.frame, character, list)
-  plotDt <- process_signal_input(input, region, track_labels)
+  # --- Average signal across samples if requested ---
+  if (average) {
+    if (is.character(input) && length(input) > 1) {
+      # Character vector of multiple files (overlapping tracks): average into one
+      plotDt <- average_signal(
+        inputs = input,
+        region = region,
+        bin_width = average_bin_width,
+        summary_fun = summary_fun
+      )
+    } else if (is.list(input) && !is.data.frame(input)) {
+      # Named list: each element is an independent track.
+      # Average only within elements that are character vectors with >1 file.
+      track_data_list <- list()
+      for (i in seq_along(input)) {
+        track_name <- names(input)[i]
+        if (is.null(track_name)) track_name <- paste0("Track ", i)
+        track_element <- input[[i]]
+
+        if (is.character(track_element) && length(track_element) > 1) {
+          avg_df <- average_signal(
+            inputs = track_element,
+            region = region,
+            bin_width = average_bin_width,
+            summary_fun = summary_fun
+          )
+          avg_df$track <- track_name
+          track_data_list[[i]] <- avg_df
+        } else {
+          # Single file, data frame, or GRanges — process normally
+          single_df <- process_signal_input(track_element, region)
+          single_df$track <- track_name
+          track_data_list[[i]] <- single_df
+        }
+      }
+      plotDt <- dplyr::bind_rows(track_data_list)
+    } else {
+      warning("average = TRUE has no effect for a single input. Proceeding normally.")
+      plotDt <- process_signal_input(input, region, track_labels)
+    }
+  } else {
+    # Process input using helper function (handles GRanges, data.frame, character, list)
+    plotDt <- process_signal_input(input, region, track_labels)
+  }
 
   # Determine plotting strategy
   has_track <- "track" %in% colnames(plotDt)
