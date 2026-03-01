@@ -845,7 +845,9 @@ process_sashimi_data <- function(
     junction_df$y_end <- numeric(0)
     junction_df$arc_direction <- character(0)
     junction_df$start1 <- numeric(0)
+    junction_df$end1 <- numeric(0)
     junction_df$start2 <- numeric(0)
+    junction_df$end2 <- numeric(0)
     return(list(coverage_df = coverage_df, junction_df = junction_df))
   }
 
@@ -884,9 +886,11 @@ process_sashimi_data <- function(
         sapply(end, get_coverage_at_pos, cov_df = coverage_df),
         0
       ),
-      # Add start1/start2 columns for compatibility with geom_link
+      # Add start1/end1/start2/end2 columns for compatibility with geom_link
       start1 = start,
-      start2 = end
+      end1 = start,
+      start2 = end,
+      end2 = end
     )
 
   return(list(coverage_df = coverage_df, junction_df = junction_df))
@@ -978,7 +982,9 @@ process_sashimi_input <- function(
       junction_df$y_end <- numeric(0)
       junction_df$arc_direction <- character(0)
       junction_df$start1 <- numeric(0)
+      junction_df$end1 <- numeric(0)
       junction_df$start2 <- numeric(0)
+      junction_df$end2 <- numeric(0)
       if (!is.null(track_name)) junction_df$track <- character(0)
       return(junction_df)
     }
@@ -1008,7 +1014,9 @@ process_sashimi_input <- function(
           0
         ),
         start1 = start,
-        start2 = end
+        end1 = start,
+        start2 = end,
+        end2 = end
       )
 
     if (!is.null(track_name)) {
