@@ -113,6 +113,7 @@ GeomLink <- ggproto(
   "GeomLink",
   Geom,
   required_aes = c("start1", "end1", "start2", "end2"),
+  optional_aes = c("y", "yend"),
   setup_params = function(data, params) {
     # Set up arrow if requested
     if (params$arrow_length > 0) {

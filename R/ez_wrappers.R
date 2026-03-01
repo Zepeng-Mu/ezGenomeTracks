@@ -2009,6 +2009,8 @@ ez_sashimi <- function(
                 end1 = end1,
                 start2 = start2,
                 end2 = end2,
+                y = y_start,
+                yend = y_end,
                 linewidth = score_transformed
               ),
               curvature = junction_curvature,
@@ -2028,6 +2030,8 @@ ez_sashimi <- function(
                 end1 = end1,
                 start2 = start2,
                 end2 = end2,
+                y = y_start,
+                yend = y_end,
                 linewidth = score_transformed
               ),
               curvature = junction_curvature,
@@ -2084,6 +2088,8 @@ ez_sashimi <- function(
               end1 = end1,
               start2 = start2,
               end2 = end2,
+              y = y_start,
+              yend = y_end,
               linewidth = score_transformed
             ),
             curvature = junction_curvature,
@@ -2103,6 +2109,8 @@ ez_sashimi <- function(
               end1 = end1,
               start2 = start2,
               end2 = end2,
+              y = y_start,
+              yend = y_end,
               linewidth = score_transformed
             ),
             curvature = junction_curvature,
