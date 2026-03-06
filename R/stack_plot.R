@@ -177,7 +177,7 @@ add_vline <- function(
 #' @param plot A ggplot2 object representing a genome track
 #' @param y Y-value for the horizontal line
 #' @param color Color of the line (default: "blue")
-#' @param size Size of the line (default: 0.5)
+#' @param linewidth Width of the line (default: 0.5)
 #' @param linetype Line type (default: "dashed")
 #' @param alpha Transparency (default: 0.7)
 #' @return A ggplot2 object with the horizontal line added
@@ -192,7 +192,7 @@ add_hline <- function(
   plot,
   y,
   color = "blue",
-  size = 0.5,
+  linewidth = 0.5,
   linetype = "dashed",
   alpha = 0.7
 ) {
@@ -200,7 +200,7 @@ add_hline <- function(
     ggplot2::geom_hline(
       yintercept = y,
       color = color,
-      size = size,
+      linewidth = linewidth,
       linetype = linetype,
       alpha = alpha
     )

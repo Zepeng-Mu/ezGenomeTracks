@@ -623,7 +623,3 @@ extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
 
   return(result)
 }
-
-
-# globals used in examples/aes mappings within this file
-utils::globalVariables(c(".data", "start", "end", "strand"))

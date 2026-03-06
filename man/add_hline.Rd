@@ -8,7 +8,7 @@ add_hline(
   plot,
   y,
   color = "blue",
-  size = 0.5,
+  linewidth = 0.5,
   linetype = "dashed",
   alpha = 0.7
 )
@@ -20,7 +20,7 @@ add_hline(
 
 \item{color}{Color of the line (default: "blue")}
 
-\item{size}{Size of the line (default: 0.5)}
+\item{linewidth}{Width of the line (default: 0.5)}
 
 \item{linetype}{Line type (default: "dashed")}
 

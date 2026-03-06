@@ -25,6 +25,11 @@
 }
 
 # Register global variables used in non-standard evaluation to appease R CMD check
+# Includes variables used in aes() mappings across all package functions and geoms
 utils::globalVariables(c(
-  ".data", "y", "strand", "start", "end"
+  ".data", "y", "strand", "start", "end",
+  "type", "label_x", "label_y", "start1", "start2", "score", "score_transformed",
+  "y_start", "y_end", "arc_direction", "arc_span", "arc_peak", "label_vjust",
+  "resolution", "log_transform", "low", "high", "pos1", "pos2", "count", "track",
+  "strand_color", "xstart", "xend"
 ))

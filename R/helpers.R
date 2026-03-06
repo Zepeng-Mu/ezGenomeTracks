@@ -140,6 +140,93 @@ import_genomic_data <- function(file, which = NULL) {
   return(df)
 }
 
+# Internal helper: Detect and return the correct column name from a data frame
+# given a list of candidate column names. Used for flexible column name handling
+# in functions that accept multiple column naming conventions (e.g., GWAS vs GRanges style).
+#
+# @param data A data frame to search
+# @param candidates Character vector of candidate column names
+# @param param_name Name of the parameter (used in error message)
+# @param required Logical indicating if the column is required (default: TRUE)
+# @return The name of the detected column, or NULL if not found and not required
+detect_column <- function(data, candidates, param_name, required = TRUE) {
+  for (col in candidates) {
+    if (col %in% colnames(data)) return(col)
+  }
+  if (required) {
+    stop(paste0(
+      "Could not find ",
+      param_name,
+      " column. Expected one of: ",
+      paste(candidates, collapse = ", ")
+    ))
+  }
+  return(NULL)
+}
+
+# Internal helper: Validate that required columns exist in a data frame
+# Throws an error with informative message if any required column is missing.
+#
+# @param data A data frame to validate
+# @param required_cols Character vector of required column names
+# @param data_name Display name of the data (used in error message, e.g. "Data frame", "Coverage data")
+validate_required_columns <- function(data, required_cols, data_name = "Data frame") {
+  if (!all(required_cols %in% colnames(data))) {
+    stop(
+      data_name,
+      " must contain columns: ",
+      paste(required_cols, collapse = ", ")
+    )
+  }
+}
+
+# Internal helper: Apply consistent facet positioning to ggplot objects
+# Handles both "left" and "top" positioning with appropriate theme settings.
+#
+# @param plot A ggplot object to modify
+# @param facet_label_position Either "left" or "top"
+# @param strip_placement Either "inside" or "outside" (default: "inside")
+# @return Modified ggplot object with facet theming applied
+apply_facet_position <- function(plot, facet_label_position, strip_placement = "inside") {
+  if (facet_label_position == "left") {
+    plot <- plot +
+      ggplot2::facet_wrap(
+        ~track,
+        ncol = 1,
+        scales = "free_y",
+        strip.position = "left"
+      ) +
+      ggplot2::theme(
+        strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
+        strip.placement = strip_placement,
+        panel.spacing.y = ggplot2::unit(0, "pt")
+      )
+  } else {
+    plot <- plot +
+      ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
+      ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
+  }
+  return(plot)
+}
+
+# Internal helper: Apply a consistent black border to plot panel
+# Used consistently across wrapper functions for uniform visual appearance.
+#
+# @param plot A ggplot object to modify
+# @return Modified ggplot object with black border applied
+apply_border_theme <- function(plot) {
+  plot +
+    ggplot2::theme(
+      panel.border = ggplot2::element_rect(
+        colour = "black",
+        fill = NA,
+        linewidth = 0.5
+      )
+    )
+}
+
+#' Extract signal data for a single input element
+
 #' Extract signal data for a single input element
 #'
 #' This function extracts genomic signal data for a specified region from either
@@ -230,12 +317,7 @@ process_signal_input <- function(input, region, track_labels = NULL) {
     # Case 1: Data frame input
     # Validate required columns
     required_cols <- c("seqnames", "start", "end", "score")
-    if (!all(required_cols %in% colnames(input))) {
-      stop(
-        "Data frame must contain columns: ",
-        paste(required_cols, collapse = ", ")
-      )
-    }
+    validate_required_columns(input, required_cols, "Data frame")
 
     # Filter by region if needed
     region_gr <- parse_region(region)
@@ -801,12 +883,7 @@ process_sashimi_data <- function(
     coverage_df <- import_genomic_data(coverage_data, which = region_gr)
   } else if (is.data.frame(coverage_data)) {
     required_cols <- c("seqnames", "start", "end", "score")
-    if (!all(required_cols %in% colnames(coverage_data))) {
-      stop(
-        "Coverage data frame must contain columns: ",
-        paste(required_cols, collapse = ", ")
-      )
-    }
+    validate_required_columns(coverage_data, required_cols, "Coverage data frame")
     coverage_df <- coverage_data |>
       dplyr::filter(
         seqnames == as.character(region_gr@seqnames),
@@ -822,12 +899,7 @@ process_sashimi_data <- function(
     junction_df <- import_genomic_data(junction_data, which = region_gr)
   } else if (is.data.frame(junction_data)) {
     required_cols <- c("seqnames", "start", "end", "score")
-    if (!all(required_cols %in% colnames(junction_data))) {
-      stop(
-        "Junction data frame must contain columns: ",
-        paste(required_cols, collapse = ", ")
-      )
-    }
+    validate_required_columns(junction_data, required_cols, "Junction data frame")
     junction_df <- junction_data |>
       dplyr::filter(
         seqnames == as.character(region_gr@seqnames),
@@ -960,12 +1032,7 @@ process_sashimi_input <- function(
       junction_df <- import_genomic_data(junc_input, which = region_gr)
     } else if (is.data.frame(junc_input)) {
       required_cols <- c("seqnames", "start", "end", "score")
-      if (!all(required_cols %in% colnames(junc_input))) {
-        stop(
-          "Junction data frame must contain columns: ",
-          paste(required_cols, collapse = ", ")
-        )
-      }
+      validate_required_columns(junc_input, required_cols, "Junction data frame")
       junction_df <- junc_input |>
         dplyr::filter(
           seqnames == as.character(region_gr@seqnames),
@@ -1076,12 +1143,7 @@ process_sashimi_input <- function(
 
       if (is.data.frame(cov_element)) {
         required_cols <- c("seqnames", "start", "end", "score")
-        if (!all(required_cols %in% colnames(cov_element))) {
-          stop(
-            "Coverage data frame must contain columns: ",
-            paste(required_cols, collapse = ", ")
-          )
-        }
+        validate_required_columns(cov_element, required_cols, "Coverage data frame")
         cov_df <- cov_element |>
           dplyr::filter(
             seqnames == as.character(region_gr@seqnames),
@@ -1126,12 +1188,7 @@ process_sashimi_input <- function(
       coverage_df <- import_genomic_data(coverage_data, which = region_gr)
     } else if (is.data.frame(coverage_data)) {
       required_cols <- c("seqnames", "start", "end", "score")
-      if (!all(required_cols %in% colnames(coverage_data))) {
-        stop(
-          "Coverage data frame must contain columns: ",
-          paste(required_cols, collapse = ", ")
-        )
-      }
+      validate_required_columns(coverage_data, required_cols, "Coverage data frame")
       coverage_df <- coverage_data |>
         dplyr::filter(
           seqnames == as.character(region_gr@seqnames),
@@ -1272,12 +1329,7 @@ process_interaction_input <- function(input, region, track_labels = NULL) {
     # Validate required columns
     input <- standardize_interaction_df(input)
     required_cols <- c("start1", "start2")
-    if (!all(required_cols %in% colnames(input))) {
-      stop(
-        "Data frame must contain columns: ",
-        paste(required_cols, collapse = ", ")
-      )
-    }
+    validate_required_columns(input, required_cols, "Data frame")
     return(input)
   } else if (is.character(input)) {
     # Case 2: Character vector input (file paths)
