@@ -3,10 +3,10 @@
 test_that("ez_manhattan creates Manhattan plots", {
   # Create test GWAS data
   test_data <- data.frame(
-    CHR = rep(1:3, each = 10),
-    BP = rep(seq(1000, 10000, 1000), 3),
-    P = runif(30, 1e-8, 1),
-    SNP = paste0("rs", 1:30)
+    CHR = rep(1:3, each = 100),
+    BP = rep(seq(1000, 10000, 1000), 30),
+    P = sample(seq(1e-9, 1, length.out = 300)),
+    SNP = paste0("rs", 1:300)
   )
 
   # Test basic Manhattan plot
@@ -32,8 +32,8 @@ test_that("ez_manhattan creates Manhattan plots", {
   expect_true(length(p4$layers) > 0)
 
   # Test with R-squared coloring
-  test_data$R2 <- runif(30, 0, 1)
-  p5 <- ez_manhattan(test_data, r2 = test_data$R2, colorBy = "r2")
+  test_data$R2 <- runif(300, 0, 1)
+  p5 <- ez_manhattan(test_data, r2 = test_data$R2, color_by = "r2")
   expect_s3_class(p5, "ggplot")
   expect_true(length(p5$layers) > 0)
 

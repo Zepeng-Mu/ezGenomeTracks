@@ -9,10 +9,11 @@
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
 #' @param group_var Column name for grouping data within a single data frame (default: NULL)
 #' @param color_by Whether colors distinguish "group" or "track" (default: "group")
-#' @param colors Color(s) for the coverage track. Can be a single color (e.g., "steelblue") or
+#' @param colors Color(s) for the coverage track. Can be a single color or
 #'   a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
 #'   If fewer colors than tracks/groups are provided, colors will be recycled.
-#'   Default is "steelblue".
+#'   When NULL (default), uses vibeColors palette if available, otherwise "steelblue".
+#'   For multiple tracks with a single color, automatically uses a colorblind-safe palette.
 #' @param y_axis_style Y-axis style: "none", "simple", "minmax", or "full" (default: "none")
 #'   - "none": No y-axis displayed
 #'   - "simple": Shows y-range as \[min - max\] label at top-left
@@ -62,7 +63,7 @@ ez_coverage <- function(
   type = c("area", "line", "heatmap"),
   group_var = NULL,
   color_by = c("group", "track"),
-  colors = "steelblue",
+  colors = NULL,
   y_axis_style = c("none", "simple", "minmax", "full"),
   y_range = NULL,
   alpha = 0.5,
@@ -89,6 +90,11 @@ ez_coverage <- function(
     "bin_width must be positive integer" = is.null(bin_width) ||
       (bin_width > 0 && is.integer(bin_width))
   )
+
+  # Resolve default colors
+  if (is.null(colors)) {
+    colors <- ez_default_single_color("coverage")
+  }
 
   chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
 
@@ -195,9 +201,13 @@ ez_coverage <- function(
     p <- ggplot2::ggplot(plotDt, aes_mapping) +
       geom_coverage(type = type, alpha = alpha, ...)
 
-    # Apply color scales - recycle colors if needed
+    # Apply color scales - use palette for multiple colors when only one was provided
     n_colors <- length(color_values)
-    plot_colors <- rep_len(colors, n_colors)
+    if (length(colors) == 1 && n_colors > 1) {
+      plot_colors <- ez_default_palette(n_colors)
+    } else {
+      plot_colors <- rep_len(colors, n_colors)
+    }
     names(plot_colors) <- color_values
 
     p <- p +
@@ -223,9 +233,13 @@ ez_coverage <- function(
       p <- ggplot2::ggplot(plotDt, aes_mapping) +
         geom_coverage(type = type, alpha = alpha, ...)
 
-      # Apply color scales - recycle colors if needed
+      # Apply color scales - use palette for multiple colors when only one was provided
       n_colors <- length(color_values)
-      plot_colors <- rep_len(colors, n_colors)
+      if (length(colors) == 1 && n_colors > 1) {
+        plot_colors <- ez_default_palette(n_colors)
+      } else {
+        plot_colors <- rep_len(colors, n_colors)
+      }
       names(plot_colors) <- color_values
 
       p <- p +
@@ -695,23 +709,9 @@ ez_manhattan <- function(
   y_axis_style <- match.arg(y_axis_style)
   facet_label_position <- match.arg(facet_label_position)
 
-  # Default color palette function (same as ez_coverage)
+  # Default color palette function
   get_default_colors <- function(n) {
-    if (n <= 9) {
-      return(c(
-        "#1f4e79",
-        "#d35400",
-        "#27ae60",
-        "#8e44ad",
-        "#f1c40f",
-        "#16a085",
-        "#e74c3c",
-        "#8b4513",
-        "#5d6d7e"
-      )[1:n])
-    } else {
-      return(rainbow(n))
-    }
+    ez_default_palette(n)
   }
 
   # Process input using helper function
@@ -1686,9 +1686,13 @@ ez_link <- function(
         ...
       )
 
-    # Apply color scales - recycle colors if needed
+    # Apply color scales - use palette for multiple colors when only one was provided
     n_colors <- length(color_values)
-    plot_colors <- rep_len(colors, n_colors)
+    if (length(colors) == 1 && n_colors > 1) {
+      plot_colors <- ez_default_palette(n_colors)
+    } else {
+      plot_colors <- rep_len(colors, n_colors)
+    }
     names(plot_colors) <- color_values
 
     p <- p +
@@ -1721,10 +1725,13 @@ ez_link <- function(
           ...
         )
 
-      # Apply color scales - recycle colors if needed
+      # Apply color scales - use palette for multiple colors when only one was provided
       n_colors <- length(color_values)
-      plot_colors <- rep_len(colors, n_colors)
-      names(plot_colors) <- color_values
+      if (length(colors) == 1 && n_colors > 1) {
+        plot_colors <- ez_default_palette(n_colors)
+      } else {
+        plot_colors <- rep_len(colors, n_colors)
+      }
 
       p <- p +
         ggplot2::scale_color_manual(
@@ -1801,7 +1808,8 @@ ez_link <- function(
 #' @param track_labels Optional vector of track labels (used for unnamed list input)
 #' @param colors Color(s) for coverage fill and junction arcs. Can be a single color
 #'   or a vector of colors for multiple tracks. If fewer colors than tracks are
-#'   provided, colors will be recycled. Default: "purple3"
+#'   provided, colors will be recycled. When NULL (default), uses vibeColors palette
+#'   if available, otherwise a built-in default.
 #' @param coverage_fill Deprecated. Use `colors` instead.
 #' @param junction_direction Direction of junction arcs: "alternate" (default, odd junctions up,
 #'   even down), "up" (all arcs above coverage), or "down" (all arcs below zero line)
@@ -1870,7 +1878,7 @@ ez_sashimi <- function(
   junction_data,
   region,
   track_labels = NULL,
-  colors = "purple3",
+  colors = NULL,
   coverage_fill = NULL,
   junction_direction = c("alternate", "up", "down"),
   junction_curvature = 0.05,
@@ -1902,15 +1910,18 @@ ez_sashimi <- function(
       length(linewidth_range) == 2
   )
 
+  # Resolve default colors
+  if (is.null(colors)) {
+    colors <- ez_default_single_color("sashimi")
+  }
+
   # Handle deprecated coverage_fill parameter
   if (!is.null(coverage_fill)) {
     warning(
       "coverage_fill is deprecated. Use 'colors' instead.",
       call. = FALSE
     )
-    if (identical(colors, "purple3")) {
-      colors <- coverage_fill
-    }
+    colors <- coverage_fill
   }
 
   chr <- stringr::str_remove(stringr::str_split(region, ":")[[1]][1], "chr")
@@ -1934,7 +1945,11 @@ ez_sashimi <- function(
   if (has_track) {
     track_names <- unique(coverage_df$track)
     n_tracks <- length(track_names)
-    plot_colors <- rep_len(colors, n_tracks)
+    if (length(colors) == 1 && n_tracks > 1) {
+      plot_colors <- ez_default_palette(n_tracks)
+    } else {
+      plot_colors <- rep_len(colors, n_tracks)
+    }
     names(plot_colors) <- track_names
   } else {
     plot_colors <- colors[1]

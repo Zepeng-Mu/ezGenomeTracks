@@ -9,7 +9,7 @@ ez_sashimi(
   junction_data,
   region,
   track_labels = NULL,
-  colors = "purple3",
+  colors = NULL,
   coverage_fill = NULL,
   junction_direction = c("alternate", "up", "down"),
   junction_curvature = 0.05,
@@ -46,7 +46,8 @@ the same names.
 
 \item{colors}{Color(s) for coverage fill and junction arcs. Can be a single color
 or a vector of colors for multiple tracks. If fewer colors than tracks are
-provided, colors will be recycled. Default: "purple3"}
+provided, colors will be recycled. When NULL (default), uses vibeColors palette
+if available, otherwise a built-in default.}
 
 \item{coverage_fill}{Deprecated. Use \code{colors} instead.}
 

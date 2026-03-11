@@ -16,6 +16,7 @@
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
 #' @importFrom ggplot2 GeomRect GeomTile GeomPath layer aes ggproto Geom
+#' @importFrom rlang `%||%`
 #'
 #' @examples
 #' \dontrun{
@@ -53,15 +54,15 @@ geom_coverage <- function(
   type <- match.arg(type, c("area", "line", "heatmap"))
   if (type == "area") {
     default_aes <- aes(
-      start = .data$start,
-      end = .data$end,
+      xmin = .data$start,
+      xmax = .data$end,
       ymin = 0,
       ymax = .data$score
     )
   } else if (type == "line") {
     default_aes <- aes(
-      start = .data$start,
-      end = .data$end,
+      xmin = .data$start,
+      xmax = .data$end,
       ymin = .data$score,
       ymax = .data$score
     )
@@ -110,7 +111,8 @@ geom_coverage <- function(
 GeomCoverage <- ggproto(
   "GeomCoverage",
   Geom,
-  required_aes = c("start", "end", "ymin", "ymax"),
+  required_aes = c(),
+  optional_aes = c("xmin", "xmax", "ymin", "ymax", "x", "y", "height", "start", "end"),
   setup_params = function(data, params) {
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params
@@ -136,9 +138,9 @@ GeomCoverage <- ggproto(
     type = "area",
     na.rm = FALSE
   ) {
-    # Transform start/end to xmin/xmax for drawing
-    data$xmin <- data$start
-    data$xmax <- data$end
+    # Resolve xmin/xmax from either aesthetic mapping or original data columns
+    if (is.null(data$xmin) && !is.null(data$start)) data$xmin <- data$start
+    if (is.null(data$xmax) && !is.null(data$end)) data$xmax <- data$end
 
     if (type == "heatmap") {
       # For heatmap, transform xmin/xmax to x and keep y/height

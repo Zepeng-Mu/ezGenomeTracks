@@ -11,7 +11,7 @@ ez_coverage(
   type = c("area", "line", "heatmap"),
   group_var = NULL,
   color_by = c("group", "track"),
-  colors = "steelblue",
+  colors = NULL,
   y_axis_style = c("none", "simple", "minmax", "full"),
   y_range = NULL,
   alpha = 0.5,
@@ -38,10 +38,11 @@ ez_coverage(
 
 \item{color_by}{Whether colors distinguish "group" or "track" (default: "group")}
 
-\item{colors}{Color(s) for the coverage track. Can be a single color (e.g., "steelblue") or
+\item{colors}{Color(s) for the coverage track. Can be a single color or
 a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
 If fewer colors than tracks/groups are provided, colors will be recycled.
-Default is "steelblue".}
+When NULL (default), uses vibeColors palette if available, otherwise "steelblue".
+For multiple tracks with a single color, automatically uses a colorblind-safe palette.}
 
 \item{y_axis_style}{Y-axis style: "none", "simple", "minmax", or "full" (default: "none")
 \itemize{

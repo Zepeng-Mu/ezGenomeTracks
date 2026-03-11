@@ -60,6 +60,9 @@ scale_x_genome <- function(
 #' cols <- hic_palette_cooler(100)
 #' }
 hic_palette_cooler <- function(n = 256) {
+  vibe_colors <- ez_hic_palette("cooler", n)
+  if (!is.null(vibe_colors)) return(vibe_colors)
+
   grDevices::colorRampPalette(c(
     "#fff5f0",
     "#fee0d2",
@@ -98,6 +101,9 @@ hic_palette_viridis <- function(n = 256) {
 #' @rdname hic_palettes
 #' @export
 hic_palette_bwr <- function(n = 256) {
+  vibe_colors <- ez_hic_diverging_palette(n)
+  if (!is.null(vibe_colors)) return(vibe_colors)
+
   # Blue-white-red diverging palette for log2 fold changes
   grDevices::colorRampPalette(c(
     "#2166ac",
