@@ -584,7 +584,8 @@ extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
 
   # 3. Extract exons
   all_exons <- GenomicFeatures::exonsBy(txdb, by = "gene")
-  region_exons <- all_exons[gene_ids]
+  valid_gene_ids <- gene_ids[gene_ids %in% names(all_exons)]
+  region_exons <- all_exons[valid_gene_ids]
 
   # 4. Build gene data frame
   gene_df <- data.frame(
