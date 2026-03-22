@@ -9,6 +9,9 @@
 #' @param type Visualization style: `"area"` (default), `"line"`, or `"heatmap"`.
 #'   - `"area"`/`"line"`: `score` is mapped to `y` (height).
 #'   - `"heatmap"`: `score` is mapped to `fill`, producing colored tiles.
+#' @param area_border Logical; if `TRUE` (default), draws thin borders on area rectangles
+#'   to eliminate white-line rendering artifacts. Set to `FALSE` for cleaner appearance
+#'   when artifacts are not visible. Only affects `type = "area"`.
 #' @param na.rm If `TRUE`, silently drop `NA` values.
 #' @param ... Additional arguments passed to [ggplot2::layer()], e.g.
 #'   `linewidth = 0.8`, or `alpha = 0.6`.
@@ -46,6 +49,7 @@ geom_coverage <- function(
   stat = "identity",
   position = "identity",
   type = "area",
+  area_border = TRUE,
   ...,
   na.rm = TRUE,
   show.legend = NA,
@@ -85,6 +89,7 @@ geom_coverage <- function(
   params_list <- utils::modifyList(
     list(
       type = type,
+      area_border = area_border,
       na.rm = na.rm
     ),
     list(...)
@@ -135,6 +140,7 @@ GeomCoverage <- ggproto(
     panel_params,
     coord,
     type = "area",
+    area_border = TRUE,
     na.rm = FALSE
   ) {
     # Transform start/end to xmin/xmax for drawing
@@ -211,13 +217,19 @@ GeomCoverage <- ggproto(
       GeomPath$draw_panel(path_data, panel_params, coord)
     } else {
       # Use GeomRect for area type
-      # Bake alpha into fill & border colours directly, then draw at full
-      # opacity so the border never double-composites over the fill.
-      a <- ifelse(is.na(data$alpha), 1, data$alpha)
-      data$fill   <- scales::alpha(data$fill, a)
-      data$colour <- scales::alpha(data$fill, 1)
-      data$alpha   <- NA
-      data$linewidth <- 0.1
+      if (area_border) {
+        # Bake alpha into fill & border colours directly, then draw at full
+        # opacity so the border never double-composites over the fill.
+        # This eliminates white-line artifacts between adjacent rectangles.
+        a <- ifelse(is.na(data$alpha), 1, data$alpha)
+        data$fill   <- scales::alpha(data$fill, a)
+        data$colour <- scales::alpha(data$fill, 1)
+        data$alpha   <- NA
+        data$linewidth <- 0.1
+      } else {
+        # No border - may show rendering artifacts on some devices
+        data$colour <- NA
+      }
       GeomRect$draw_panel(data, panel_params, coord)
     }
   },

@@ -16,6 +16,7 @@ ez_coverage(
   y_range = NULL,
   alpha = 0.5,
   bin_width = NULL,
+  area_border = TRUE,
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
@@ -52,11 +53,15 @@ For multiple tracks with a single color, automatically uses a colorblind-safe pa
 \item "full": Full y-axis with all ticks and labels
 }}
 
-\item{y_range}{Y-axis range limits (default: NULL)}
+\item{y_range}{Y-axis range limits. When NULL (default), uses the global maximum
+across all tracks so all tracks share the same y-scale.}
 
 \item{alpha}{Transparency (default: 0.5)}
 
 \item{bin_width}{Width of bins in base pairs (default: NULL)}
+
+\item{area_border}{Logical; if \code{TRUE} (default), draws thin borders on area rectangles
+to eliminate white-line rendering artifacts. Only affects \code{type = "area"}.}
 
 \item{facet_label_position}{Position of facet labels: "top" or "left" (default: "top")}
 

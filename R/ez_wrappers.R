@@ -23,6 +23,8 @@
 #'   across all tracks so all tracks share the same y-scale.
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
+#' @param area_border Logical; if `TRUE` (default), draws thin borders on area rectangles
+#'   to eliminate white-line rendering artifacts. Only affects `type = "area"`.
 #' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
 #' @param average Logical. If `TRUE`, averages overlapping tracks into a single
 #'   track before plotting. Applies when `input` is a character vector of
@@ -69,6 +71,7 @@ ez_coverage <- function(
   y_range = NULL,
   alpha = 0.5,
   bin_width = NULL,
+  area_border = TRUE,
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
@@ -200,7 +203,7 @@ ez_coverage <- function(
     }
 
     p <- ggplot2::ggplot(plotDt, aes_mapping) +
-      geom_coverage(type = type, alpha = alpha, ...)
+      geom_coverage(type = type, area_border = area_border, alpha = alpha, ...)
 
     # Apply color scales - use palette for multiple colors when only one was provided
     n_colors <- length(color_values)
@@ -232,7 +235,7 @@ ez_coverage <- function(
       legend_name <- "Track"
 
       p <- ggplot2::ggplot(plotDt, aes_mapping) +
-        geom_coverage(type = type, alpha = alpha, ...)
+        geom_coverage(type = type, area_border = area_border, alpha = alpha, ...)
 
       # Apply color scales - use palette for multiple colors when only one was provided
       n_colors <- length(color_values)
@@ -257,6 +260,7 @@ ez_coverage <- function(
       ) +
         geom_coverage(
           type = type,
+          area_border = area_border,
           fill = colors[1],
           alpha = alpha,
           ...
