@@ -54,15 +54,15 @@ geom_coverage <- function(
   type <- match.arg(type, c("area", "line", "heatmap"))
   if (type == "area") {
     default_aes <- aes(
-      xmin = .data$start,
-      xmax = .data$end,
+      start = .data$start,
+      end = .data$end,
       ymin = 0,
       ymax = .data$score
     )
   } else if (type == "line") {
     default_aes <- aes(
-      xmin = .data$start,
-      xmax = .data$end,
+      start = .data$start,
+      end = .data$end,
       ymin = .data$score,
       ymax = .data$score
     )
@@ -111,8 +111,7 @@ geom_coverage <- function(
 GeomCoverage <- ggproto(
   "GeomCoverage",
   Geom,
-  required_aes = c(),
-  optional_aes = c("xmin", "xmax", "ymin", "ymax", "x", "y", "height", "start", "end"),
+  required_aes = c("start", "end", "ymin", "ymax"),
   setup_params = function(data, params) {
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params
@@ -138,9 +137,9 @@ GeomCoverage <- ggproto(
     type = "area",
     na.rm = FALSE
   ) {
-    # Resolve xmin/xmax from either aesthetic mapping or original data columns
-    if (is.null(data$xmin) && !is.null(data$start)) data$xmin <- data$start
-    if (is.null(data$xmax) && !is.null(data$end)) data$xmax <- data$end
+    # Transform start/end to xmin/xmax for drawing
+    data$xmin <- data$start
+    data$xmax <- data$end
 
     if (type == "heatmap") {
       # For heatmap, transform xmin/xmax to x and keep y/height
@@ -212,9 +211,12 @@ GeomCoverage <- ggproto(
       GeomPath$draw_panel(path_data, panel_params, coord)
     } else {
       # Use GeomRect for area type
-      # Set border colour to match fill to eliminate anti-aliasing gaps
-      # between adjacent rectangles (white vertical line artifacts)
-      data$colour <- data$fill
+      # Bake alpha into fill & border colours directly, then draw at full
+      # opacity so the border never double-composites over the fill.
+      a <- ifelse(is.na(data$alpha), 1, data$alpha)
+      data$fill   <- scales::alpha(data$fill, a)
+      data$colour <- scales::alpha(data$fill, 1)
+      data$alpha   <- NA
       data$linewidth <- 0.1
       GeomRect$draw_panel(data, panel_params, coord)
     }
