@@ -64,6 +64,9 @@ geom_feature <- function(
     inherit.aes = inherit.aes,
     params = list(
       height = height,
+      colour = color,
+      fill = fill,
+      alpha = alpha,
       na.rm = na.rm,
       ...
     )
