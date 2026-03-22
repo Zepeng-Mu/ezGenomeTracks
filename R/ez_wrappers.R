@@ -19,7 +19,8 @@
 #'   - "simple": Shows y-range as \[min - max\] label at top-left
 #'   - "minmax": Shows only min and max values on y-axis with ticks
 #'   - "full": Full y-axis with all ticks and labels
-#' @param y_range Y-axis range limits (default: NULL)
+#' @param y_range Y-axis range limits. When NULL (default), uses the global maximum
+#'   across all tracks so all tracks share the same y-scale.
 #' @param alpha Transparency (default: 0.5)
 #' @param bin_width Width of bins in base pairs (default: NULL)
 #' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
@@ -265,14 +266,6 @@ ez_coverage <- function(
 
   # Add faceting if multiple tracks
   if (has_track) {
-    # Warn if y_axis_style is "none" and y_range is NULL for multiple tracks
-    if (y_axis_style == "none" && is.null(y_range)) {
-      warning(
-        "y_axis_style is set to 'none' with multiple tracks. ",
-        "Consider setting y_range to allow for better comparison between tracks.",
-        call. = FALSE
-      )
-    }
     p <- apply_facet_position(p, facet_label_position, strip_placement = "inside")
   }
 
@@ -288,22 +281,17 @@ ez_coverage <- function(
 
   # Calculate y-axis limits for annotations (track-specific if multiple tracks)
   if (is.null(y_range)) {
+    y_min <- 0
+    y_max <- max(plotDt$score, na.rm = TRUE)
     if (has_track) {
-      # Calculate per-track y-ranges
-      y_range_df <- plotDt |>
-        dplyr::group_by(track) |>
-        dplyr::summarise(
-          y_min = 0,
-          y_max = max(score, na.rm = TRUE),
-          .groups = "drop"
-        ) |>
-        dplyr::mutate(
-          y_label = paste0("[", round(y_min, 1), " - ", round(y_max, 1), "]"),
-          x = x_min
-        )
-    } else {
-      y_min <- 0
-      y_max <- max(plotDt$score, na.rm = TRUE)
+      # Use the global maximum across all tracks as the shared y-range
+      y_range_df <- data.frame(
+        track = unique(plotDt$track),
+        y_min = y_min,
+        y_max = y_max,
+        y_label = paste0("[", round(y_min, 1), " - ", round(y_max, 1), "]"),
+        x = x_min
+      )
     }
   } else {
     y_min <- y_range[1]
@@ -337,9 +325,9 @@ ez_coverage <- function(
         scale_x_genome_region(region, oob = scales::oob_keep) +
         ggplot2::scale_y_continuous(
           expand = c(0, 0),
-          breaks = function(limits) c(0, limits[2])
+          breaks = c(y_min, y_max)
         ) +
-        ggplot2::coord_cartesian(clip = "off") +
+        ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
         ggplot2::labs(x = paste0("Chr", chr)) +
         # Max label at top
         ggplot2::geom_text(
@@ -407,7 +395,7 @@ ez_coverage <- function(
         ez_coverage_theme(y_axis_style = y_axis_style) +
         scale_x_genome_region(region) +
         ggplot2::scale_y_continuous(expand = c(0, 0)) +
-        ggplot2::coord_cartesian(clip = "off") +
+        ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
         ggplot2::labs(x = paste0("Chr", chr)) +
         ggplot2::geom_text(
           data = y_range_df,
@@ -443,7 +431,7 @@ ez_coverage <- function(
       ez_coverage_theme(y_axis_style = y_axis_style) +
       scale_x_genome_region(region) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
-      ggplot2::coord_cartesian(ylim = y_range) +
+      ggplot2::coord_cartesian(ylim = c(y_min, y_max)) +
       ggplot2::labs(x = paste0("Chr", chr))
   }
 
