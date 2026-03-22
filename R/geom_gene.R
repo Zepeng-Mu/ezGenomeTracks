@@ -613,7 +613,12 @@ extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
       )
     }
   })
-  exon_df <- do.call(rbind, exon_list[!sapply(exon_list, is.null)])
+  filtered_exons <- exon_list[!sapply(exon_list, is.null)]
+  exon_df <- if (length(filtered_exons) > 0) {
+    do.call(rbind, filtered_exons)
+  } else {
+    data.frame()
+  }
 
   # 6. Combine gene body and exon rows
   if (nrow(exon_df) > 0) {
