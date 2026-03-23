@@ -550,7 +550,6 @@ extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
   }
 
   # 1. Extract genes in region
-  seqlevels(txdb) <- seqlevels(region_gr)
   all_genes <- GenomicFeatures::genes(txdb)
   region_genes <- subsetByOverlaps(all_genes, region_gr)
 
