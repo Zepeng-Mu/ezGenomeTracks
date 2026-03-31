@@ -259,6 +259,126 @@ test_that("ez_coverage with average = TRUE and list of data frames does NOT aver
   expect_equal(length(unique(result$data$track)), 2)
 })
 
+# ============================================================
+# Real-world bigWig tests (inst/extdata files)
+# ============================================================
+
+# Helper: find the package's bigWig files
+bw_files <- system.file(
+  "extdata",
+  c("avg_chr2-231091223_231109786_231113600_0.bw",
+    "avg_chr2-231091223_231109786_231113600_1.bw",
+    "avg_chr2-231091223_231109786_231113600_2.bw"),
+  package = "ezGenomeTracks"
+)
+bw_region <- "chr2:231109000-231113000"
+bw_available <- all(nzchar(bw_files)) && all(file.exists(bw_files))
+
+test_that("average_signal works with real bigWig files", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  result <- average_signal(
+    inputs = bw_files,
+    region = bw_region,
+    bin_width = 100
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c("seqnames", "start", "end", "score") %in% colnames(result)))
+  expect_true(nrow(result) > 0)
+  # All scores should be finite after nans_to_zeros
+
+  expect_true(all(is.finite(result$score)))
+  # Region should be chr2
+  expect_true(all(result$seqnames == "chr2"))
+  # Bins should be within the requested region
+  expect_true(all(result$start >= 231109000))
+  expect_true(all(result$end <= 231113000))
+})
+
+test_that("average_signal bigWig scores change with summary_fun", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  result_mean <- average_signal(bw_files, bw_region, bin_width = 200, summary_fun = "mean")
+  result_max  <- average_signal(bw_files, bw_region, bin_width = 200, summary_fun = "max")
+  result_sum  <- average_signal(bw_files, bw_region, bin_width = 200, summary_fun = "sum")
+
+  # sum >= mean (for non-negative data with 3 samples)
+  expect_true(all(result_sum$score >= result_mean$score - 1e-10))
+  # max >= mean
+  expect_true(all(result_max$score >= result_mean$score - 1e-10))
+})
+
+test_that("average_signal bigWig respects bin_width", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  r50  <- average_signal(bw_files[1:2], bw_region, bin_width = 50)
+  r200 <- average_signal(bw_files[1:2], bw_region, bin_width = 200)
+
+  expect_true(nrow(r50) > nrow(r200))
+})
+
+test_that("average_signal with single bigWig returns its own signal", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  result <- average_signal(bw_files[1], bw_region, bin_width = 100)
+
+  expect_s3_class(result, "data.frame")
+  expect_true(nrow(result) > 0)
+  expect_true(all(is.finite(result$score)))
+})
+
+test_that("ez_coverage average=TRUE with bigWig character vector produces plot", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  # Character vector → overlapping tracks → average collapses to one
+  p <- ez_coverage(
+    input = bw_files,
+    region = bw_region,
+    average = TRUE,
+    average_bin_width = 100
+  )
+
+  expect_s3_class(p, "gg")
+  # Averaged: should NOT have a "track" column (single track)
+  expect_false("track" %in% colnames(p$data))
+})
+
+test_that("ez_coverage average=TRUE with named list averages within elements", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  # Named list: each element is a separate track.
+  # Elements with >1 file get averaged; single-file elements stay as-is.
+  p <- ez_coverage(
+    input = list(
+      "Averaged" = bw_files[1:2],
+      "Single"   = bw_files[3]
+    ),
+    region = bw_region,
+    average = TRUE,
+    average_bin_width = 100,
+    y_axis_style = "simple"
+  )
+
+  expect_s3_class(p, "gg")
+  # Should have 2 tracks
+  expect_true("track" %in% colnames(p$data))
+  expect_equal(sort(unique(p$data$track)), c("Averaged", "Single"))
+})
+
+test_that("ez_coverage average=FALSE with bigWig character vector keeps overlapping tracks", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  # Without average, character vector produces overlapping (grouped) tracks
+  p <- ez_coverage(
+    input = bw_files,
+    region = bw_region,
+    average = FALSE
+  )
+
+  expect_s3_class(p, "gg")
+})
+
 test_that("ez_coverage with average = TRUE and single input warns", {
   expect_warning(
     ez_coverage(sample1, region, average = TRUE),

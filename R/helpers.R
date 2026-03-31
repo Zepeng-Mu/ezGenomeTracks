@@ -541,9 +541,9 @@ average_signal <- function(
     ext <- tolower(tools::file_ext(file))
     if (ext %in% c("bw", "bigwig")) {
       bw <- rtracklayer::BigWigFile(file)
-      # summary() returns an RleList; we extract the mean per bin
+      # summary() returns a CompressedGRangesList; extract numeric scores
       bin_summary <- rtracklayer::summary(bw, bins_gr, type = "mean")
-      scores <- unlist(bin_summary)
+      scores <- as.numeric(unlist(bin_summary)$score)
     } else {
       # For non-bigWig formats (bedGraph, BED, etc.), import and overlap
       imported <- import_genomic_data(file, which = bins_gr)
