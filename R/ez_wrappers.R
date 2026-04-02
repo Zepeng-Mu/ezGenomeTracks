@@ -2347,7 +2347,7 @@ ez_hic <- function(
   }
 
   # Add color scale
-  p <- p + scale_fill_hic(palette = palette, trans = trans, limits = limits)
+  p <- p + scale_fill_hic(palette = palette, trans = transform, limits = limits)
 
   # Add appropriate scales and theme
   if (style == "triangle") {
