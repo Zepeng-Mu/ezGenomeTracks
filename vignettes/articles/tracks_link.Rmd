@@ -1,0 +1,271 @@
+---
+title: "Link/Arc Track"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 10,
+  fig.height = 3,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r setup}
+library(ezGenomeTracks)
+library(ggplot2)
+```
+
+Link/arc tracks visualize pairwise genomic interactions such as chromatin loops, enhancer-promoter connections, or any paired-end data. The `ez_link()` function draws curved arcs connecting two genomic regions.
+
+> **Note**: Due to a rendering limitation with bezier curves in knitr/R Markdown documents, the code examples in this vignette are shown as code only. Please run these examples interactively in R to see the visualizations.
+
+# Basic Usage
+
+## Creating Interaction Data
+
+Interaction data requires paired coordinates: `start1/end1` for the first anchor and `start2/end2` for the second anchor.
+
+```{r basic, eval=FALSE}
+# Create example interaction data
+interactions_df <- data.frame(
+  start1 = c(1000, 2500, 5000),
+  end1 = c(1500, 3000, 5500),
+  start2 = c(4000, 6000, 8000),
+  end2 = c(4500, 6500, 8500),
+  score = c(10, 25, 15)
+)
+
+# Basic arc track
+ez_link(interactions_df, region = "chr1:1-10000")
+```
+
+## From Package Example Data
+
+```{r example-data}
+# Load example interactions
+data(example_interactions)
+head(example_interactions)
+```
+
+```{r example-plot, eval=FALSE}
+ez_link(example_interactions, region = "chr1:1-15000")
+```
+
+# Arc Direction
+
+Control whether arcs curve upward or downward.
+
+```{r direction-down, eval=FALSE}
+# Arcs curving downward (default)
+ez_link(
+  interactions_df,
+  region = "chr1:1-10000",
+  direction = "down",
+  colors = "steelblue"
+)
+```
+
+```{r direction-up, eval=FALSE}
+# Arcs curving upward
+ez_link(
+  interactions_df,
+  region = "chr1:1-10000",
+  direction = "up",
+  colors = "coral"
+)
+```
+
+# Customizing Appearance
+
+## Colors and Line Properties
+
+```{r custom-style, eval=FALSE}
+ez_link(
+  interactions_df,
+  region = "chr1:1-10000",
+  colors = "purple",
+  size = 1.5,
+  alpha = 0.8
+)
+```
+
+## Arc Shape
+
+Control the curvature and height of arcs.
+
+```{r curvature, eval=FALSE}
+# Higher curvature = more pronounced curves
+ez_link(
+  interactions_df,
+  region = "chr1:1-10000",
+  curvature = 0.8,
+  height_factor = 0.25,
+  colors = "darkgreen"
+)
+```
+
+```{r flat-arcs, eval=FALSE}
+# Flatter arcs
+ez_link(
+  interactions_df,
+  region = "chr1:1-10000",
+  curvature = 0.3,
+  height_factor = 0.1,
+  colors = "darkblue"
+)
+```
+
+# Score-Based Coloring
+
+Map interaction scores (e.g., contact frequency, significance) to color intensity.
+
+```{r score-color, eval=FALSE}
+ez_link(
+  interactions_df,
+  region = "chr1:1-10000",
+  use_score = TRUE,
+  colors = "red",
+  size = 1.2
+)
+```
+
+# Multiple Tracks
+
+## Grouped Interactions
+
+Visualize interactions from different conditions or cell types together.
+
+```{r grouped, eval=FALSE}
+# Add group information
+interactions_grouped <- rbind(
+  transform(interactions_df, cell_type = "K562"),
+  transform(
+    data.frame(
+      start1 = c(1500, 3500),
+      end1 = c(2000, 4000),
+      start2 = c(5000, 7500),
+      end2 = c(5500, 8000),
+      score = c(20, 30)
+    ),
+    cell_type = "GM12878"
+  )
+)
+
+ez_link(
+  interactions_grouped,
+  region = "chr1:1-10000",
+  group_var = "cell_type",
+  colors = c("blue", "orange"),
+  alpha = 0.7
+)
+```
+
+## Stacked Tracks (Faceted)
+
+Display interactions from different samples as separate tracks.
+
+```{r stacked, fig.height=4, eval=FALSE}
+# Create named list for faceted display
+interaction_list <- list(
+  "Sample A" = interactions_df,
+  "Sample B" = data.frame(
+    start1 = c(2000, 4500),
+    end1 = c(2500, 5000),
+    start2 = c(6000, 8500),
+    end2 = c(6500, 9000),
+    score = c(18, 22)
+  )
+)
+
+ez_link(
+  interaction_list,
+  region = "chr1:1-10000",
+  colors = c("purple", "darkgreen"),
+  facet_label_position = "left"
+)
+```
+
+# Combining with Other Tracks
+
+Arc tracks are most informative when combined with coverage and gene tracks to show interactions in genomic context.
+
+```{r combined, fig.height=6, eval=FALSE}
+region <- "chr1:1-15000"
+
+# Coverage track (using example data)
+data(example_signal)
+cov_track <- ez_coverage(
+  example_signal,
+  region = region,
+  colors = "steelblue",
+  y_axis_style = "simple"
+)
+
+# Arc track
+arc_track <- ez_link(
+  example_interactions,
+  region = region,
+  direction = "down",
+  colors = "coral",
+  size = 1
+)
+
+# Gene track
+data(example_genes)
+gene_track <- ez_gene(example_genes, region = region)
+
+# Stack all tracks
+vstack_plot(
+  cov_track,
+  arc_track,
+  gene_track,
+  region = region,
+  heights = c(0.75, 0.5)
+)
+```
+
+# Advanced Usage
+
+## Using geom_link() Directly
+
+For full customization, use `geom_link()` with ggplot2.
+
+```{r geom-direct, eval=FALSE}
+ggplot(interactions_df) +
+  geom_link(
+    aes(
+      start1 = start1, end1 = end1,
+      start2 = start2, end2 = end2,
+      color = score
+    ),
+    direction = "down",
+    height_factor = 0.2,
+    linewidth = 1.2
+  ) +
+  scale_color_viridis_c(option = "plasma") +
+  scale_x_genome_region("chr1:1-10000") +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid = element_blank()
+  ) +
+  labs(x = "Chr1", color = "Score")
+```
+
+# Tips and Best Practices
+
+1. **Arc direction**: Use `direction = "down"` when placing arcs below coverage tracks, `"up"` when above.
+
+2. **Height factor**: Adjust `height_factor` based on the genomic span of your interactions. Longer-range interactions may need smaller values to prevent arcs from becoming too tall.
+
+3. **Score scaling**: For interaction scores with large ranges, consider log-transforming before plotting.
+
+4. **Overlapping arcs**: Use transparency (`alpha`) when many arcs overlap to see density patterns.
+
+5. **BEDPE format**: When loading from files, ensure your BEDPE file has columns for both anchor coordinates (chr1, start1, end1, chr2, start2, end2).
+
+6. **Interactive use**: Due to rendering limitations with bezier curves in knitr documents, arc tracks are best viewed in interactive R sessions or saved directly to files using `ggsave()`.
