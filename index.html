@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ezGenomeTracks — Minimal, ggplot2-based genome browser tracks for R</title>
+    <meta name="description"
+        content="A ggplot2-based R package for creating publication-quality genomic track visualizations with minimal code.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --bg-card-hover: #1f2a40;
+            --accent-teal: #00e5c7;
+            --accent-coral: #ff6b6b;
+            --accent-amber: #ffc857;
+            --accent-blue: #4dabf7;
+            --accent-purple: #b197fc;
+            --accent-green: #69db7c;
+            --text-primary: #f8f9fa;
+            --text-secondary: #a0aec0;
+            --text-muted: #6c7a89;
+            --text-code: #79c0ff;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(0, 229, 199, 0.3);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+            --shadow-glow-teal: 0 0 30px rgba(0, 229, 199, 0.15);
+            --shadow-glow-coral: 0 0 30px rgba(255, 107, 107, 0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --font-heading: 'Sora', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 18px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Background grid pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Ambient gradient orbs */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -20%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 229, 199, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatOrb 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatOrb {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(-50px, 80px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(30px, -40px) scale(0.95);
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding: 80px 24px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0, 229, 199, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 30% 70%, rgba(255, 107, 107, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 40% at 70% 30%, rgba(77, 171, 247, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(0, 229, 199, 0.08);
+            border: 1px solid rgba(0, 229, 199, 0.2);
+            border-radius: 100px;
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            color: var(--accent-teal);
+            margin-bottom: 32px;
+            opacity: 0;
+            animation: fadeUp 0.6s ease forwards;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-teal);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+        }
+
+        .hero-title {
+            font-family: var(--font-heading);
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: fadeUp 0.6s 0.15s ease forwards;
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, var(--accent-teal) 0%, var(--accent-blue) 50%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-body);
+            font-size: 1.35rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+            opacity: 0;
+            animation: fadeUp 0.6s 0.3s ease forwards;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fadeUp 0.6s 0.45s ease forwards;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 20px rgba(0, 229, 199, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #00ffc8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 229, 199, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .btn svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .hero-tagline {
+            font-family: var(--font-body);
+            font-size: 1.15rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            opacity: 0;
+            animation: fadeUp 0.6s 0.55s ease forwards;
+        }
+
+        .hero-tagline {
+            font-family: var(--font-body);
+            font-size: 1.15rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            opacity: 0;
+            animation: fadeUp 0.6s 0.55s ease forwards;
+        }
+
+        .hero-install {
+            opacity: 0;
+            animation: fadeUp 0.6s 0.6s ease forwards;
+        }
+
+        .install-block {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: var(--text-code);
+            position: relative;
+        }
+
+        .install-block .prompt {
+            color: var(--accent-teal);
+            user-select: none;
+        }
+
+        .install-block .comment {
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color var(--transition-fast);
+            display: flex;
+            align-items: center;
+        }
+
+        .copy-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .copy-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ==================== SECTION STYLES ==================== */
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent-teal);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.7;
+        }
+
+        .section-header {
+            margin-bottom: 64px;
+        }
+
+        .section-header.center {
+            text-align: center;
+        }
+
+        .section-header.center .section-desc {
+            margin: 0 auto;
+        }
+
+        /* ==================== TRACK TYPES ==================== */
+        .tracks-section {
+            background: var(--bg-secondary);
+        }
+
+        .tracks-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 50% 80% at 80% 20%, rgba(177, 151, 252, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .tracks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .track-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px;
+            transition: all var(--transition-smooth);
+            opacity: 0;
+            animation: fadeUp 0.5s ease forwards;
+        }
+
+        .track-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .track-card:nth-child(2) {
+            animation-delay: 0.18s;
+        }
+
+        .track-card:nth-child(3) {
+            animation-delay: 0.26s;
+        }
+
+        .track-card:nth-child(4) {
+            animation-delay: 0.34s;
+        }
+
+        .track-card:nth-child(5) {
+            animation-delay: 0.42s;
+        }
+
+        .track-card:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+
+        .track-card:nth-child(7) {
+            animation-delay: 0.58s;
+        }
+
+        .track-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-accent);
+            box-shadow: var(--shadow-glow-teal);
+            background: var(--bg-card-hover);
+        }
+
+        .track-card:nth-child(2):hover {
+            border-color: rgba(255, 107, 107, 0.3);
+            box-shadow: var(--shadow-glow-coral);
+        }
+
+        .track-card:nth-child(3):hover {
+            border-color: rgba(255, 200, 87, 0.3);
+            box-shadow: 0 0 30px rgba(255, 200, 87, 0.15);
+        }
+
+        .track-card:nth-child(4):hover {
+            border-color: rgba(77, 171, 247, 0.3);
+            box-shadow: 0 0 30px rgba(77, 171, 247, 0.15);
+        }
+
+        .track-card:nth-child(5):hover {
+            border-color: rgba(177, 151, 252, 0.3);
+            box-shadow: 0 0 30px rgba(177, 151, 252, 0.15);
+        }
+
+        .track-card:nth-child(6):hover {
+            border-color: rgba(105, 219, 124, 0.3);
+            box-shadow: 0 0 30px rgba(105, 219, 124, 0.15);
+        }
+
+        .track-card:nth-child(7):hover {
+            border-color: rgba(255, 107, 107, 0.3);
+            box-shadow: var(--shadow-glow-coral);
+        }
+
+        .track-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .track-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .track-icon.teal {
+            background: rgba(0, 229, 199, 0.1);
+            color: var(--accent-teal);
+        }
+
+        .track-icon.coral {
+            background: rgba(255, 107, 107, 0.1);
+            color: var(--accent-coral);
+        }
+
+        .track-icon.amber {
+            background: rgba(255, 200, 87, 0.1);
+            color: var(--accent-amber);
+        }
+
+        .track-icon.blue {
+            background: rgba(77, 171, 247, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .track-icon.purple {
+            background: rgba(177, 151, 252, 0.1);
+            color: var(--accent-purple);
+        }
+
+        .track-icon.green {
+            background: rgba(105, 219, 124, 0.1);
+            color: var(--accent-green);
+        }
+
+        .track-name {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .track-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .track-func {
+            display: inline-block;
+            margin-top: 12px;
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            color: var(--text-code);
+            background: rgba(121, 192, 255, 0.08);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* ==================== CODE EXAMPLE ==================== */
+        .code-section {
+            overflow: hidden;
+        }
+
+        .code-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(0, 229, 199, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .code-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+        }
+
+        .code-text .section-desc {
+            margin-bottom: 32px;
+        }
+
+        .code-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .code-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .code-features li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-teal);
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 10px;
+        }
+
+        .code-block-wrapper {
+            position: relative;
+        }
+
+        .code-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            font-family: var(--font-code);
+            font-size: 0.82rem;
+            line-height: 1.8;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .code-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .code-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .code-dots span:nth-child(1) {
+            background: #ff5f57;
+        }
+
+        .code-dots span:nth-child(2) {
+            background: #febc2e;
+        }
+
+        .code-dots span:nth-child(3) {
+            background: #28c840;
+        }
+
+        .code-filename {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .code-body {
+            padding: 24px;
+            overflow-x: auto;
+        }
+
+        .code-body pre {
+            margin: 0;
+        }
+
+        .code-body code {
+            font-family: inherit;
+        }
+
+        /* Syntax highlighting */
+        .kw {
+            color: var(--accent-purple);
+        }
+
+        .fn {
+            color: var(--accent-blue);
+        }
+
+        .str {
+            color: var(--accent-teal);
+        }
+
+        .cmt {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .num {
+            color: var(--accent-amber);
+        }
+
+        .op {
+            color: var(--text-secondary);
+        }
+
+        .arg {
+            color: var(--accent-coral);
+        }
+
+        /* ==================== CAROUSEL ==================== */
+        .carousel-section {
+            background: var(--bg-secondary);
+        }
+
+        .carousel-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 50% 60% at 50% 50%, rgba(255, 200, 87, 0.03) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .carousel-container {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .carousel-viewport {
+            position: relative;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            aspect-ratio: 16 / 9;
+        }
+
+        .carousel-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 16px;
+        }
+
+        .carousel-slide .slide-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 24px;
+            background: linear-gradient(transparent, rgba(10, 14, 23, 0.9));
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .carousel-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .carousel-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .carousel-btn:hover {
+            border-color: var(--accent-teal);
+            background: rgba(0, 229, 199, 0.1);
+            color: var(--accent-teal);
+        }
+
+        .carousel-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .carousel-dots {
+            display: flex;
+            gap: 10px;
+        }
+
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            padding: 0;
+        }
+
+        .carousel-dot.active {
+            background: var(--accent-teal);
+            box-shadow: 0 0 12px rgba(0, 229, 199, 0.4);
+        }
+
+        .carousel-dot:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ==================== FEATURES ==================== */
+        .features-section {
+            position: relative;
+        }
+
+        .features-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 40% 60% at 10% 80%, rgba(0, 229, 199, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 60% at 90% 20%, rgba(255, 107, 107, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 48px 32px;
+            border-radius: var(--radius-xl);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            transition: all var(--transition-smooth);
+            opacity: 0;
+            animation: fadeUp 0.5s ease forwards;
+        }
+
+        .feature-card:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+
+        .feature-card:nth-child(2) {
+            animation-delay: 0.35s;
+        }
+
+        .feature-card:nth-child(3) {
+            animation-delay: 0.5s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-accent);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .feature-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .feature-icon.teal {
+            background: rgba(0, 229, 199, 0.1);
+            color: var(--accent-teal);
+        }
+
+        .feature-icon.coral {
+            background: rgba(255, 107, 107, 0.1);
+            color: var(--accent-coral);
+        }
+
+        .feature-icon.amber {
+            background: rgba(255, 200, 87, 0.1);
+            color: var(--accent-amber);
+        }
+
+        .feature-title {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .feature-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ==================== FOOTER ==================== */
+        footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .footer-logo {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .footer-logo .accent {
+            color: var(--accent-teal);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-teal);
+        }
+
+        .footer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-badge svg {
+            width: 14px;
+            height: 14px;
+            color: var(--accent-teal);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1024px) {
+            .code-layout {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                max-width: 480px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 16px;
+            }
+
+            section {
+                padding: 72px 0;
+            }
+
+            .hero {
+                min-height: auto;
+                padding: 120px 24px 80px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .tracks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .carousel-viewport {
+                aspect-ratio: 4 / 3;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-left {
+                flex-direction: column;
+            }
+
+            .footer-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .install-block {
+                font-size: 0.7rem;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ==================== HERO ==================== -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">R Package &middot; ggplot2 &middot; MIT License</div>
+            <h1 class="hero-title">
+                <span class="gradient-text">ezGenomeTracks</span>
+            </h1>
+            <p class="hero-subtitle">
+                Minimal, ggplot2-based genome browser tracks for R. Create publication-quality genomic visualizations
+                with just a few lines of code.
+            </p>
+            <div class="hero-actions">
+                <a href="#docs" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                    </svg>
+                    View Documentation
+                </a>
+                <a href="https://github.com/Zepeng-Mu/ezGenomeTracks" class="btn btn-secondary" target="_blank"
+                    rel="noopener noreferrer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="currentColor">
+                        <path
+                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+            <p class="hero-tagline">Designed so you spend time on science, not syntax.</p>
+            <div class="hero-install">
+                <div class="install-block">
+                    <span class="comment"># Install from GitHub</span>
+                    <span class="prompt">&gt;</span>
+                    <code>devtools::install_github(<span class="str">"Zepeng-Mu/ezGenomeTracks"</span>)</code>
+                    <button class="copy-btn"
+                        onclick="navigator.clipboard.writeText('devtools::install_github(&quot;Zepeng-Mu/ezGenomeTracks&quot;)')"
+                        aria-label="Copy to clipboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9.75a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== TRACK TYPES ==================== -->
+    <section class="tracks-section" id="tracks">
+        <div class="container">
+            <div class="section-header center">
+                <span class="section-label">Track Types</span>
+                <h2 class="section-title">Seven tracks, one package</h2>
+                <p class="section-desc">From signal coverage to Hi-C contact matrices, ezGenomeTracks covers the full
+                    spectrum of genomic visualization needs.</p>
+            </div>
+            <div class="tracks-grid">
+                <div class="track-card">
+                    <div class="track-icon teal">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                        </svg>
+                    </div>
+                    <h3 class="track-name">Coverage</h3>
+                    <p class="track-desc">ChIP-seq, ATAC-seq, RNA-seq signal tracks from bigWig files or data frames.
+                    </p>
+                    <span class="track-func">ez_coverage()</span>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon coral">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                        </svg>
+                    </div>
+                    <h3 class="track-name">Gene</h3>
+                    <p class="track-desc">Gene models with exons, introns, and UTRs from TxDb objects or GTF files.</p>
+                    <span class="track-func">ez_gene()</span>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon amber">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                        </svg>
+                    </div>
+                    <h3 class="track-name">Feature / Peak</h3>
+                    <p class="track-desc">Genomic intervals — peaks, enhancers, promoters — from BED files or data
+                        frames.</p>
+                    <span class="track-func">ez_feature()</span>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-2.56a4.5 4.5 0 0 0-1.242-7.244l-4.5-4.5a4.5 4.5 0 0 0-6.364 6.364L4.34 8.87" />
+                        </svg>
+                    </div>
+                    <h3 class="track-name">Link / Arc</h3>
+                    <p class="track-desc">Chromatin loops, enhancer-promoter interactions, and genomic arcs.</p>
+                    <span class="track-func">ez_link()</span>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon purple">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                    </div>
+                    <h3 class="track-name">Sashimi</h3>
+                    <p class="track-desc">RNA-seq splice junction plots with coverage and arc-based junction display.
+                    </p>
+                    <span class="track-func">ez_sashimi()</span>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon green">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                        </svg>
+                    </div>
+                    <h3 class="track-name">Manhattan</h3>
+                    <p class="track-desc">GWAS association plots — genome-wide or regional LocusZoom-style views.</p>
+                    <span class="track-func">ez_manhattan()</span>
+                </div>
+                <div class="track-card">
+                    <div class="track-icon coral">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75 6.429 9.75m11.142 0 4.179 2.25L12 17.25 2.25 12l4.179-2.25m11.142 0L12 7.5" />
+                        </svg>
+                    </div>
+                    <h3 class="track-name">Hi-C</h3>
+                    <p class="track-desc">Contact matrices, TADs, and 3D chromatin structure visualization.</p>
+                    <span class="track-func">ez_hic()</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CODE EXAMPLE ==================== -->
+    <section class="code-section" id="code">
+        <div class="container">
+            <div class="code-layout">
+                <div class="code-text">
+                    <span class="section-label">Simple by Design</span>
+                    <h2 class="section-title">From file to plot in one line</h2>
+                    <p class="section-desc">
+                        ezGenomeTracks handles data import, coordinate parsing, theming, and scaling automatically.
+                        Stack multiple tracks with a shared genomic axis using <code
+                            style="color: var(--text-code); background: rgba(121,192,255,0.1); padding: 2px 8px; border-radius: 4px;">vstack_plot()</code>.
+                    </p>
+                    <ul class="code-features">
+                        <li>Flexible input: file paths, data frames, GRanges, or named lists</li>
+                        <li>Automatic genomic coordinate formatting (kb/Mb)</li>
+                        <li>Clean publication-ready themes out of the box</li>
+                        <li>Full ggplot2 compatibility — add any layer or scale</li>
+                        <li>Multi-sample support via faceted or overlapping tracks</li>
+                    </ul>
+                </div>
+                <div class="code-block-wrapper">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="code-filename">example.R</span>
+                        </div>
+                        <div class="code-body">
+                            <pre><code><span class="kw">library</span>(<span class="str">ezGenomeTracks</span>)
+
+<span class="cmt"># Define a genomic region</span>
+region <span class="op">&lt;-</span> <span class="str">"chr2:231109000-231115000"</span>
+
+<span class="cmt"># Create individual tracks</span>
+cov <span class="op">&lt;-</span> <span class="fn">ez_coverage</span>(
+  bw_file, region,
+  <span class="arg">colors</span> <span class="op">=</span> <span class="str">"steelblue"</span>
+)
+
+genes <span class="op">&lt;-</span> <span class="fn">ez_gene</span>(txdb, region)
+
+<span class="cmt"># Stack with shared x-axis</span>
+<span class="fn">vstack_plot</span>(
+  cov, genes,
+  <span class="arg">region</span> <span class="op">=</span> region,
+  <span class="arg">heights</span> <span class="op">=</span> <span class="fn">c</span>(<span class="num">2</span>, <span class="num">1</span>)
+)</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CAROUSEL ==================== -->
+    <section class="carousel-section" id="examples">
+        <div class="container">
+            <div class="section-header center">
+                <span class="section-label">Examples</span>
+                <h2 class="section-title">See it in action</h2>
+                <p class="section-desc">Publication-quality plots created with just a few lines of R code.</p>
+            </div>
+            <div class="carousel-container">
+                <div class="carousel-viewport" id="carousel">
+                    <div class="carousel-slide active">
+                        <img src="assets/index-example-quick-1.png" alt="Single coverage track example">
+                        <div class="slide-caption">Single coverage track from bigWig file</div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="assets/index-example-multi-1.png" alt="Multi-sample stacked coverage">
+                        <div class="slide-caption">Multi-sample stacked coverage with faceting</div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="assets/gwas-1.png" alt="Manhattan GWAS plot">
+                        <div class="slide-caption">Regional Manhattan plot for GWAS visualization</div>
+                    </div>
+                    <div class="carousel-slide">
+                        <img src="assets/hic-signal-1.png" alt="Hi-C triangle view with signal">
+                        <div class="slide-caption">Hi-C contact matrix with signal tracks</div>
+                    </div>
+                </div>
+                <div class="carousel-nav">
+                    <button class="carousel-btn" id="prevBtn" aria-label="Previous slide">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                        </svg>
+                    </button>
+                    <div class="carousel-dots" id="carouselDots">
+                        <button class="carousel-dot active" data-index="0" aria-label="Go to slide 1"></button>
+                        <button class="carousel-dot" data-index="1" aria-label="Go to slide 2"></button>
+                        <button class="carousel-dot" data-index="2" aria-label="Go to slide 3"></button>
+                        <button class="carousel-dot" data-index="3" aria-label="Go to slide 4"></button>
+                    </div>
+                    <button class="carousel-btn" id="nextBtn" aria-label="Next slide">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FEATURES ==================== -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header center">
+                <span class="section-label">Why ezGenomeTracks</span>
+                <h2 class="section-title">Built for the ggplot2 ecosystem</h2>
+                <p class="section-desc">A different approach to genome browser tracks — modular, composable, and fully
+                    customizable.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon teal">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">ggplot2 Native</h3>
+                    <p class="feature-desc">Every track is a ggplot object. Add layers, scales, themes, and annotations
+                        using the full ggplot2 grammar of graphics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon coral">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Easy Wrappers</h3>
+                    <p class="feature-desc">One-line track creation with <code
+                            style="color: var(--text-code);">ez_*()</code> functions that auto-detect input types, parse
+                        regions, and apply sensible defaults.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon amber">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Stackable</h3>
+                    <p class="feature-desc">Compose complex multi-track figures with <code
+                            style="color: var(--text-code);">vstack_plot()</code> and <code
+                            style="color: var(--text-code);">hstack_plot()</code> — shared axes, controlled heights,
+                        aligned coordinates.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span class="footer-logo"><span class="accent">ez</span>GenomeTracks</span>
+                    <div class="footer-links">
+                        <a href="#docs">Documentation</a>
+                        <a href="https://github.com/Zepeng-Mu/ezGenomeTracks" target="_blank"
+                            rel="noopener noreferrer">GitHub</a>
+                        <a href="#tracks">Tracks</a>
+                    </div>
+                </div>
+                <div class="footer-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                    </svg>
+                    Built with ggplot2
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== CAROUSEL JS ==================== -->
+    <script>
+        (function () {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.carousel-dot');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let current = 0;
+            let autoplayTimer;
+
+            function goTo(index) {
+                slides[current].classList.remove('active');
+                dots[current].classList.remove('active');
+                current = (index + slides.length) % slides.length;
+                slides[current].classList.add('active');
+                dots[current].classList.add('active');
+                resetAutoplay();
+            }
+
+            function resetAutoplay() {
+                clearInterval(autoplayTimer);
+                autoplayTimer = setInterval(() => goTo(current + 1), 5000);
+            }
+
+            prevBtn.addEventListener('click', () => goTo(current - 1));
+            nextBtn.addEventListener('click', () => goTo(current + 1));
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => goTo(parseInt(dot.dataset.index)));
+            });
+
+            resetAutoplay();
+        })();
+    </script>
+</body>
+
+</html>
