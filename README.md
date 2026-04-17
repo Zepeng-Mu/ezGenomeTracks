@@ -14,12 +14,28 @@ Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) an
 
 ## Installation
 
+This package requires several Bioconductor packages. Install them first to avoid compilation errors:
+
+``` r
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install(c(
+    "GenomicRanges",
+    "IRanges",
+    "S4Vectors",
+    "rtracklayer",
+    "GenomicFeatures",
+    "AnnotationDbi"
+))
+```
+
+Then install ezGenomeTracks from GitHub:
+
 ``` r
 # install.packages("devtools")
 devtools::install_github("Zepeng-Mu/ezGenomeTracks")
 ```
-
-(Optionally install Bioconductor dependencies you need, e.g. GenomicRanges, rtracklayer.)
 
 ## Core Concepts
 
