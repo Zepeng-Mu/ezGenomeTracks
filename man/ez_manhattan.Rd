@@ -7,6 +7,11 @@
 ez_manhattan(
   input,
   region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   chr = NULL,
   bp = NULL,
   p = NULL,
@@ -39,7 +44,23 @@ column naming conventions.}
 
 \item{region}{Optional genomic region string (e.g., "chr1:1000000-2000000") to
 force regional mode. When provided, data is filtered to this region and the
-plot uses coordinate-based x-axis consistent with \code{ez_coverage} and \code{ez_gene}.}
+plot uses coordinate-based x-axis consistent with \code{ez_coverage} and \code{ez_gene}.
+Either \code{region} or \code{gene} can be used to specify regional mode.}
+
+\item{gene}{Optional gene name/symbol to look up (e.g., "PTPRC", "TP53").
+When provided, the region is automatically determined from the gene coordinates
+in \code{gene_db}. Forces regional mode.}
+
+\item{gene_db}{TxDb object for gene coordinate lookup when using \code{gene} parameter.}
+
+\item{org_db}{Optional OrgDb object for gene symbol mapping. If NULL (default),
+auto-detects available OrgDb packages.}
+
+\item{extend}{Numeric. Amount to extend the region beyond the gene body when
+using \code{gene} parameter. Default: 0.1 (10\% of gene length on each side).}
+
+\item{extend_type}{How to interpret \code{extend}: "proportion" (relative to gene
+length) or "bp" (absolute base pairs). Default: "proportion".}
 
 \item{chr}{Character string specifying the column name for chromosome numbers.
 Default: "CHR". Also accepts "seqnames", "chrom", etc.}
@@ -135,7 +156,7 @@ with support for grouping and multiple tracks.
 The function creates a Manhattan plot with chromosomes on the x-axis and
 -log10(p-values) on the y-axis. The plot mode is automatically determined:
 \itemize{
-\item \strong{Regional mode}: When \code{region} is provided OR when data contains only one
+\item \strong{Regional mode}: When \code{region} or \code{gene} is provided OR when data contains only one
 chromosome, the plot uses genomic coordinate formatting consistent with
 \code{ez_coverage} and \code{ez_gene}, making it suitable for stacking with other
 tracks via \code{vstack_plot()}. This is ideal for LocusZoom-style regional

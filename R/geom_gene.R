@@ -518,35 +518,9 @@ extract_txdb_data <- function(txdb, region_gr, org.Hs.eg.db = NULL) {
     )
   }
 
-  # Auto-detect OrgDb if not provided
+  # Auto-detect OrgDb if not provided (using shared helper)
   if (is.null(org.Hs.eg.db)) {
-    # Common OrgDb package names to check
-    orgdb_packages <- c(
-      "org.Hs.eg.db",
-      "org.Mm.eg.db",
-      "org.Rn.eg.db",
-      "org.Dm.eg.db",
-      "org.Ce.eg.db",
-      "org.Sc.sgd.db",
-      "org.Dr.eg.db",
-      "org.At.tair.db"
-    )
-
-    for (pkg_name in orgdb_packages) {
-      # Check if package is available and try to load the OrgDb object
-      if (requireNamespace(pkg_name, quietly = TRUE)) {
-        # Use package::package pattern to access the OrgDb object
-        candidate <- tryCatch(
-          eval(parse(text = paste0(pkg_name, "::", pkg_name))),
-          error = function(e) NULL
-        )
-        if (!is.null(candidate) && methods::is(candidate, "OrgDb")) {
-          org.Hs.eg.db <- candidate
-          message("Auto-detected OrgDb: ", pkg_name)
-          break
-        }
-      }
-    }
+    org.Hs.eg.db <- .detect_org_db()
   }
 
   # 1. Extract genes in region

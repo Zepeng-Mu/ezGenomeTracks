@@ -6,7 +6,12 @@
 \usage{
 ez_feature(
   input,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   color = "black",
   fill = "gray70",
   alpha = 0.7,
@@ -21,6 +26,22 @@ genomic coordinates with columns for chromosome, start, and end positions.}
 
 \item{region}{Genomic region to display in the format "chr:start-end".
 Example: "chr1:1000000-2000000"}
+
+\item{gene}{Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+When provided, the region is automatically determined from the gene coordinates
+in \code{gene_db}. Either \code{region} or \code{gene} must be provided.}
+
+\item{gene_db}{TxDb object for gene coordinate lookup when using \code{gene} parameter.}
+
+\item{org_db}{Optional OrgDb object for gene symbol mapping. If NULL (default),
+auto-detects available OrgDb packages.}
+
+\item{extend}{Numeric. Amount to extend the region beyond the gene body when
+using \code{gene} parameter. Default: 0.1 (10\% of gene length on each side).}
+
+\item{extend_type}{How to interpret \code{extend}: "proportion" (relative to gene
+length) or "bp" (absolute base pairs). Default: "proportion".
+Create a feature track from genomic regions}
 
 \item{color}{Border color of the features. Default: "black"}
 

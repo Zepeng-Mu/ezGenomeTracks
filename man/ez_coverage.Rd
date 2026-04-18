@@ -6,7 +6,12 @@
 \usage{
 ez_coverage(
   input,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   track_labels = NULL,
   type = c("area", "line", "heatmap"),
   group_var = NULL,
@@ -29,7 +34,24 @@ ez_coverage(
 \arguments{
 \item{input}{A GRanges object, data frame, character vector of file paths, or named list of data sources.}
 
-\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000").
+Either \code{region} or \code{gene} (with \code{gene_db}) must be provided.}
+
+\item{gene}{Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+When provided, the region is automatically determined from the gene coordinates
+in \code{gene_db}. Either \code{region} or \code{gene} must be provided.}
+
+\item{gene_db}{TxDb object for gene coordinate lookup when using \code{gene} parameter
+(e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).}
+
+\item{org_db}{Optional OrgDb object for gene symbol mapping. If NULL (default),
+auto-detects available OrgDb packages.}
+
+\item{extend}{Numeric. Amount to extend the region beyond the gene body when
+using \code{gene} parameter. Default: 0.1 (10\% of gene length on each side).}
+
+\item{extend_type}{How to interpret \code{extend}: "proportion" (relative to gene
+length) or "bp" (absolute base pairs). Default: "proportion".}
 
 \item{track_labels}{Optional vector of track labels (used for character vector input)}
 
@@ -107,4 +129,10 @@ df <- data.frame(
   score = rnorm(100), sample = rep(c("A", "B"), 50)
 )
 ez_coverage(df, "chr1:1-100", group_var = "sample", colors = c("blue", "orange"))
+
+\dontrun{
+# Using gene name instead of coordinates
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+ez_coverage(signal_data, gene = "PTPRC", gene_db = TxDb.Hsapiens.UCSC.hg38.knownGene)
+}
 }

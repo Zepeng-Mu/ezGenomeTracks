@@ -1,10 +1,67 @@
+# Internal helper to resolve region from either region string or gene name
+# This avoids code duplication across ez_* functions
+#' @noRd
+.resolve_region <- function(
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp")
+) {
+  extend_type <- match.arg(extend_type)
+
+  # Case 1: region provided directly
+  if (!is.null(region)) {
+    if (!is.null(gene)) {
+      warning(
+        "Both 'region' and 'gene' provided. Using 'region' and ignoring 'gene'."
+      )
+    }
+    return(region)
+  }
+
+  # Case 2: gene name provided - look up coordinates
+  if (!is.null(gene)) {
+    if (is.null(gene_db)) {
+      stop(
+        "When using 'gene' parameter, 'gene_db' (TxDb object) must be provided ",
+        "for coordinate lookup."
+      )
+    }
+    return(gene_to_region(
+      gene_name = gene,
+      txdb = gene_db,
+      org_db = org_db,
+      extend = extend,
+      extend_type = extend_type
+    ))
+  }
+
+  # Case 3: neither provided
+  stop("Either 'region' or 'gene' (with 'gene_db') must be provided.")
+}
+
+
 #' Easy coverage track visualization
 #'
 #' This function creates a coverage track visualization from various input types.
 #' It provides a flexible interface with support for grouping and multiple tracks.
 #'
 #' @param input A GRanges object, data frame, character vector of file paths, or named list of data sources.
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000").
+#'   Either `region` or `gene` (with `gene_db`) must be provided.
+#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Either `region` or `gene` must be provided.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter
+#'   (e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' @param track_labels Optional vector of track labels (used for character vector input)
 #' @param type Type of signal visualization: "line", "area", or "heatmap" (default: "area")
 #' @param group_var Column name for grouping data within a single data frame (default: NULL)
@@ -59,9 +116,20 @@
 #'   score = rnorm(100), sample = rep(c("A", "B"), 50)
 #' )
 #' ez_coverage(df, "chr1:1-100", group_var = "sample", colors = c("blue", "orange"))
+#'
+#' \dontrun{
+#' # Using gene name instead of coordinates
+#' library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' ez_coverage(signal_data, gene = "PTPRC", gene_db = TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' }
 ez_coverage <- function(
   input,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   track_labels = NULL,
   type = c("area", "line", "heatmap"),
   group_var = NULL,
@@ -80,6 +148,16 @@ ez_coverage <- function(
   average_bin_width = 50,
   ...
 ) {
+  # Resolve region from either region string or gene name
+  region <- .resolve_region(
+    region = region,
+    gene = gene,
+    gene_db = gene_db,
+    org_db = org_db,
+    extend = extend,
+    extend_type = extend_type
+  )
+
   # Validate inputs
   type <- match.arg(type)
   y_axis_style <- match.arg(y_axis_style)
@@ -90,7 +168,6 @@ ez_coverage <- function(
 
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
-    "region must be provided" = !missing(region),
     "bin_width must be positive integer" = is.null(bin_width) ||
       (bin_width > 0 && is.integer(bin_width))
   )
@@ -458,7 +535,18 @@ ez_coverage <- function(
 #' It is a wrapper around geom_feature that provides a simpler interface.
 #'
 #' @param input A BED file path or data frame with peak data
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000").
+#'   Either `region` or `gene` (with `gene_db`) must be provided.
+#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Either `region` or `gene` must be provided.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' Create a feature track from genomic regions
 #'
 #' @description
@@ -512,7 +600,12 @@ ez_coverage <- function(
 #' )
 ez_feature <- function(
   input,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   color = "black",
   fill = "gray70",
   alpha = 0.7,
@@ -520,6 +613,16 @@ ez_feature <- function(
   use_score = FALSE,
   ...
 ) {
+  # Resolve region from either region string or gene name
+  region <- .resolve_region(
+    region = region,
+    gene = gene,
+    gene_db = gene_db,
+    org_db = org_db,
+    extend = extend,
+    extend_type = extend_type
+  )
+
   # Check if data is a file path or data frame
   if (is.character(input) && length(input) == 1) {
     # It's a file path, import it as a data frame
@@ -582,6 +685,17 @@ ez_feature <- function(
 #' @param region Optional genomic region string (e.g., "chr1:1000000-2000000") to
 #'   force regional mode. When provided, data is filtered to this region and the
 #'   plot uses coordinate-based x-axis consistent with `ez_coverage` and `ez_gene`.
+#'   Either `region` or `gene` can be used to specify regional mode.
+#' @param gene Optional gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Forces regional mode.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' @param chr Character string specifying the column name for chromosome numbers.
 #'   Default: "CHR". Also accepts "seqnames", "chrom", etc.
 #' @param bp Character string specifying the column name for base pair positions.
@@ -640,7 +754,7 @@ ez_feature <- function(
 #' The function creates a Manhattan plot with chromosomes on the x-axis and
 #' -log10(p-values) on the y-axis. The plot mode is automatically determined:
 #'
-#' - **Regional mode**: When `region` is provided OR when data contains only one
+#' - **Regional mode**: When `region` or `gene` is provided OR when data contains only one
 #'   chromosome, the plot uses genomic coordinate formatting consistent with
 #'   `ez_coverage` and `ez_gene`, making it suitable for stacking with other
 #'   tracks via `vstack_plot()`. This is ideal for LocusZoom-style regional
@@ -674,6 +788,11 @@ ez_feature <- function(
 ez_manhattan <- function(
   input,
   region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   chr = NULL,
   bp = NULL,
   p = NULL,
@@ -697,6 +816,20 @@ ez_manhattan <- function(
   facet_label_position = c("top", "left"),
   ...
 ) {
+  # Resolve region from gene name if provided
+  if (!is.null(gene)) {
+    if (is.null(gene_db)) {
+      stop("When using 'gene' parameter, 'gene_db' (TxDb object) must be provided.")
+    }
+    region <- gene_to_region(
+      gene_name = gene,
+      txdb = gene_db,
+      org_db = org_db,
+      extend = extend,
+      extend_type = match.arg(extend_type)
+    )
+  }
+
   # Validate inputs
   y_axis_style <- match.arg(y_axis_style)
   facet_label_position <- match.arg(facet_label_position)
@@ -929,7 +1062,19 @@ ez_manhattan <- function(
 #'   - A TxDb object from the GenomicFeatures package
 #'   - A data frame with gene annotation data
 #' @param region Genomic region to display in the format "chr:start-end".
-#'   Example: "chr1:1000000-2000000"
+#'   Example: "chr1:1000000-2000000". Either `region` or `gene` (with `gene_db`)
+#'   must be provided.
+#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Either `region` or `gene` must be provided.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
+#'   Can be the same as `data` if `data` is also a TxDb.
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' @param exon_height Relative height of exons (0 to 1). Default: 0.4
 #' @param intron_width Line width for introns. Default: 0.4
 #' @param exon_color Border color for exons. Default: NULL (uses strand-based colors
@@ -1037,9 +1182,21 @@ ez_manhattan <- function(
 #'
 #' # No labels
 #' ez_gene(example_genes, "chr1:11869-14409", label_style = "none")
+#'
+#' \dontrun{
+#' # Using gene name for region lookup
+#' library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+#' ez_gene(txdb, gene = "PTPRC", gene_db = txdb)
+#' }
 ez_gene <- function(
   data,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   exon_height = 0.2,
   intron_width = 0.6,
   exon_color = NULL,
@@ -1057,6 +1214,16 @@ ez_gene <- function(
   repel_args = list(),
   ...
 ) {
+  # Resolve region from either region string or gene name
+  region <- .resolve_region(
+    region = region,
+    gene = gene,
+    gene_db = gene_db,
+    org_db = org_db,
+    extend = extend,
+    extend_type = extend_type
+  )
+
   # Match label_style argument
   label_style <- match.arg(label_style)
   # Filter out 'color' and 'colour' from ... to prevent them from overriding
@@ -1485,7 +1652,18 @@ ez_gene <- function(
 #'
 #' @param input A GRanges, GInteractions, data frame, character vector of file paths,
 #'   or named list of data sources with interaction data.
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000").
+#'   Either `region` or `gene` (with `gene_db`) must be provided.
+#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Either `region` or `gene` must be provided.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' @param track_labels Optional vector of track labels (used for character vector input)
 #' @param group_var Column name for grouping data within a single data frame (default: NULL)
 #' @param color_by Whether colors distinguish "group" or "track" (default: "group")
@@ -1556,7 +1734,12 @@ ez_gene <- function(
 #' ez_link(df, "chr1:1-10000", group_var = "sample", colors = c("blue", "orange"))
 ez_link <- function(
   input,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   track_labels = NULL,
   group_var = NULL,
   color_by = c("group", "track"),
@@ -1572,14 +1755,23 @@ ez_link <- function(
   show_legend = FALSE,
   ...
 ) {
+  # Resolve region from either region string or gene name
+  region <- .resolve_region(
+    region = region,
+    gene = gene,
+    gene_db = gene_db,
+    org_db = org_db,
+    extend = extend,
+    extend_type = extend_type
+  )
+
   # Validate inputs
   direction <- match.arg(direction)
   color_by <- match.arg(color_by)
   facet_label_position <- match.arg(facet_label_position)
 
   stopifnot(
-    "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
-    "region must be provided" = !missing(region)
+    "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1
   )
 
   # Process input using helper function (handles GRanges, GInteractions, data.frame, character, list)
@@ -1796,7 +1988,18 @@ ez_link <- function(
 #'     junction_data must also be a single source.
 #'   - If coverage_data is a named list, junction_data must be a named list with
 #'     the same names.
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000").
+#'   Either `region` or `gene` (with `gene_db`) must be provided.
+#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Either `region` or `gene` must be provided.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' @param track_labels Optional vector of track labels (used for unnamed list input)
 #' @param colors Color(s) for coverage fill and junction arcs. Can be a single color
 #'   or a vector of colors for multiple tracks. If fewer colors than tracks are
@@ -1868,7 +2071,12 @@ ez_link <- function(
 ez_sashimi <- function(
   coverage_data,
   junction_data,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   track_labels = NULL,
   colors = NULL,
   coverage_fill = NULL,
@@ -1887,6 +2095,16 @@ ez_sashimi <- function(
   show_legend = FALSE,
   ...
 ) {
+  # Resolve region from either region string or gene name
+  region <- .resolve_region(
+    region = region,
+    gene = gene,
+    gene_db = gene_db,
+    org_db = org_db,
+    extend = extend,
+    extend_type = extend_type
+  )
+
   # Validate inputs
   junction_direction <- match.arg(junction_direction)
   score_transform <- match.arg(score_transform)
@@ -1895,7 +2113,6 @@ ez_sashimi <- function(
 
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
-    "region must be provided" = !missing(region),
     "linewidth_range must be a numeric vector of length 2" = is.numeric(
       linewidth_range
     ) &&
@@ -2226,7 +2443,18 @@ ez_sashimi <- function(
 #'     \item A data frame: Sparse format with (pos1, pos2, score) or (bin1, bin2, score)
 #'     \item A file path: Tab-delimited matrix file
 #'   }
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000")
+#' @param region Genomic region to display (e.g., "chr1:1000000-2000000").
+#'   Either `region` or `gene` (with `gene_db`) must be provided.
+#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Either `region` or `gene` must be provided.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' @param resolution Resolution of the Hi-C data in base pairs (default: 10000)
 #' @param style Visualization style: "triangle" (default, rotated view) or "square"
 #' @param palette Color palette: "cooler" (red, default), "ylgnbu", "viridis", or "bwr"
@@ -2275,10 +2503,19 @@ ez_sashimi <- function(
 #'   rasterize = TRUE,
 #'   rasterize_dpi = 300
 #' )
+#'
+#' # Using gene name for region lookup
+#' library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' ez_hic(hic_data, gene = "PTPRC", gene_db = TxDb.Hsapiens.UCSC.hg38.knownGene)
 #' }
 ez_hic <- function(
   data,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   resolution = 10000,
   style = c("triangle", "square"),
   palette = c("cooler", "ylgnbu", "viridis", "bwr"),
@@ -2290,6 +2527,16 @@ ez_hic <- function(
   show_diagonal = TRUE,
   ...
 ) {
+  # Resolve region from either region string or gene name
+  region <- .resolve_region(
+    region = region,
+    gene = gene,
+    gene_db = gene_db,
+    org_db = org_db,
+    extend = extend,
+    extend_type = extend_type
+  )
+
   style <- match.arg(style)
   palette <- match.arg(palette)
 

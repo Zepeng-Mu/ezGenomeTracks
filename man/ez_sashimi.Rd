@@ -7,7 +7,12 @@
 ez_sashimi(
   coverage_data,
   junction_data,
-  region,
+  region = NULL,
+  gene = NULL,
+  gene_db = NULL,
+  org_db = NULL,
+  extend = 0.1,
+  extend_type = c("proportion", "bp"),
   track_labels = NULL,
   colors = NULL,
   coverage_fill = NULL,
@@ -40,7 +45,23 @@ junction_data must also be a single source.
 the same names.
 }}
 
-\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000")}
+\item{region}{Genomic region to display (e.g., "chr1:1000000-2000000").
+Either \code{region} or \code{gene} (with \code{gene_db}) must be provided.}
+
+\item{gene}{Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+When provided, the region is automatically determined from the gene coordinates
+in \code{gene_db}. Either \code{region} or \code{gene} must be provided.}
+
+\item{gene_db}{TxDb object for gene coordinate lookup when using \code{gene} parameter.}
+
+\item{org_db}{Optional OrgDb object for gene symbol mapping. If NULL (default),
+auto-detects available OrgDb packages.}
+
+\item{extend}{Numeric. Amount to extend the region beyond the gene body when
+using \code{gene} parameter. Default: 0.1 (10\% of gene length on each side).}
+
+\item{extend_type}{How to interpret \code{extend}: "proportion" (relative to gene
+length) or "bp" (absolute base pairs). Default: "proportion".}
 
 \item{track_labels}{Optional vector of track labels (used for unnamed list input)}
 
