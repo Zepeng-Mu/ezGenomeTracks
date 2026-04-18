@@ -1,4 +1,4 @@
-# ezGenomeTracks - Wrapper functions (split from ez_wrappers.R)
+# ezGenomeTracks - Hic functions (split from ez_wrappers.R)
 #' Easy Hi-C track visualization
 #'
 #' This function creates a Hi-C contact matrix visualization from various input types.

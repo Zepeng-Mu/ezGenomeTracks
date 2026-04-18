@@ -1,4 +1,4 @@
-# ezGenomeTracks - Wrapper functions (split from ez_wrappers.R)
+# ezGenomeTracks - Sashimi functions (split from ez_wrappers.R)
 #' Easy sashimi plot visualization
 #'
 #' This function creates a sashimi plot combining coverage tracks with splice junction arcs.

@@ -1,4 +1,4 @@
-# ezGenomeTracks - Wrapper functions (split from ez_wrappers.R)
+# ezGenomeTracks - Coverage functions (split from ez_wrappers.R)
 # Internal helper to resolve region from either region string or gene name
 # This avoids code duplication across ez_* functions
 #' @noRd

@@ -1,4 +1,4 @@
-# ezGenomeTracks - Wrapper functions (split from ez_wrappers.R)
+# ezGenomeTracks - Feature functions (split from ez_wrappers.R)
 #' Easy peak track visualization
 #'
 #' This function creates a peak track visualization from a BED file or data frame.

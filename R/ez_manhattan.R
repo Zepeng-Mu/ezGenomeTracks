@@ -1,4 +1,4 @@
-# ezGenomeTracks - Wrapper functions (split from ez_wrappers.R)
+# ezGenomeTracks - Manhattan functions (split from ez_wrappers.R)
 #' Easy Manhattan plot visualization
 #'
 #' This function creates a Manhattan plot for GWAS results.

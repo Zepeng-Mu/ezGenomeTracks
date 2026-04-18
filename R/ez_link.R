@@ -1,4 +1,4 @@
-# ezGenomeTracks - Wrapper functions (split from ez_wrappers.R)
+# ezGenomeTracks - Link functions (split from ez_wrappers.R)
 #' Easy interaction track visualization
 #'
 #' This function creates an interaction track visualization from various input types.

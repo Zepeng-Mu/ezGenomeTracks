@@ -1,4 +1,4 @@
-# ezGenomeTracks - Wrapper functions (split from ez_wrappers.R)
+# ezGenomeTracks - Gene functions (split from ez_wrappers.R)
 #' Easy gene track visualization
 #'
 #' @description
