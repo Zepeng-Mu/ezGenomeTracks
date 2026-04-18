@@ -50,7 +50,7 @@ geom_hic <- function(
   show.legend = NA,
   inherit.aes = TRUE
 ) {
-  layer_obj <- layer_obj <- ggplot2::layer(
+  layer_obj <- ggplot2::layer(
     data = data,
     mapping = mapping,
     stat = stat,
@@ -221,7 +221,7 @@ geom_hic_triangle <- function(
   show.legend = NA,
   inherit.aes = TRUE
 ) {
-  layer_obj <- layer_obj <- ggplot2::layer(
+  layer_obj <- ggplot2::layer(
     data = data,
     mapping = mapping,
     stat = stat,

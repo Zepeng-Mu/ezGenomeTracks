@@ -178,3 +178,113 @@ test_that("error handling works correctly", {
   expect_error(parse_region("invalid_region"))
   expect_error(parse_region("chr1:1000")) # Missing end
 })
+
+# Tests for gene_to_region function
+test_that("gene_to_region validates inputs correctly", {
+  # Test invalid gene_name inputs
+  expect_error(gene_to_region(NULL, "fake_txdb"), "gene_name must be a single")
+  expect_error(gene_to_region("", "fake_txdb"), "gene_name must be a single")
+  expect_error(gene_to_region(c("A", "B"), "fake_txdb"), "gene_name must be a single")
+  expect_error(gene_to_region(123, "fake_txdb"), "gene_name must be a single")
+
+  # Test invalid txdb (not a TxDb object)
+  expect_error(gene_to_region("PTPRC", "fake_txdb"), "txdb must be a TxDb object")
+  expect_error(gene_to_region("PTPRC", data.frame()), "txdb must be a TxDb object")
+
+  # Test invalid extend
+  skip_if_not_installed("GenomicFeatures")
+  skip_if_not_installed("TxDb.Hsapiens.UCSC.hg38.knownGene")
+  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
+  expect_error(gene_to_region("PTPRC", txdb, extend = -0.1), "extend must be a non-negative")
+})
+
+test_that("gene_to_region with TxDb returns valid region string", {
+  skip_if_not_installed("GenomicFeatures")
+  skip_if_not_installed("TxDb.Hsapiens.UCSC.hg38.knownGene")
+  skip_if_not_installed("org.Hs.eg.db")
+
+  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
+
+  # Test with a known gene (TP53 is well-characterized)
+  result <- gene_to_region("TP53", txdb, extend = 0.1)
+
+  # Check result is a valid region string format
+  expect_type(result, "character")
+  expect_length(result, 1)
+  expect_match(result, "^chr[0-9XY]+:[0-9]+-[0-9]+$")
+
+  # Parse the result and validate
+  region_gr <- parse_region(result)
+  expect_s4_class(region_gr, "GRanges")
+  expect_equal(length(region_gr), 1)
+})
+
+test_that("gene_to_region handles extend_type correctly", {
+  skip_if_not_installed("GenomicFeatures")
+  skip_if_not_installed("TxDb.Hsapiens.UCSC.hg38.knownGene")
+  skip_if_not_installed("org.Hs.eg.db")
+
+  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
+
+  # Test proportion-based extension
+  result_prop <- gene_to_region("TP53", txdb, extend = 0.1, extend_type = "proportion")
+  expect_type(result_prop, "character")
+
+  # Test bp-based extension
+  result_bp <- gene_to_region("TP53", txdb, extend = 5000, extend_type = "bp")
+  expect_type(result_bp, "character")
+
+  # Results should be different
+  expect_true(result_prop != result_bp)
+})
+
+test_that("gene_to_region returns error for invalid gene", {
+  skip_if_not_installed("GenomicFeatures")
+  skip_if_not_installed("TxDb.Hsapiens.UCSC.hg38.knownGene")
+  skip_if_not_installed("org.Hs.eg.db")
+
+  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
+
+  # Test with a fake gene name (error message varies by OrgDb state)
+  expect_error(gene_to_region("FAKEGENE12345", txdb))
+})
+
+test_that(".detect_org_db returns OrgDb or NULL", {
+  # This test just verifies the function doesn't error
+  result <- ezGenomeTracks:::.detect_org_db()
+
+  # Result should be either NULL or an OrgDb
+  if (!is.null(result)) {
+    expect_true(methods::is(result, "OrgDb"))
+  }
+})
+
+test_that(".resolve_region handles different input combinations", {
+  # Test with region provided
+  result1 <- ezGenomeTracks:::.resolve_region(region = "chr1:1000-2000")
+  expect_equal(result1, "chr1:1000-2000")
+
+  # Test with neither region nor gene
+
+  expect_error(
+    ezGenomeTracks:::.resolve_region(region = NULL, gene = NULL),
+    "Either 'region' or 'gene'"
+  )
+
+  # Test with gene but missing gene_db
+  expect_error(
+    ezGenomeTracks:::.resolve_region(gene = "TP53", gene_db = NULL),
+    "'gene_db'"
+  )
+
+  # Test with both region and gene (should warn and use region)
+  expect_warning(
+    result2 <- ezGenomeTracks:::.resolve_region(
+      region = "chr1:1000-2000",
+      gene = "TP53",
+      gene_db = "fake_db"
+    ),
+    "Using 'region'"
+  )
+  expect_equal(result2, "chr1:1000-2000")
+})

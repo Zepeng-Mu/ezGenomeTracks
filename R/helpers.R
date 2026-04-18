@@ -269,6 +269,9 @@ get_single_signal <- function(input, region, name = NULL) {
     # Single track, file name
     track_data <- import_genomic_data(input, which = region_gr) |>
       dplyr::mutate(name = name)
+  } else {
+    stop("Input must be a data.frame or file path (character), got: ",
+         paste(class(input), collapse = "/"))
   }
 
   return(track_data)
