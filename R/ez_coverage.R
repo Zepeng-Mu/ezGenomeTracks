@@ -528,9 +528,17 @@ ez_coverage <- function(
     p <- apply_border_theme(p)
   }
 
-  # Remove spacing between facet panels (applied last to avoid being overwritten)
+  # Apply facet label theming last (after all other themes, so it doesn't get overwritten)
   if (has_track) {
-    p <- p + ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
+    if (facet_label_position == "left") {
+      p <- p + ggplot2::theme(
+        strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
+        strip.placement = "inside",
+        panel.spacing.y = ggplot2::unit(0, "pt")
+      )
+    } else {
+      p <- p + ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
+    }
   }
 
   return(p)

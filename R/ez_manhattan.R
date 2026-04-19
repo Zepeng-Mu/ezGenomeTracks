@@ -284,10 +284,6 @@ ez_manhattan <- function(
             ncol = 1,
             scales = "free_y",
             strip.position = "left"
-          ) +
-          ggplot2::theme(
-            strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
-            strip.placement = "outside"
           )
       } else {
         plot_obj <- plot_obj +
@@ -296,6 +292,15 @@ ez_manhattan <- function(
     }
 
     plot_obj <- plot_obj + ez_theme()
+
+    # Apply facet label theming last (after ez_theme, so it doesn't get overwritten)
+    if (has_track && facet_label_position == "left") {
+      plot_obj <- plot_obj +
+        ggplot2::theme(
+          strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
+          strip.placement = "outside"
+        )
+    }
   } else {
     # Standard single-track genome-wide Manhattan plot
     plot_obj <- ggplot2::ggplot(plotDt) +
