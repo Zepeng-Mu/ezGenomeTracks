@@ -15,13 +15,13 @@ library(ezGenomeTracks)
 
 # Motivation
 
-There are several R/python packages that plot genome browser tracks, but most of them require a lot of coding to set up. PygenomeTracks is one of my favorite, but it requires writing `.ini` configuration files and running command-line tools, which can be cumbersome for R users, and is not flexible for data exploration.
+There have been several R/python packages that plot genome browser tracks, but most of them require a lot of coding to set up. PygenomeTracks is one of my favorite, but it requires writing `.ini` configuration files and running command-line tools, which can be cumbersome for R users, and is not flexible for generating a large number of plots in exploratory data analysis.
 
-Using `ggplot2`, it is possible to generate beautiful genome browser plots, although it typically requires a lot of custom code and data wrangling. That motivated me to create an R package that is based on `ggplot2`, while providing simple high-level functions for common track types. The goal is to make it easy to create publication-quality genome browser plots with minimal code, while still allowing for advanced customization when needed.
+Using `ggplot2`, it is possible to generate beautiful genome browser tracks, although it typically requires a lot of custom code and data wrangling. That motivated me to create an R package that is based on `ggplot2`, while providing simple high-level functions for common track types. The goal is to make it easy to create publication-quality genome browser plots with minimal code for most users, while still allowing for advanced customization for a smaller number of power users.
 
 # Design principles
 
-ezGenomeTracks is designed around three core principles: modular ggplot2 geoms, simple high-level wrappers, and consistent genomic scaling and styling. The package provides both low-level building blocks for advanced customization and easy-to-use helpers for quick plotting.
+`ezGenomeTracks` is designed around three core principles: modular ggplot2 geoms, simple high-level wrappers, and consistent genomic scaling and styling. The package provides both low-level building blocks for advanced customization and easy-to-use helpers for quick plotting.
 
 **Easy `ez_*` wrappers**: For most common use-cases the package provides `ez_*()` helper functions such as `ez_coverage()`, `ez_gene()`, and `ez_feature()`. These wrappers accept flexible input types (file paths, `data.frame`, `GRanges`, or named lists) and internally prepare the data, select sensible defaults, and return a full ggplot2 layer or complete track that you can stack with `vstack_plot()`. I imagine most users will primarily use these high-level wrappers for quick plotting.
 

@@ -4,6 +4,9 @@ library(GenomicRanges)
 library(IRanges)
 library(usethis)
 
+# Prevent scientific notation in output files (e.g., 1e+06 instead of 1000000)
+options(scipen = 999)
+
 # Set seed for reproducibility
 set.seed(42)
 
