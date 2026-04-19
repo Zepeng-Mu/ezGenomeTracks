@@ -117,6 +117,14 @@ GeomCoverage <- ggproto(
   "GeomCoverage",
   Geom,
   required_aes = c("start", "end", "ymin", "ymax"),
+  setup_data = function(data, params) {
+    # Transform start/end to xmin/xmax early so ggplot2 computes
+
+    # the correct x-axis range from the data
+    data$xmin <- data$start
+    data$xmax <- data$end
+    data
+  },
   setup_params = function(data, params) {
     params$type <- match.arg(params$type, c("area", "line", "heatmap"))
     params

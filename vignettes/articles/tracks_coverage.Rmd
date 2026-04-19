@@ -202,8 +202,7 @@ head(bw0_cov)
 
 ```{r, fig.height=4}
 ggplot(bw0_cov) +
-  geom_coverage() +
-  scale_x_genome_region("chr2:231109000-231115000")
+  geom_coverage()
 ```
 
-As you can see, `geom_coverage` automatically looks for default columns need to plot coverage data, but more code are needed to make the plot look like what `ez_coverage` outputs.
+As shown above, `geom_coverage` automatically looks for default columns need to plot coverage data, but more code are needed to make the plot look like what `ez_coverage` outputs.
