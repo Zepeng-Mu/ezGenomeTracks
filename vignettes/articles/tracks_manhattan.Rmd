@@ -75,7 +75,7 @@ ez_locusZoom(
 
 ### With LD coloring
 
-You can use the `r2` option to color the dots by linkage disequilibrium with a lead variant. This creates the classic LocusZoom color gradient.
+You can use the `r2` option to color the dots by linkage disequilibrium with a lead variant. This creates the classic LocusZoom color gradient. For demonstration purpose, here we use p-value to create a continuous color for `r2`.
 
 ```{r}
 # Simulated r2 values (in practice, these come from LD calculations)
@@ -89,14 +89,4 @@ ez_locusZoom(
   r2 = r2_values,
   size = 2
 )
-```
-
-### Stacking with gene tracks
-
-Since `ez_locusZoom()` uses consistent genomic coordinate formatting, it can be stacked with other tracks using `vstack_plot()`:
-```r
-# Example (requires TxDb)
-p1 <- ez_locusZoom(gwas_results, region = "chr17:7500000-7700000", r2 = ld_values)
-p2 <- ez_gene(txdb, region = "chr17:7500000-7700000")
-vstack_plot(p1, p2, heights = c(2, 1))
 ```

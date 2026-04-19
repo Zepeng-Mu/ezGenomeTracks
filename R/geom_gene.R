@@ -33,7 +33,6 @@
 #' - Optional directional arrows for strand indication
 #' - Integration with ggplot2's theming system
 #'
-#' @inheritParams ggplot2::layer
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
 #' @param stat The statistical transformation to use on the data.
