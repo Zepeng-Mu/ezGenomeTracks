@@ -476,6 +476,10 @@ geom_manhattan <- function(
 
     # For genome-wide mode, need to adjust BP positions
     if (!is_regional && exists("data_cum")) {
+      # Ensure CHR type matches for join (data_cum CHR may be factor)
+      if (is.factor(data_cum$CHR)) {
+        hl_data$CHR <- factor(hl_data$CHR, levels = levels(data_cum$CHR))
+      }
       hl_data <- hl_data |>
         dplyr::inner_join(data_cum, by = "CHR") |>
         dplyr::mutate(BP = .data$BP + .data$BP_add)

@@ -13,11 +13,14 @@ knitr::opts_chunk$set(
 library(ezGenomeTracks)
 ```
 
-`ezGenomeTracks` allows for two type of Manhattan plots. First, a genome-wide Manhattan when more than one chromosome is involved. This is very typical for GWAS results. Second, a region-level Manhattan plot, which is more similar to a LocusZoom plot.
+`ezGenomeTracks` provides two specialized functions for visualizing GWAS association data:
+
+- **`ez_manhattan()`** - Genome-wide Manhattan plots across multiple chromosomes
+- **`ez_locusZoom()`** - Regional association plots (LocusZoom-style) for a single locus
 
 ## Genome-wide Manhattan plot
 
-We use the example GWAS data from `qqman` package to demonstrate genome-wide Manhattan.
+Use `ez_manhattan()` to visualize GWAS results across the entire genome. We use the example GWAS data from `qqman` package to demonstrate.
 
 ```{r}
 library(qqman)
@@ -30,26 +33,70 @@ ez_manhattan(
   chr = "CHR",
   bp = "BP",
   p = "P",
-  color_by = "CHR",
   colors = c("grey", "skyblue")
 )
 ```
 
-## Region-level Manhattan plot
-
-You can use `r2` option to color the dots with LD information.
+You can add a genome-wide significance threshold line:
 
 ```{r}
-region <- "chr3:200-500"
-locusResults <- gwasResults |> 
-  dplyr::filter(CHR == 3 & BP > 200 & BP < 500)
-
 ez_manhattan(
+  input = gwasResults,
+  chr = "CHR",
+  bp = "BP",
+  p = "P",
+  colors = c("grey", "skyblue"),
+  threshold_p = 5e-8,
+  threshold_color = "red"
+)
+```
+
+## Regional association plot (LocusZoom-style)
+
+Use `ez_locusZoom()` to create regional association plots focused on a single locus. This is ideal for fine-mapping visualization and can be stacked with other genomic tracks.
+
+```{r}
+# Filter data to a specific region
+region <- "chr3:200-500"
+locusResults <- gwasResults |>
+  dplyr::filter(CHR == 3 & BP > 200 & BP < 500)
+```
+
+### Basic regional plot
+
+```{r}
+ez_locusZoom(
+  input = locusResults,
+  region = region,
+  snp = "SNP",
+  size = 1
+)
+```
+
+### With LD coloring
+
+You can use the `r2` option to color the dots by linkage disequilibrium with a lead variant. This creates the classic LocusZoom color gradient.
+
+```{r}
+# Simulated r2 values (in practice, these come from LD calculations)
+r2_values <- -log10(locusResults$P) / max(-log10(locusResults$P))
+
+ez_locusZoom(
   input = locusResults,
   region = region,
   snp = "SNP",
   lead_snp = "rs3057",
-  r2 = -log10(locusResults$P) / max(-log10(locusResults$P)),
-  size = 1
+  r2 = r2_values,
+  size = 2
 )
+```
+
+### Stacking with gene tracks
+
+Since `ez_locusZoom()` uses consistent genomic coordinate formatting, it can be stacked with other tracks using `vstack_plot()`:
+```r
+# Example (requires TxDb)
+p1 <- ez_locusZoom(gwas_results, region = "chr17:7500000-7700000", r2 = ld_values)
+p2 <- ez_gene(txdb, region = "chr17:7500000-7700000")
+vstack_plot(p1, p2, heights = c(2, 1))
 ```

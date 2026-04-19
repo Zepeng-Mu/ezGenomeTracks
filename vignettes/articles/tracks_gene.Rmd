@@ -26,6 +26,8 @@ txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 
 ## Plot genes with `ez_gene`
 
+By default, `ez_gene` detects an `org.Hs.eg.db` object in the work space, converts Ensembl gene name to gene symbols, seperates genes by strand.
+
 ```{r, fig.height=1}
 geneRegion <- "chr10:6,012,410-6,063,160"
 
