@@ -12,25 +12,29 @@
    - Use ggproto objects (e.g., `GeomGene`, `GeomCoverage`)
 
 2. **Easy wrappers** (`ez_*`): High-level convenience functions that combine geoms with themes/scales
-   - `ez_coverage()`, `ez_gene()`, `ez_feature()`, `ez_arc()`, `ez_manhattan()`
-   - All in `R/ez_wrappers.R`
+   - `ez_coverage()`, `ez_gene()`, `ez_feature()`, `ez_link()`, `ez_hic()`, `ez_manhattan()`, `ez_sashimi()`
+   - Each in separate files: `R/ez_coverage.R`, `R/ez_gene.R`, `R/ez_feature.R`, etc.
    - Handle multiple input types: file paths, data frames, named lists
    - Apply appropriate themes automatically
 
-3. **Track composition** (`genome_plot()`): Stacks multiple tracks with aligned x-axes
-   - Uses `aplot::plot_list()` for vertical stacking
-   - Located in `R/genome_plot.R`
+3. **Track composition** (`vstack_plot()`/`hstack_plot()`): Stacks multiple tracks
+   - Uses `aplot::insert_bottom()` and `aplot::insert_right()` for stacking
+   - Located in `R/stack_plot.R`
 
 ### Data Flow Pattern
 ```
-Input (file/df/list) → process_*_data() → ez_*() → geom_*() → theme/scales → genome_plot()
+Input (file/df/list) → process_*_data() → ez_*() → geom_*() → theme/scales → vstack_plot()
 ```
 
-**Critical helpers in `R/helpers.R`:**
-- `parse_region()`: Converts "chr1:1000-2000" strings to GRanges objects
-- `process_signal_input()`: Normalizes diverse input types (df/files/lists) into standardized format
-- `granges_to_df()`/`df_to_granges()`: Bidirectional GRanges ↔ data frame conversion
-- `import_genomic_data()`: Wraps rtracklayer::import for file reading
+**Helper functions (split by domain in `R/helpers_*.R`):**
+- `helpers_region.R`: `parse_region()` - converts "chr1:1000-2000" strings to GRanges
+- `helpers_conversions.R`: `granges_to_df()`/`df_to_granges()` - bidirectional conversion
+- `helpers_signal.R`: `process_signal_input()` - normalizes diverse input types
+- `helpers_processing.R`: `get_single_signal()`, `import_genomic_data()` - data extraction
+- `helpers_gene.R`: Gene-specific utilities (label filtering, TxDb extraction)
+- `helpers_interaction.R`: `calculate_link_ylim()`, `process_interaction_input()`
+- `helpers_averaging.R`: `average_signal()` - cross-sample signal averaging
+- `helpers_internal.R`: Internal utilities (`validate_required_columns`, `detect_column`, etc.)
 
 ### Column Name Conventions
 - **Coordinates**: `seqnames`, `start`, `end`, `strand` (GRanges-compatible)
@@ -75,9 +79,10 @@ pkgdown::build_site()          # Build documentation site
 - **Discrete y-axes**: Use `ggplot2:::compute_data_size()` for proper height calculation (see `GeomGene`)
 
 ### aplot Stacking
-- `genome_plot()` passes tracks to `aplot::plot_list()` with `guides = "collect"`
+- `vstack_plot()` uses `aplot::insert_bottom()` for vertical stacking
+- `hstack_plot()` uses `aplot::insert_right()` for horizontal stacking
 - All tracks MUST share the same x-axis limits (via `scale_x_genome_region()`)
-- Use `heights` parameter for relative track sizing
+- Use `heights`/`widths` parameter for relative track sizing
 
 ## Project-Specific Conventions
 
@@ -111,8 +116,10 @@ pkgdown::build_site()          # Build documentation site
 5. **Namespace conflicts**: Use explicit `ggplot2::` prefixes in ggproto methods (not standard functions)
 
 ## Key Files Reference
-- **Core API**: `R/ez_wrappers.R`, `R/genome_plot.R`
-- **Geoms**: `R/geom_gene.R`, `R/geom_coverage.R`, `R/geom_*.R`
-- **Utilities**: `R/helpers.R`, `R/scales.R`, `R/theme.R`
+- **Easy wrappers**: `R/ez_coverage.R`, `R/ez_gene.R`, `R/ez_feature.R`, `R/ez_link.R`, `R/ez_hic.R`, `R/ez_manhattan.R`, `R/ez_sashimi.R`
+- **Geoms**: `R/geom_gene.R`, `R/geom_coverage.R`, `R/geom_feature.R`, `R/geom_link.R`, `R/geom_hic.R`, `R/geom_manhattan.R`
+- **Track stacking**: `R/stack_plot.R`
+- **Helpers**: `R/helpers_*.R` (split by domain: region, conversions, signal, gene, interaction, etc.)
+- **Scales & themes**: `R/scales.R`, `R/theme.R`, `R/color_utils.R`
 - **Package metadata**: `DESCRIPTION`, `NAMESPACE` (auto-generated)
 - **Vignettes**: `vignettes/introduction.Rmd`, `vignettes/advanced_usage.Rmd`
