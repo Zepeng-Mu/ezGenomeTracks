@@ -22,6 +22,7 @@ reference:
   - ez_sashimi
   - ez_manhattan
   - ez_hic
+  - ez_locusZoom
   - vstack_plot
   - hstack_plot
 
@@ -42,6 +43,7 @@ reference:
   - process_signal_input
   - process_gene_data
   - process_interaction_data
+  - process_interaction_input
   - process_sashimi_data
   - process_sashimi_input
   - process_manhattan_input
@@ -81,7 +83,9 @@ reference:
   - parse_region
   - format_genomic_coord
   - extract_txdb_data
+  - gene_to_region
   - get_single_signal
+  - average_signal
   - plot_signal_df
   - calculate_link_ylim
   - stat_bin_signal

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,6 +22,10 @@
     <li><a class="dropdown-item" href="../articles/tracks_gene.html">Gene</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples"><li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -83,13 +87,19 @@
           <code><a href="ez_manhattan.html">ez_manhattan()</a></code>
 
         </dt>
-        <dd>Easy Manhattan plot visualization</dd>
+        <dd>Easy genome-wide Manhattan plot visualization</dd>
       </dl><dl><dt>
 
           <code><a href="ez_hic.html">ez_hic()</a></code>
 
         </dt>
         <dd>Easy Hi-C track visualization</dd>
+      </dl><dl><dt>
+
+          <code><a href="ez_locusZoom.html">ez_locusZoom()</a></code>
+
+        </dt>
+        <dd>Easy LocusZoom-style regional association plot</dd>
       </dl><dl><dt>
 
           <code><a href="vstack_plot.html">vstack_plot()</a></code>
@@ -184,6 +194,12 @@
 
         </dt>
         <dd>Process interaction data for visualization</dd>
+      </dl><dl><dt>
+
+          <code><a href="process_interaction_input.html">process_interaction_input()</a></code>
+
+        </dt>
+        <dd>Process interaction input into standardized data frame</dd>
       </dl><dl><dt>
 
           <code><a href="process_sashimi_data.html">process_sashimi_data()</a></code>
@@ -381,10 +397,22 @@
         <dd>Extract gene data from TxDb object</dd>
       </dl><dl><dt>
 
+          <code><a href="gene_to_region.html">gene_to_region()</a></code>
+
+        </dt>
+        <dd>Convert gene name to genomic region</dd>
+      </dl><dl><dt>
+
           <code><a href="get_single_signal.html">get_single_signal()</a></code>
 
         </dt>
         <dd>Extract signal data for a single input element</dd>
+      </dl><dl><dt>
+
+          <code><a href="average_signal.html">average_signal()</a></code>
+
+        </dt>
+        <dd>Average signal across multiple samples on a common binned grid</dd>
       </dl><dl><dt>
 
           <code><a href="plot_signal_df.html">plot_signal_df()</a></code>
