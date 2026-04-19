@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,6 +22,10 @@
     <li><a class="dropdown-item" href="articles/tracks_gene.html">Gene</a></li>
     <li><a class="dropdown-item" href="articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="articles/tracks_manhattan.html">Manhattan</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples"><li><a class="dropdown-item" href="articles/examples_abc.html">abc</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -59,24 +63,23 @@
 <li>
 <strong>Easy wrappers</strong> (<code>ez_*</code>): High-level convenience functions that combine geoms with themes/scales
 <ul><li>
-<code><a href="reference/ez_coverage.html">ez_coverage()</a></code>, <code><a href="reference/ez_gene.html">ez_gene()</a></code>, <code><a href="reference/ez_feature.html">ez_feature()</a></code>, <code>ez_arc()</code>, <code><a href="reference/ez_manhattan.html">ez_manhattan()</a></code>
+<code><a href="reference/ez_coverage.html">ez_coverage()</a></code>, <code><a href="reference/ez_gene.html">ez_gene()</a></code>, <code><a href="reference/ez_feature.html">ez_feature()</a></code>, <code><a href="reference/ez_link.html">ez_link()</a></code>, <code><a href="reference/ez_hic.html">ez_hic()</a></code>, <code><a href="reference/ez_manhattan.html">ez_manhattan()</a></code>, <code><a href="reference/ez_sashimi.html">ez_sashimi()</a></code>
 </li>
-<li>All in <code>R/ez_wrappers.R</code>
-</li>
+<li>Each in separate files: <code>R/ez_coverage.R</code>, <code>R/ez_gene.R</code>, <code>R/ez_feature.R</code>, etc.</li>
 <li>Handle multiple input types: file paths, data frames, named lists</li>
 <li>Apply appropriate themes automatically</li>
 </ul></li>
 <li>
-<strong>Track composition</strong> (<code>genome_plot()</code>): Stacks multiple tracks with aligned x-axes
-<ul><li>Uses <code><a href="https://rdrr.io/pkg/aplot/man/plot_list.html" class="external-link">aplot::plot_list()</a></code> for vertical stacking</li>
-<li>Located in <code>R/genome_plot.R</code>
+<strong>Track composition</strong> (<code><a href="reference/vstack_plot.html">vstack_plot()</a></code>/<code><a href="reference/hstack_plot.html">hstack_plot()</a></code>): Stacks multiple tracks
+<ul><li>Uses <code><a href="https://rdrr.io/pkg/aplot/man/plot-insertion.html" class="external-link">aplot::insert_bottom()</a></code> and <code><a href="https://rdrr.io/pkg/aplot/man/plot-insertion.html" class="external-link">aplot::insert_right()</a></code> for stacking</li>
+<li>Located in <code>R/stack_plot.R</code>
 </li>
 </ul></li>
 </ol></div>
 <div class="section level3">
 <h3 id="data-flow-pattern">Data Flow Pattern<a class="anchor" aria-label="anchor" href="#data-flow-pattern"></a></h3>
-<pre><code>Input (file/df/list) → process_*_data() → ez_*() → geom_*() → theme/scales → genome_plot()</code></pre>
-<p><strong>Critical helpers in <code>R/helpers.R</code>:</strong> - <code><a href="reference/parse_region.html">parse_region()</a></code>: Converts “chr1:1000-2000” strings to GRanges objects - <code><a href="reference/process_signal_input.html">process_signal_input()</a></code>: Normalizes diverse input types (df/files/lists) into standardized format - <code><a href="reference/granges_to_df.html">granges_to_df()</a></code>/<code><a href="reference/df_to_granges.html">df_to_granges()</a></code>: Bidirectional GRanges ↔︎ data frame conversion - <code><a href="reference/import_genomic_data.html">import_genomic_data()</a></code>: Wraps rtracklayer::import for file reading</p>
+<pre><code>Input (file/df/list) → process_*_data() → ez_*() → geom_*() → theme/scales → vstack_plot()</code></pre>
+<p><strong>Helper functions (split by domain in <code>R/helpers_*.R</code>):</strong> - <code>helpers_region.R</code>: <code><a href="reference/parse_region.html">parse_region()</a></code> - converts “chr1:1000-2000” strings to GRanges - <code>helpers_conversions.R</code>: <code><a href="reference/granges_to_df.html">granges_to_df()</a></code>/<code><a href="reference/df_to_granges.html">df_to_granges()</a></code> - bidirectional conversion - <code>helpers_signal.R</code>: <code><a href="reference/process_signal_input.html">process_signal_input()</a></code> - normalizes diverse input types - <code>helpers_processing.R</code>: <code><a href="reference/get_single_signal.html">get_single_signal()</a></code>, <code><a href="reference/import_genomic_data.html">import_genomic_data()</a></code> - data extraction - <code>helpers_gene.R</code>: Gene-specific utilities (label filtering, TxDb extraction) - <code>helpers_interaction.R</code>: <code><a href="reference/calculate_link_ylim.html">calculate_link_ylim()</a></code>, <code><a href="reference/process_interaction_input.html">process_interaction_input()</a></code> - <code>helpers_averaging.R</code>: <code><a href="reference/average_signal.html">average_signal()</a></code> - cross-sample signal averaging - <code>helpers_internal.R</code>: Internal utilities (<code>validate_required_columns</code>, <code>detect_column</code>, etc.)</p>
 </div>
 <div class="section level3">
 <h3 id="column-name-conventions">Column Name Conventions<a class="anchor" aria-label="anchor" href="#column-name-conventions"></a></h3>
@@ -145,10 +148,11 @@
 <div class="section level3">
 <h3 id="aplot-stacking">aplot Stacking<a class="anchor" aria-label="anchor" href="#aplot-stacking"></a></h3>
 <ul><li>
-<code>genome_plot()</code> passes tracks to <code><a href="https://rdrr.io/pkg/aplot/man/plot_list.html" class="external-link">aplot::plot_list()</a></code> with <code>guides = "collect"</code>
-</li>
+<code><a href="reference/vstack_plot.html">vstack_plot()</a></code> uses <code><a href="https://rdrr.io/pkg/aplot/man/plot-insertion.html" class="external-link">aplot::insert_bottom()</a></code> for vertical stacking</li>
+<li>
+<code><a href="reference/hstack_plot.html">hstack_plot()</a></code> uses <code><a href="https://rdrr.io/pkg/aplot/man/plot-insertion.html" class="external-link">aplot::insert_right()</a></code> for horizontal stacking</li>
 <li>All tracks MUST share the same x-axis limits (via <code><a href="reference/scale_x_genome_region.html">scale_x_genome_region()</a></code>)</li>
-<li>Use <code>heights</code> parameter for relative track sizing</li>
+<li>Use <code>heights</code>/<code>widths</code> parameter for relative track sizing</li>
 </ul></div>
 </div>
 <div class="section level2">
@@ -206,13 +210,18 @@
 <div class="section level2">
 <h2 id="key-files-reference">Key Files Reference<a class="anchor" aria-label="anchor" href="#key-files-reference"></a></h2>
 <ul><li>
-<strong>Core API</strong>: <code>R/ez_wrappers.R</code>, <code>R/genome_plot.R</code>
+<strong>Easy wrappers</strong>: <code>R/ez_coverage.R</code>, <code>R/ez_gene.R</code>, <code>R/ez_feature.R</code>, <code>R/ez_link.R</code>, <code>R/ez_hic.R</code>, <code>R/ez_manhattan.R</code>, <code>R/ez_sashimi.R</code>
 </li>
 <li>
-<strong>Geoms</strong>: <code>R/geom_gene.R</code>, <code>R/geom_coverage.R</code>, <code>R/geom_*.R</code>
+<strong>Geoms</strong>: <code>R/geom_gene.R</code>, <code>R/geom_coverage.R</code>, <code>R/geom_feature.R</code>, <code>R/geom_link.R</code>, <code>R/geom_hic.R</code>, <code>R/geom_manhattan.R</code>
 </li>
 <li>
-<strong>Utilities</strong>: <code>R/helpers.R</code>, <code>R/scales.R</code>, <code>R/theme.R</code>
+<strong>Track stacking</strong>: <code>R/stack_plot.R</code>
+</li>
+<li>
+<strong>Helpers</strong>: <code>R/helpers_*.R</code> (split by domain: region, conversions, signal, gene, interaction, etc.)</li>
+<li>
+<strong>Scales &amp; themes</strong>: <code>R/scales.R</code>, <code>R/theme.R</code>, <code>R/color_utils.R</code>
 </li>
 <li>
 <strong>Package metadata</strong>: <code>DESCRIPTION</code>, <code>NAMESPACE</code> (auto-generated)</li>

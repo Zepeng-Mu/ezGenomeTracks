@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,12 @@
     <li><a class="dropdown-item" href="../articles/tracks_gene.html">Gene</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples">
+<li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -70,7 +76,7 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Zepeng-Mu/ezGenomeTracks" class="external-link">ezGenomeTracks</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: replacing previous import 'AnnotationDbi::select' by 'dplyr::select'</span></span>
 <span><span class="co">#&gt; when loading 'ezGenomeTracks'</span></span>
-<span><span class="co">#&gt; ezGenomeTracks v0.0.1</span></span>
+<span><span class="co">#&gt; ezGenomeTracks v0.0.8</span></span>
 <span><span class="co">#&gt; Easy and flexible genomic track visualization</span></span>
 <span><span class="co">#&gt; Use citation('ezGenomeTracks') to see how to cite this package</span></span>
 <span><span class="co">#&gt; For documentation and examples, visit: https://github.com/zmu/ezGenomeTracks</span></span>
@@ -167,10 +173,28 @@ to <code>ez_coverage</code>.</p>
 differential usage across the three genotypes.</p>
 </div>
 <div class="section level3">
+<h3 id="averaging-signals-across-samples">Averaging signals across samples<a class="anchor" aria-label="anchor" href="#averaging-signals-across-samples"></a>
+</h3>
+<p>In some cases it is desirable to average signal across multiple
+samples, such as across donors with the same genotype.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
+<span>  input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
+<span>  region <span class="op">=</span> <span class="st">"chr2:231109000-231115000"</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"line"</span>,</span>
+<span>  average_bin_width <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  average <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  y_axis_style <span class="op">=</span> <span class="st">"full"</span>,</span>
+<span>  facet_label_position <span class="op">=</span> <span class="st">"left"</span>,</span>
+<span>  show.legend <span class="op">=</span> <span class="cn">F</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+</div>
+<div class="section level3">
 <h3 id="changing-the-looks-of-coverage-track">Changing the looks of coverage track<a class="anchor" aria-label="anchor" href="#changing-the-looks-of-coverage-track"></a>
 </h3>
-<p>Set y-axis range to all tracks.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>Set y-axis range to all tracks, but hiding y-axis labels.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
 <span>  input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
 <span>  region <span class="op">=</span> <span class="st">"chr2:231109000-231115000"</span>,</span>
@@ -181,9 +205,9 @@ differential usage across the three genotypes.</p>
 <span>  facet_label_position <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  y_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 <p>Add border around tracks.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
 <span>  input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
 <span>  region <span class="op">=</span> <span class="st">"chr2:231109000-231115000"</span>,</span>
@@ -195,9 +219,9 @@ differential usage across the three genotypes.</p>
 <span>  facet_label_position <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  border <span class="op">=</span> <span class="cn">T</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 <p>Draw lines for coverage.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
 <span>  input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
 <span>  region <span class="op">=</span> <span class="st">"chr2:231109000-231115000"</span>,</span>
@@ -210,9 +234,9 @@ differential usage across the three genotypes.</p>
 <span>  facet_label_position <span class="op">=</span> <span class="st">"left"</span>,</span>
 <span>  show_legend <span class="op">=</span> <span class="cn">T</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
 <p>Change y-axis style.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
 <span>  input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
 <span>  region <span class="op">=</span> <span class="st">"chr2:231109000-231115000"</span>,</span>
@@ -221,8 +245,8 @@ differential usage across the three genotypes.</p>
 <span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  track_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AA"</span>, <span class="st">"AG"</span>, <span class="st">"GG"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
 <span>  input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
@@ -232,8 +256,8 @@ differential usage across the three genotypes.</p>
 <span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  track_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AA"</span>, <span class="st">"AG"</span>, <span class="st">"GG"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-9-2.png" width="700"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-10-2.png" width="700"></p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
 <span>  input <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">bw0</span>, <span class="va">bw1</span>, <span class="va">bw2</span><span class="op">)</span>,</span>
@@ -242,10 +266,8 @@ differential usage across the three genotypes.</p>
 <span>  colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue2"</span>, <span class="st">"orange2"</span>, <span class="st">"purple2"</span><span class="op">)</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  track_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AA"</span>, <span class="st">"AG"</span>, <span class="st">"GG"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: y_axis_style is set to 'none' with multiple tracks. Consider setting</span></span>
-<span><span class="co">#&gt; y_range to allow for better comparison between tracks.</span></span></code></pre></div>
-<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-9-3.png" width="700"></p>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-10-3.png" width="700"></p>
 </div>
 </div>
 <div class="section level2">
@@ -254,7 +276,7 @@ differential usage across the three genotypes.</p>
 <p>For advanced users that hope to do more customization with the plots,
 <code>geom_coverage</code> can be directly used with <code>ggplot</code>
 calls.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bw0_cov</span> <span class="op">&lt;-</span> <span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span><span class="va">bw0</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/granges_to_df.html">granges_to_df</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -266,11 +288,11 @@ calls.</p>
 <span><span class="co">#&gt; 4     chr2 231106789 231106790     1      * 11.65226</span></span>
 <span><span class="co">#&gt; 5     chr2 231106790 231106791     1      * 12.09351</span></span>
 <span><span class="co">#&gt; 6     chr2 231106791 231106792     1      * 12.09351</span></span></code></pre></div>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">bw0_cov</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_coverage.html">geom_coverage</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
-<p>As you can see, <code>geom_coverage</code> automatically looks for
+<p><img src="tracks_coverage_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
+<p>As shown above, <code>geom_coverage</code> automatically looks for
 default columns need to plot coverage data, but more code are needed to
 make the plot look like what <code>ez_coverage</code> outputs.</p>
 </div>

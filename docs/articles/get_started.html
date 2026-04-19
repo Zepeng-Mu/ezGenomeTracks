@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,12 @@
     <li><a class="dropdown-item" href="../articles/tracks_gene.html">Gene</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples">
+<li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -70,34 +76,36 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Zepeng-Mu/ezGenomeTracks" class="external-link">ezGenomeTracks</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: replacing previous import 'AnnotationDbi::select' by 'dplyr::select'</span></span>
 <span><span class="co">#&gt; when loading 'ezGenomeTracks'</span></span>
-<span><span class="co">#&gt; ezGenomeTracks v0.0.1</span></span>
+<span><span class="co">#&gt; ezGenomeTracks v0.0.8</span></span>
 <span><span class="co">#&gt; Easy and flexible genomic track visualization</span></span>
 <span><span class="co">#&gt; Use citation('ezGenomeTracks') to see how to cite this package</span></span>
 <span><span class="co">#&gt; For documentation and examples, visit: https://github.com/zmu/ezGenomeTracks</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
-<p>There are several R/python packages that plot genome browser tracks,
-but most of them require a lot of coding to set up. PygenomeTracks is
-one of my favorite, but it requires writing <code>.ini</code>
-configuration files and running command-line tools, which can be
-cumbersome for R users, and is not flexible for data exploration.</p>
+<p>There have been several R/python packages that plot genome browser
+tracks, but most of them require a lot of coding to set up.
+PygenomeTracks is one of my favorite, but it requires writing
+<code>.ini</code> configuration files and running command-line tools,
+which can be cumbersome for R users, and is not flexible for generating
+a large number of plots in exploratory data analysis.</p>
 <p>Using <code>ggplot2</code>, it is possible to generate beautiful
-genome browser plots, although it typically requires a lot of custom
+genome browser tracks, although it typically requires a lot of custom
 code and data wrangling. That motivated me to create an R package that
 is based on <code>ggplot2</code>, while providing simple high-level
 functions for common track types. The goal is to make it easy to create
-publication-quality genome browser plots with minimal code, while still
-allowing for advanced customization when needed.</p>
+publication-quality genome browser plots with minimal code for most
+users, while still allowing for advanced customization for a smaller
+number of power users.</p>
 </div>
 <div class="section level2">
 <h2 id="design-principles">Design principles<a class="anchor" aria-label="anchor" href="#design-principles"></a>
 </h2>
-<p>ezGenomeTracks is designed around three core principles: modular
-ggplot2 geoms, simple high-level wrappers, and consistent genomic
-scaling and styling. The package provides both low-level building blocks
-for advanced customization and easy-to-use helpers for quick
-plotting.</p>
+<p><code>ezGenomeTracks</code> is designed around three core principles:
+modular ggplot2 geoms, simple high-level wrappers, and consistent
+genomic scaling and styling. The package provides both low-level
+building blocks for advanced customization and easy-to-use helpers for
+quick plotting.</p>
 <p><strong>Easy <code>ez_*</code> wrappers</strong>: For most common
 use-cases the package provides <code>ez_*()</code> helper functions such
 as <code><a href="../reference/ez_coverage.html">ez_coverage()</a></code>, <code><a href="../reference/ez_gene.html">ez_gene()</a></code>, and
@@ -109,10 +117,14 @@ return a full ggplot2 layer or complete track that you can stack with
 these high-level wrappers for quick plotting.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># one-line coverage track from a bigWig or data.frame</span></span>
-<span><span class="va">cov</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span><span class="st">"inst/extdata/example_signal.bw"</span>, colour <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></span>
+<span><span class="va">cov</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ez_coverage.html">ez_coverage</a></span><span class="op">(</span></span>
+<span>  <span class="st">"inst/extdata/example_signal.bedgraph"</span>,</span>
+<span>  region <span class="op">=</span> <span class="st">"chr1:1009000-1092000"</span>,</span>
+<span>  colour <span class="op">=</span> <span class="st">"steelblue"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># one-line gene model track</span></span>
-<span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ez_gene.html">ez_gene</a></span><span class="op">(</span><span class="va">example_genes</span><span class="op">)</span></span>
+<span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ez_gene.html">ez_gene</a></span><span class="op">(</span><span class="va">example_genes</span>, region <span class="op">=</span> <span class="st">"chr1:1009000-1092000"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># stack and display</span></span>
 <span><span class="fu"><a href="../reference/vstack_plot.html">vstack_plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">cov</span>, <span class="va">genes</span><span class="op">)</span>, region <span class="op">=</span> <span class="st">"chr1:100000-101000"</span><span class="op">)</span></span></code></pre></div>
@@ -129,7 +141,7 @@ geoms you can use them directly with any <code><a href="https://ggplot2.tidyvers
 <span></span>
 <span><span class="co"># `signal_df` is a data frame with columns `seqnames`, `start`, `end`, `score`</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">signal_df</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_coverage.html">geom_coverage</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="va">start</span>, xmax <span class="op">=</span> <span class="va">end</span>, y <span class="op">=</span> <span class="va">score</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_coverage.html">geom_coverage</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/scale_x_genome_region.html">scale_x_genome_region</a></span><span class="op">(</span>region <span class="op">=</span> <span class="st">"chr1:100000-101000"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Genomic scales for readable labels</strong>: Genomic
 coordinates can be large and hard to read when plotted directly. The

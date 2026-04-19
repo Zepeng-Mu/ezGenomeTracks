@@ -9,7 +9,7 @@ It provides a flexible interface with support for grouping and multiple tracks."
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,6 +25,10 @@ It provides a flexible interface with support for grouping and multiple tracks."
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
   </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples"><li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
+  </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/Zepeng-Mu/ezGenomeTracks"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -37,7 +41,7 @@ It provides a flexible interface with support for grouping and multiple tracks."
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Easy coverage track visualization</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Zepeng-Mu/ezGenomeTracks/blob/HEAD/R/ez_wrappers.R" class="external-link"><code>R/ez_wrappers.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Zepeng-Mu/ezGenomeTracks/blob/HEAD/R/ez_coverage.R" class="external-link"><code>R/ez_coverage.R</code></a></small>
       <div class="d-none name"><code>ez_coverage.Rd</code></div>
     </div>
 
@@ -50,19 +54,28 @@ It provides a flexible interface with support for grouping and multiple tracks.<
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ez_coverage</span><span class="op">(</span></span>
 <span>  <span class="va">input</span>,</span>
-<span>  <span class="va">region</span>,</span>
+<span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  gene <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  gene_db <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  org_db <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  extend <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  extend_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"proportion"</span>, <span class="st">"bp"</span><span class="op">)</span>,</span>
 <span>  track_labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"area"</span>, <span class="st">"line"</span>, <span class="st">"heatmap"</span><span class="op">)</span>,</span>
 <span>  group_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  color_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"track"</span><span class="op">)</span>,</span>
-<span>  colors <span class="op">=</span> <span class="st">"steelblue"</span>,</span>
+<span>  colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  y_axis_style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"simple"</span>, <span class="st">"minmax"</span>, <span class="st">"full"</span><span class="op">)</span>,</span>
 <span>  y_range <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  bin_width <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  area_border <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  facet_label_position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"top"</span>, <span class="st">"left"</span><span class="op">)</span>,</span>
 <span>  border <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show_legend <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  average <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  summary_fun <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"median"</span>, <span class="st">"max"</span>, <span class="st">"min"</span>, <span class="st">"sum"</span><span class="op">)</span>,</span>
+<span>  average_bin_width <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -76,7 +89,34 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 
 
 <dt id="arg-region">region<a class="anchor" aria-label="anchor" href="#arg-region"></a></dt>
-<dd><p>Genomic region to display (e.g., "chr1:1000000-2000000")</p></dd>
+<dd><p>Genomic region to display (e.g., "chr1:1000000-2000000").
+Either <code>region</code> or <code>gene</code> (with <code>gene_db</code>) must be provided.</p></dd>
+
+
+<dt id="arg-gene">gene<a class="anchor" aria-label="anchor" href="#arg-gene"></a></dt>
+<dd><p>Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+When provided, the region is automatically determined from the gene coordinates
+in <code>gene_db</code>. Either <code>region</code> or <code>gene</code> must be provided.</p></dd>
+
+
+<dt id="arg-gene-db">gene_db<a class="anchor" aria-label="anchor" href="#arg-gene-db"></a></dt>
+<dd><p>TxDb object for gene coordinate lookup when using <code>gene</code> parameter
+(e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).</p></dd>
+
+
+<dt id="arg-org-db">org_db<a class="anchor" aria-label="anchor" href="#arg-org-db"></a></dt>
+<dd><p>Optional OrgDb object for gene symbol mapping. If NULL (default),
+auto-detects available OrgDb packages.</p></dd>
+
+
+<dt id="arg-extend">extend<a class="anchor" aria-label="anchor" href="#arg-extend"></a></dt>
+<dd><p>Numeric. Amount to extend the region beyond the gene body when
+using <code>gene</code> parameter. Default: 0.1 (10% of gene length on each side).</p></dd>
+
+
+<dt id="arg-extend-type">extend_type<a class="anchor" aria-label="anchor" href="#arg-extend-type"></a></dt>
+<dd><p>How to interpret <code>extend</code>: "proportion" (relative to gene
+length) or "bp" (absolute base pairs). Default: "proportion".</p></dd>
 
 
 <dt id="arg-track-labels">track_labels<a class="anchor" aria-label="anchor" href="#arg-track-labels"></a></dt>
@@ -96,10 +136,11 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 
 
 <dt id="arg-colors">colors<a class="anchor" aria-label="anchor" href="#arg-colors"></a></dt>
-<dd><p>Color(s) for the coverage track. Can be a single color (e.g., "steelblue") or
+<dd><p>Color(s) for the coverage track. Can be a single color or
 a vector of colors for multiple tracks/groups (e.g., c("blue", "orange", "green")).
 If fewer colors than tracks/groups are provided, colors will be recycled.
-Default is "steelblue".</p></dd>
+When NULL (default), uses vibeColors palette if available, otherwise "steelblue".
+For multiple tracks with a single color, automatically uses a colorblind-safe palette.</p></dd>
 
 
 <dt id="arg-y-axis-style">y_axis_style<a class="anchor" aria-label="anchor" href="#arg-y-axis-style"></a></dt>
@@ -111,7 +152,8 @@ Default is "steelblue".</p></dd>
 
 
 <dt id="arg-y-range">y_range<a class="anchor" aria-label="anchor" href="#arg-y-range"></a></dt>
-<dd><p>Y-axis range limits (default: NULL)</p></dd>
+<dd><p>Y-axis range limits. When NULL (default), uses the global maximum
+across all tracks so all tracks share the same y-scale.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
@@ -120,6 +162,11 @@ Default is "steelblue".</p></dd>
 
 <dt id="arg-bin-width">bin_width<a class="anchor" aria-label="anchor" href="#arg-bin-width"></a></dt>
 <dd><p>Width of bins in base pairs (default: NULL)</p></dd>
+
+
+<dt id="arg-area-border">area_border<a class="anchor" aria-label="anchor" href="#arg-area-border"></a></dt>
+<dd><p>Logical; if <code>TRUE</code> (default), draws thin borders on area rectangles
+to eliminate white-line rendering artifacts. Only affects <code>type = "area"</code>.</p></dd>
 
 
 <dt id="arg-facet-label-position">facet_label_position<a class="anchor" aria-label="anchor" href="#arg-facet-label-position"></a></dt>
@@ -132,6 +179,25 @@ Default is "steelblue".</p></dd>
 
 <dt id="arg-show-legend">show_legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, displays the legend (default: FALSE)</p></dd>
+
+
+<dt id="arg-average">average<a class="anchor" aria-label="anchor" href="#arg-average"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, averages overlapping tracks into a single
+track before plotting. Applies when <code>input</code> is a character vector of
+multiple file paths (overlapping tracks), or when <code>input</code> is a named list
+whose elements are character vectors with multiple files (averages within
+each list element separately, keeping tracks independent).
+Uses <code><a href="average_signal.html">average_signal()</a></code> internally. (default: FALSE)</p></dd>
+
+
+<dt id="arg-summary-fun">summary_fun<a class="anchor" aria-label="anchor" href="#arg-summary-fun"></a></dt>
+<dd><p>Summary function used when <code>average = TRUE</code>. One of
+<code>"mean"</code>, <code>"median"</code>, <code>"max"</code>, <code>"min"</code>, <code>"sum"</code>. (default: <code>"mean"</code>)</p></dd>
+
+
+<dt id="arg-average-bin-width">average_bin_width<a class="anchor" aria-label="anchor" href="#arg-average-bin-width"></a></dt>
+<dd><p>Bin width (in bp) for the averaging grid when
+<code>average = TRUE</code>. (default: 50)</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -153,9 +219,7 @@ Default is "steelblue".</p></dd>
 <span class="r-in"><span>  score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span><span class="va">gr</span>, <span class="st">"chr1:1-100"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(input, seqnames == as.character(region_gr@seqnames),     start &gt;= region_gr@start, end &lt;= region_gr@end):</span> <span style="color: #00BBBB;">ℹ</span> In argument: `start &gt;= region_gr@start`.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> no slot of name "start" for this object of class "GRanges"</span>
+<span class="r-plt img"><img src="ez_coverage-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Single data frame with grouping</span></span></span>
 <span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
@@ -163,9 +227,13 @@ Default is "steelblue".</p></dd>
 <span class="r-in"><span>  score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>, <span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span><span class="va">df</span>, <span class="st">"chr1:1-100"</span>, group_var <span class="op">=</span> <span class="st">"sample"</span>, colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in dplyr::filter(input, seqnames == as.character(region_gr@seqnames),     start &gt;= region_gr@start, end &lt;= region_gr@end):</span> <span style="color: #00BBBB;">ℹ</span> In argument: `start &gt;= region_gr@start`.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> no slot of name "start" for this object of class "GRanges"</span>
+<span class="r-plt img"><img src="ez_coverage-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Using gene name instead of coordinates</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ez_coverage</span><span class="op">(</span><span class="va">signal_data</span>, gene <span class="op">=</span> <span class="st">"PTPRC"</span>, gene_db <span class="op">=</span> <span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

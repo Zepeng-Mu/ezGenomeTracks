@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,12 @@
     <li><a class="dropdown-item" href="../articles/tracks_gene.html">Gene</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples">
+<li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -70,7 +76,7 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Zepeng-Mu/ezGenomeTracks" class="external-link">ezGenomeTracks</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: replacing previous import 'AnnotationDbi::select' by 'dplyr::select'</span></span>
 <span><span class="co">#&gt; when loading 'ezGenomeTracks'</span></span>
-<span><span class="co">#&gt; ezGenomeTracks v0.0.1</span></span>
+<span><span class="co">#&gt; ezGenomeTracks v0.0.8</span></span>
 <span><span class="co">#&gt; Easy and flexible genomic track visualization</span></span>
 <span><span class="co">#&gt; Use citation('ezGenomeTracks') to see how to cite this package</span></span>
 <span><span class="co">#&gt; For documentation and examples, visit: https://github.com/zmu/ezGenomeTracks</span></span></code></pre></div>
@@ -126,11 +132,19 @@
 <div class="section level2">
 <h2 id="plot-genes-with-ez_gene">Plot genes with <code>ez_gene</code><a class="anchor" aria-label="anchor" href="#plot-genes-with-ez_gene"></a>
 </h2>
+<p>By default, <code>ez_gene</code> detects an <code>org.Hs.eg.db</code>
+object in the work space, converts Ensembl gene name to gene symbols,
+seperates genes by strand.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">geneRegion</span> <span class="op">&lt;-</span> <span class="st">"chr10:6,012,410-6,063,160"</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/ez_gene.html">ez_gene</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">txdb</span>, <span class="va">geneRegion</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Auto-detected OrgDb: org.Hs.eg.db</span></span>
+<span><span class="co">#&gt;   2135 genes were dropped because they have exons located on both strands</span></span>
+<span><span class="co">#&gt;   of the same reference sequence or on more than one reference sequence,</span></span>
+<span><span class="co">#&gt;   so cannot be represented by a single genomic range.</span></span>
+<span><span class="co">#&gt;   Use 'single.strand.genes.only=FALSE' to get all the genes in a</span></span>
+<span><span class="co">#&gt;   GRangesList object, or use suppressMessages() to suppress this message.</span></span>
 <span><span class="co">#&gt; 'select()' returned 1:1 mapping between keys and columns</span></span>
 <span><span class="co">#&gt; Warning in data.frame(gene_id = gid, gene_name = gene_symbols[gid], strand =</span></span>
 <span><span class="co">#&gt; as.character(strand(exons_gr)), : row names were found from a short variable</span></span>
@@ -162,6 +176,11 @@ frame for plotting.</p>
 <span>  region_gr <span class="op">=</span> <span class="fu">ezGenomeTracks</span><span class="fu">::</span><span class="fu"><a href="../reference/parse_region.html">parse_region</a></span><span class="op">(</span><span class="va">geneRegion</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Auto-detected OrgDb: org.Hs.eg.db</span></span>
+<span><span class="co">#&gt;   2135 genes were dropped because they have exons located on both strands</span></span>
+<span><span class="co">#&gt;   of the same reference sequence or on more than one reference sequence,</span></span>
+<span><span class="co">#&gt;   so cannot be represented by a single genomic range.</span></span>
+<span><span class="co">#&gt;   Use 'single.strand.genes.only=FALSE' to get all the genes in a</span></span>
+<span><span class="co">#&gt;   GRangesList object, or use suppressMessages() to suppress this message.</span></span>
 <span><span class="co">#&gt; 'select()' returned 1:1 mapping between keys and columns</span></span>
 <span><span class="co">#&gt; Warning in data.frame(gene_id = gid, gene_name = gene_symbols[gid], strand =</span></span>
 <span><span class="co">#&gt; as.character(strand(exons_gr)), : row names were found from a short variable</span></span>

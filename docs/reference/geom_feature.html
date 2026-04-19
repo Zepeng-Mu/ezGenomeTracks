@@ -9,7 +9,7 @@ ATAC-seq features, or any interval-based features. It displays the features as r
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,6 +24,10 @@ ATAC-seq features, or any interval-based features. It displays the features as r
     <li><a class="dropdown-item" href="../articles/tracks_gene.html">Gene</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples"><li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -69,7 +73,8 @@ ATAC-seq features, or any interval-based features. It displays the features as r
 
 
 <dl><dt id="arg-mapping">mapping<a class="anchor" aria-label="anchor" href="#arg-mapping"></a></dt>
-<dd><p>Aesthetic mappings (default: NULL). xmin, xmax are required.</p></dd>
+<dd><p>Aesthetic mappings. Required: start, end. Optional: fill, color, alpha.
+The geom expects data with 'start' and 'end' columns (genomic coordinates).</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -90,7 +95,7 @@ often aesthetics, used to set an aesthetic to a fixed value.</p></dd>
 
 
 <dt id="arg-height">height<a class="anchor" aria-label="anchor" href="#arg-height"></a></dt>
-<dd><p>Height of the features (default: 0.8)</p></dd>
+<dd><p>Height of the features as proportion of y-axis range (default: 0.8)</p></dd>
 
 
 <dt id="arg-color">color<a class="anchor" aria-label="anchor" href="#arg-color"></a></dt>
@@ -110,20 +115,19 @@ often aesthetics, used to set an aesthetic to a fixed value.</p></dd>
 
 
 <dt id="arg-show-legend">show.legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
-<dd><p>logical. Should this layer be included in the legends?
-<code>NA</code>, the default, includes if any aesthetics are mapped.
-<code>FALSE</code> never includes, and <code>TRUE</code> always includes.
-It can also be a named logical vector to finely select the aesthetics to
-display. To include legend keys for all levels, even
-when no data exists, use <code>TRUE</code>.  If <code>NA</code>, all levels are shown in legend,
-but unobserved levels are omitted.</p></dd>
+<dd><p>Logical. Should this layer be included in the legends? <code>NA</code>, the default,
+includes if any aesthetics are mapped. <code>FALSE</code> never includes, and <code>TRUE</code>
+always includes. It can also be a named logical vector to finely select the
+aesthetics to display. To include legend keys for all levels, even when no
+data exists, use <code>TRUE</code>.  If <code>NA</code>, all levels are shown in legend, but
+unobserved levels are omitted.</p></dd>
 
 
 <dt id="arg-inherit-aes">inherit.aes<a class="anchor" aria-label="anchor" href="#arg-inherit-aes"></a></dt>
-<dd><p>If <code>FALSE</code>, overrides the default aesthetics,
-rather than combining with them. This is most useful for helper functions
-that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. <code><a href="https://ggplot2.tidyverse.org/reference/annotation_borders.html" class="external-link">annotation_borders()</a></code>.</p></dd>
+<dd><p>If <code>FALSE</code>, overrides the default aesthetics, rather than combining with
+them. This is most useful for helper functions that define both data and
+aesthetics and shouldn't inherit behaviour from the default plot
+specification, e.g. <code><a href="https://ggplot2.tidyverse.org/reference/annotation_borders.html" class="external-link">annotation_borders()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -136,7 +140,7 @@ the default plot specification, e.g. <code><a href="https://ggplot2.tidyverse.or
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">feature_data</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">geom_feature</span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="va">start</span>, xmax <span class="op">=</span> <span class="va">end</span>, fill <span class="op">=</span> <span class="va">score</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">geom_feature</span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">score</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

@@ -11,7 +11,7 @@ It provides a high-level interface supporting both square heatmap and triangle
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,6 +27,10 @@ It provides a high-level interface supporting both square heatmap and triangle
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
   </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples"><li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
+  </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/Zepeng-Mu/ezGenomeTracks"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -39,7 +43,7 @@ It provides a high-level interface supporting both square heatmap and triangle
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Easy Hi-C track visualization</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Zepeng-Mu/ezGenomeTracks/blob/HEAD/R/geom_hic.R" class="external-link"><code>R/geom_hic.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Zepeng-Mu/ezGenomeTracks/blob/HEAD/R/ez_hic.R" class="external-link"><code>R/ez_hic.R</code></a></small>
       <div class="d-none name"><code>ez_hic.Rd</code></div>
     </div>
 
@@ -53,14 +57,20 @@ It provides a high-level interface supporting both square heatmap and triangle
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ez_hic</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
-<span>  <span class="va">region</span>,</span>
+<span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  gene <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  gene_db <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  org_db <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  extend <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  extend_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"proportion"</span>, <span class="st">"bp"</span><span class="op">)</span>,</span>
 <span>  resolution <span class="op">=</span> <span class="fl">10000</span>,</span>
 <span>  style <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"triangle"</span>, <span class="st">"square"</span><span class="op">)</span>,</span>
 <span>  palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cooler"</span>, <span class="st">"ylgnbu"</span>, <span class="st">"viridis"</span>, <span class="st">"bwr"</span><span class="op">)</span>,</span>
-<span>  trans <span class="op">=</span> <span class="st">"log10"</span>,</span>
+<span>  transform <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  limits <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_distance <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rasterize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  rasterize_dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  show_diagonal <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -78,7 +88,33 @@ It provides a high-level interface supporting both square heatmap and triangle
 
 
 <dt id="arg-region">region<a class="anchor" aria-label="anchor" href="#arg-region"></a></dt>
-<dd><p>Genomic region to display (e.g., "chr1:1000000-2000000")</p></dd>
+<dd><p>Genomic region to display (e.g., "chr1:1000000-2000000").
+Either <code>region</code> or <code>gene</code> (with <code>gene_db</code>) must be provided.</p></dd>
+
+
+<dt id="arg-gene">gene<a class="anchor" aria-label="anchor" href="#arg-gene"></a></dt>
+<dd><p>Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+When provided, the region is automatically determined from the gene coordinates
+in <code>gene_db</code>. Either <code>region</code> or <code>gene</code> must be provided.</p></dd>
+
+
+<dt id="arg-gene-db">gene_db<a class="anchor" aria-label="anchor" href="#arg-gene-db"></a></dt>
+<dd><p>TxDb object for gene coordinate lookup when using <code>gene</code> parameter.</p></dd>
+
+
+<dt id="arg-org-db">org_db<a class="anchor" aria-label="anchor" href="#arg-org-db"></a></dt>
+<dd><p>Optional OrgDb object for gene symbol mapping. If NULL (default),
+auto-detects available OrgDb packages.</p></dd>
+
+
+<dt id="arg-extend">extend<a class="anchor" aria-label="anchor" href="#arg-extend"></a></dt>
+<dd><p>Numeric. Amount to extend the region beyond the gene body when
+using <code>gene</code> parameter. Default: 0.1 (10% of gene length on each side).</p></dd>
+
+
+<dt id="arg-extend-type">extend_type<a class="anchor" aria-label="anchor" href="#arg-extend-type"></a></dt>
+<dd><p>How to interpret <code>extend</code>: "proportion" (relative to gene
+length) or "bp" (absolute base pairs). Default: "proportion".</p></dd>
 
 
 <dt id="arg-resolution">resolution<a class="anchor" aria-label="anchor" href="#arg-resolution"></a></dt>
@@ -93,7 +129,7 @@ It provides a high-level interface supporting both square heatmap and triangle
 <dd><p>Color palette: "cooler" (red, default), "ylgnbu", "viridis", or "bwr"</p></dd>
 
 
-<dt id="arg-trans">trans<a class="anchor" aria-label="anchor" href="#arg-trans"></a></dt>
+<dt id="arg-transform">transform<a class="anchor" aria-label="anchor" href="#arg-transform"></a></dt>
 <dd><p>Scale transformation: "identity" (linear), "log10" (default), "log2", "sqrt"</p></dd>
 
 
@@ -107,8 +143,12 @@ Only applies to triangle style.</p></dd>
 
 
 <dt id="arg-rasterize">rasterize<a class="anchor" aria-label="anchor" href="#arg-rasterize"></a></dt>
-<dd><p>Logical. If TRUE and ggrastr package is available, rasterize the plot
-for better performance with large matrices. Default: FALSE</p></dd>
+<dd><p>Logical. If TRUE and ggrastr package is available, rasterize the
+Hi-C layer for better performance with large matrices. Default: FALSE</p></dd>
+
+
+<dt id="arg-rasterize-dpi">rasterize_dpi<a class="anchor" aria-label="anchor" href="#arg-rasterize-dpi"></a></dt>
+<dd><p>Resolution for rasterization in dots per inch. Default: 300</p></dd>
 
 
 <dt id="arg-show-diagonal">show_diagonal<a class="anchor" aria-label="anchor" href="#arg-show-diagonal"></a></dt>
@@ -150,6 +190,17 @@ for better performance with large matrices. Default: FALSE</p></dd>
 <span class="r-in"><span>  resolution <span class="op">=</span> <span class="fl">10000</span>,</span></span>
 <span class="r-in"><span>  max_distance <span class="op">=</span> <span class="fl">200000</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># With rasterization for large regions</span></span></span>
+<span class="r-in"><span><span class="fu">ez_hic</span><span class="op">(</span><span class="va">mat</span>, <span class="st">"chr1:1000000-1500000"</span>,</span></span>
+<span class="r-in"><span>  resolution <span class="op">=</span> <span class="fl">10000</span>,</span></span>
+<span class="r-in"><span>  rasterize <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  rasterize_dpi <span class="op">=</span> <span class="fl">300</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Using gene name for region lookup</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">ez_hic</span><span class="op">(</span><span class="va">hic_data</span>, gene <span class="op">=</span> <span class="st">"PTPRC"</span>, gene_db <span class="op">=</span> <span class="va">TxDb.Hsapiens.UCSC.hg38.knownGene</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

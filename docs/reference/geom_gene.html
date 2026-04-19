@@ -11,7 +11,7 @@ of gene structure and strand separation."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,6 +26,10 @@ of gene structure and strand separation."></head><body>
     <li><a class="dropdown-item" href="../articles/tracks_gene.html">Gene</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_sashimi.html">Sashimi</a></li>
     <li><a class="dropdown-item" href="../articles/tracks_manhattan.html">Manhattan</a></li>
+  </ul></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Examples</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-examples"><li><a class="dropdown-item" href="../articles/examples_abc.html">abc</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -178,14 +182,14 @@ It handles both the data processing and the actual drawing of gene features.</p>
     <h2 id="aesthetics">Aesthetics<a class="anchor" aria-label="anchor" href="#aesthetics"></a></h2>
 
 
-<p>The following aesthetics are required:</p><ul><li><p><code>xstart</code>: Start position of the feature (genomic coordinate)</p></li>
-<li><p><code>xend</code>: End position of the feature (genomic coordinate)</p></li>
+<p>The following aesthetics are required:</p><ul><li><p><code>start</code>: Start position of the feature (genomic coordinate)</p></li>
+<li><p><code>end</code>: End position of the feature (genomic coordinate)</p></li>
 <li><p><code>type</code>: Type of feature ("gene" or "exon")</p></li>
 </ul><p>Optional aesthetics:</p><ul><li><p><code>color</code>: Color for both exons (fill) and introns (color)</p></li>
 <li><p><code>fill</code>: Fill color for exons (overrides <code>color</code> for fill if specified)</p></li>
 <li><p><code>strand</code>: Strand information ("+" or "-")</p></li>
 <li><p><code>y</code>: Optional grouping variable (overrides automatic strand-based grouping)</p></li>
-</ul><p>The following aesthetics are used by the geom:</p><ul><li><p><code>xstart</code>, <code>xend</code>: Start and end genomic coordinates</p></li>
+</ul><p>The following aesthetics are used by the geom:</p><ul><li><p><code>start</code>, <code>end</code>: Start and end genomic coordinates</p></li>
 <li><p><code>type</code>: Feature type ("gene" or "exon")</p></li>
 <li><p><code>strand</code>: Strand information ("+" or "-")</p></li>
 <li><p><code>y</code>: Optional y-axis grouping</p></li>
@@ -200,11 +204,10 @@ It handles both the data processing and the actual drawing of gene features.</p>
     <h2 id="data-format">Data Format<a class="anchor" aria-label="anchor" href="#data-format"></a></h2>
 
 
-<p>The function expects a data frame with the following columns:</p><ul><li><p>Required:</p><ul><li><p><code>xstart</code>, <code>xend</code>: Genomic coordinates of features</p></li>
+<p>The function expects a data frame with the following columns:</p><ul><li><p>Required:</p><ul><li><p><code>start</code>, <code>end</code>: Genomic coordinates of features</p></li>
 <li><p><code>type</code>: Either "gene" (for introns) or "exon"</p></li>
 </ul></li>
 <li><p>Optional:</p><ul><li><p><code>strand</code>: "+" or "-" for forward/reverse strand</p></li>
-<li><p><code>exon_start</code>, <code>exon_end</code>: For long-format exon data</p></li>
 <li><p>Any additional columns for aesthetics (e.g., gene names, biotypes)</p></li>
 </ul></li>
 </ul></div>
@@ -236,14 +239,14 @@ It handles both the data processing and the actual drawing of gene features.</p>
 <span class="r-in"><span><span class="co"># Example 1: Basic usage with automatic strand separation</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">gene_data</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_gene</span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    xstart <span class="op">=</span> <span class="va">start</span>, xend <span class="op">=</span> <span class="va">end</span>,</span></span>
+<span class="r-in"><span>    start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>,</span></span>
 <span class="r-in"><span>    type <span class="op">=</span> <span class="va">feature</span>, color <span class="op">=</span> <span class="va">gene_name</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Example 2: Custom y-axis grouping by biotype</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">gene_data</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_gene</span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    xstart <span class="op">=</span> <span class="va">start</span>, xend <span class="op">=</span> <span class="va">end</span>,</span></span>
+<span class="r-in"><span>    start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>,</span></span>
 <span class="r-in"><span>    type <span class="op">=</span> <span class="va">feature</span>, y <span class="op">=</span> <span class="va">biotype</span>,</span></span>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="va">gene_name</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span><span class="op">)</span></span></span>
@@ -251,7 +254,7 @@ It handles both the data processing and the actual drawing of gene features.</p>
 <span class="r-in"><span><span class="co"># Example 3: Styling options</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">gene_data</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_gene</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xstart <span class="op">=</span> <span class="va">start</span>, xend <span class="op">=</span> <span class="va">end</span>, type <span class="op">=</span> <span class="va">feature</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>, type <span class="op">=</span> <span class="va">feature</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    exon_fill <span class="op">=</span> <span class="st">"steelblue"</span>,</span></span>
 <span class="r-in"><span>    exon_color <span class="op">=</span> <span class="st">"navy"</span>,</span></span>
 <span class="r-in"><span>    intron_color <span class="op">=</span> <span class="st">"darkblue"</span>,</span></span>
