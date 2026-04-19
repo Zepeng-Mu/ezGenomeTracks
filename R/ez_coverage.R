@@ -195,8 +195,14 @@ ez_coverage <- function(
       # Average only within elements that are character vectors with >1 file.
       track_data_list <- list()
       for (i in seq_along(input)) {
-        track_name <- names(input)[i]
-        if (is.null(track_name)) track_name <- paste0("Track ", i)
+        # Priority: track_labels > names(input) > default "Track i"
+        if (!is.null(track_labels) && length(track_labels) >= i) {
+          track_name <- track_labels[i]
+        } else if (!is.null(names(input)[i]) && names(input)[i] != "") {
+          track_name <- names(input)[i]
+        } else {
+          track_name <- paste0("Track ", i)
+        }
         track_element <- input[[i]]
 
         if (is.character(track_element) && length(track_element) > 1) {
