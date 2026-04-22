@@ -5,6 +5,12 @@ Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) an
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+<p align="center">
+  <img src="infographic.png" alt="ezGenomeTracks workflow" width="100%">
+</p>
+
+<p align="center"><em>Generated with GPT-image-2</em></p>
+
 > [!NOTE]
 > `ezGenomeTracks` is my experiment with Vibe Coding. I mostly use Github Copilot Business. I have also tried Cursor, TRAE and Windsurf.
 
