@@ -6,7 +6,7 @@ Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) an
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Zepeng-Mu/ezGenomeTracks/main/man/figures/infographic.png" alt="ezGenomeTracks workflow infographic" width="100%">
+  <img src="man/figures/infographic.png" alt="ezGenomeTracks workflow infographic" width="100%">
 </p>
 
 <p align="center"><em>Infographic generated with GPT-image-2</em></p>
