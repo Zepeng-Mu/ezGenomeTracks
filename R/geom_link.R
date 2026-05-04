@@ -181,8 +181,14 @@ GeomLink <- ggproto(
     y_range_data <- panel_params$y.range
     y_scale <- diff(y_range_data)
 
-    # Transform arc heights to npc coordinates
-    arc_heights_npc <- arc_heights_data / y_scale
+    # Handle edge case where y_scale is 0 or non-finite
+    if (is.na(y_scale) || is.infinite(y_scale) || y_scale == 0) {
+      # Fallback: use absolute arc heights directly (in native coordinates)
+      arc_heights_npc <- arc_heights_data
+    } else {
+      # Transform arc heights to npc coordinates
+      arc_heights_npc <- arc_heights_data / y_scale
+    }
 
     # Create bezier curves for each link
     grobs <- lapply(seq_len(nrow(coords)), function(i) {
@@ -211,6 +217,11 @@ GeomLink <- ggproto(
         x_end
       )
       y_bezier <- c(y_start, y_start + arc_h_npc, y_end + arc_h_npc, y_end)
+
+      # Check for non-finite coordinates and skip if found
+      if (any(!is.finite(x_bezier)) || any(!is.finite(y_bezier))) {
+        return(grid::nullGrob())
+      }
 
       # Create bezier grob
       grid::bezierGrob(
