@@ -121,3 +121,43 @@ ez_hic_diverging_palette <- function(n = 256) {
   }
   NULL
 }
+
+# UCSC Genome Browser nucleotide color conventions (A, C, G, T, N)
+.ucsc_nucleotide_colors <- c(
+  A = "#00A800",
+  C = "#0000CC",
+  G = "#CC9900",
+  T = "#CC0000",
+  N = "#999999"
+)
+
+#' UCSC nucleotide color palette
+#'
+#' Returns the UCSC Genome Browser nucleotide color conventions as a named
+#' character vector. Colors follow standard bioinformatics conventions:
+#' A (green), C (blue), G (gold), T (red), N (grey).
+#'
+#' @param colors Optional named character vector of color overrides (e.g.,
+#'   `c(A = "purple")`). Unspecified bases retain their UCSC defaults.
+#' @return A named character vector with hex color codes for A, C, G, T, N.
+#' @export
+#' @examples
+#' # Default UCSC colors
+#' ez_sequence_palette()
+#'
+#' # Override A to purple
+#' ez_sequence_palette(colors = c(A = "purple"))
+ez_sequence_palette <- function(colors = NULL) {
+  palette <- .ucsc_nucleotide_colors
+  if (!is.null(colors)) {
+    valid <- names(colors) %in% names(palette)
+    if (!all(valid)) {
+      warning(
+        "Ignoring unknown nucleotide names in 'colors': ",
+        paste(names(colors)[!valid], collapse = ", ")
+      )
+    }
+    palette[names(colors)[valid]] <- colors[valid]
+  }
+  palette
+}

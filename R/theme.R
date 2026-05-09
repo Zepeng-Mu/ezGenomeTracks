@@ -303,6 +303,37 @@ ez_sashimi_theme <- function(y_axis_style = c("none", "simple", "full"), ...) {
   return(theme)
 }
 
+#' A theme for nucleotide sequence tracks
+#'
+#' This function creates a theme specifically for sequence tracks produced by
+#' `ez_sequence()`. It removes all y-axis elements (the track is always a
+#' single row of colored tiles) and strips the panel background.
+#'
+#' @param ... Additional arguments passed to `ez_theme`.
+#' @return A ggplot2 theme object.
+#' @export
+#' @importFrom ggplot2 theme element_blank
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' p <- ggplot(df, aes(x = position, label = nucleotide, fill = fill)) +
+#'   geom_sequence() +
+#'   ez_sequence_theme()
+#' }
+ez_sequence_theme <- function(...) {
+  ez_theme(show_x_axis = FALSE, show_ticks = FALSE, ...) +
+    ggplot2::theme(
+      axis.text.y  = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
+      axis.line.y  = ggplot2::element_blank(),
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.text.x  = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank(),
+      axis.line.x  = ggplot2::element_blank(),
+      plot.margin  = ggplot2::margin(2, 5, 2, 5)
+    )
+}
+
 
 #' Hi-C theme
 #'

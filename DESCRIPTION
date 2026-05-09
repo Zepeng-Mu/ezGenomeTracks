@@ -40,7 +40,9 @@ Suggests:
     mockr,
     ggrastr,
     ggrepel (>= 0.9.0),
-    vibeColors
+    vibeColors,
+    BSgenome,
+    Biostrings
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BiocViews: Visualization, Sequencing, HiC
