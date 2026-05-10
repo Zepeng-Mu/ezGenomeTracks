@@ -21,6 +21,7 @@ reference:
   - ez_link
   - ez_sashimi
   - ez_manhattan
+  - ez_sequence
   - ez_hic
   - ez_locusZoom
   - vstack_plot
@@ -34,6 +35,7 @@ reference:
   - geom_gene
   - geom_link
   - geom_manhattan
+  - geom_sequence
   - geom_hic
   - geom_hic_triangle
 
@@ -61,6 +63,8 @@ reference:
   - ez_sashimi_theme
   - ez_manhattan_theme
   - ez_hic_theme
+  - ez_sequence_theme
+  - ez_sequence_palette
   - scale_x_genome
   - scale_x_genome_region
   - scale_y_strand
@@ -119,6 +123,8 @@ navbar:
         href: articles/tracks_sashimi.html
       - text: Manhattan
         href: articles/tracks_manhattan.html
+      - text: Sequence
+        href: articles/tracks_sequence.html
     examples:
       text: Examples
       menu:
