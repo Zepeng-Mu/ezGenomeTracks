@@ -330,6 +330,7 @@ ez_sequence_theme <- function(...) {
       axis.text.x  = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
       axis.line.x  = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_blank(),
       plot.margin  = ggplot2::margin(2, 5, 2, 5)
     )
 }

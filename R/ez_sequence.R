@@ -60,7 +60,7 @@
 #' UCSC nucleotide color defaults can be inspected via `ez_sequence_palette()`.
 #'
 #' @export
-#' @importFrom ggplot2 ggplot aes scale_fill_identity ylim
+#' @importFrom ggplot2 ggplot aes scale_fill_identity ylim coord_cartesian
 #' @importFrom methods is
 #'
 #' @examples
@@ -150,6 +150,7 @@ ez_sequence <- function(
     ggplot2::scale_fill_identity() +
     ggplot2::ylim(0, 1) +
     scale_x_genome_region(region) +
+    ggplot2::coord_cartesian(clip = "off") +
     ez_sequence_theme()
 
   p
