@@ -1,0 +1,179 @@
+---
+title: "Sequence track"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ezGenomeTracks)
+library(ggplot2)
+```
+
+`ezGenomeTracks` provides `ez_sequence()` to plot nucleotide sequence from a reference genome. Each base is colored following [UCSC Genome Browser](https://genome.ucsc.edu/) conventions: **A** (green), **C** (blue), **G** (gold), **T** (red), **N** (grey).
+
+## Setup
+
+You need a BSgenome data package for your organism. For human hg38:
+
+```{r eval=FALSE}
+BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
+```
+
+```{r}
+library(BSgenome.Hsapiens.UCSC.hg38)
+genome <- BSgenome.Hsapiens.UCSC.hg38::Hsapiens
+```
+
+Define a short region to inspect (sequence tracks are most useful at base-pair resolution):
+
+```{r}
+region <- "chr2:231109000-231109030"
+```
+
+## Visual styles
+
+`ez_sequence()` offers two visual styles controlled by the `style` argument.
+
+### Text style (default)
+
+The default `style = "text"` draws bold, UCSC-colored nucleotide letters with no background or border — a clean look that is readable at narrow regions and blends well with other tracks.
+
+```{r, fig.height=0.5}
+ez_sequence(genome, region = region)
+```
+
+### Tile style
+
+`style = "tile"` draws colored background tiles with white letter labels on top, echoing the classic UCSC "dense" sequence display.
+
+```{r, fig.height=0.5}
+ez_sequence(genome, region = region, style = "tile")
+```
+
+## Automatic label suppression
+
+When the region is wider than `max_label_bp` (default 200 bp), `show_labels = "auto"` (the default) suppresses individual letter labels automatically. This prevents overplotting while still rendering colored blocks for orientation.
+
+```{r, fig.height=0.5}
+# Wide region: labels hidden automatically, tiles drawn instead
+ez_sequence(genome, region = "chr2:231109000-231109500", style = "tile")
+```
+
+You can override this behaviour by setting `show_labels` explicitly:
+
+```{r, fig.height=0.5}
+# Force labels off regardless of region width
+ez_sequence(genome, region = region, show_labels = FALSE, style = "tile")
+```
+
+## Customizing colors
+
+Use the `colors` argument to override individual nucleotide colors. Only the specified bases are changed; others retain UCSC defaults.
+
+```{r, fig.height=0.5}
+ez_sequence(
+  genome,
+  region = region,
+  colors = c(A = "darkorchid", T = "deeppink")
+)
+```
+
+Inspect the full default palette:
+
+```{r}
+ez_sequence_palette()
+```
+
+Replace the entire palette by supplying all five bases:
+
+```{r, fig.height=0.5}
+grayscale <- c(
+  A = "#222222",
+  C = "#555555",
+  G = "#888888",
+  T = "#BBBBBB",
+  N = "#DDDDDD"
+)
+ez_sequence(genome, region = region, colors = grayscale)
+```
+
+## Adjusting label size and tile height
+
+```{r, fig.height=0.5}
+ez_sequence(
+  genome,
+  region = region,
+  style = "tile",
+  label_size = 4,
+  tile_height = 1
+)
+```
+
+## Stacking with other tracks
+
+`ez_sequence()` returns a standard ggplot2 object and is fully compatible with `vstack_plot()`. A common pattern is to place a sequence track at the bottom of a stacked plot for base-level context.
+
+```{r}
+bw0 <- system.file(
+  "extdata",
+  "avg_chr2-231091223_231109786_231113600_0.bw",
+  package = "ezGenomeTracks"
+)
+```
+
+```{r, fig.height=2.5}
+cov_track <- ez_coverage(bw0, region = region, y_axis_style = "simple")
+seq_track <- ez_sequence(genome, region = region)
+
+vstack_plot(cov_track, seq_track, heights = c(1))
+```
+
+The tile style can also be useful in a stacked context, particularly when the region is very narrow:
+
+```{r, fig.height=2.5}
+vstack_plot(
+  ez_coverage(bw0, region = region, y_axis_style = "simple"),
+  ez_sequence(genome, region = region, style = "tile"),
+  heights = c(1)
+)
+```
+
+## Low-level usage with `geom_sequence`
+
+For full control, you can use `geom_sequence()` directly in a `ggplot()` call. The expected data frame needs `position`, `nucleotide`, and `fill` columns, which you can build with `ez_sequence_palette()` and a DNAString:
+
+```{r}
+library(BSgenome)
+library(GenomicRanges)
+
+region_gr <- parse_region(region)
+seq_char <- as.character(getSeq(genome, region_gr)[[1]])
+nucs <- strsplit(seq_char, "")[[1]]
+palette <- ez_sequence_palette()
+
+seq_df <- data.frame(
+  position = seq(
+    GenomicRanges::start(region_gr),
+    by = 1L,
+    length.out = length(nucs)
+  ),
+  nucleotide = nucs,
+  fill = palette[nucs]
+)
+
+head(seq_df)
+```
+
+```{r, fig.height=0.5}
+ggplot(seq_df, aes(x = position, label = nucleotide, fill = fill)) +
+  geom_sequence(label_size = 3.5) +
+  scale_fill_identity() +
+  scale_x_genome_region(region) +
+  ylim(0, 1) +
+  ez_sequence_theme()
+```

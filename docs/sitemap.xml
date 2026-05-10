@@ -7,6 +7,7 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_gene.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_manhattan.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_sashimi.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_sequence.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/authors.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/copilot-instructions.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/index.html</loc></url>
@@ -46,6 +47,9 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_manhattan_theme.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_sashimi.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_sashimi_theme.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_sequence.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_sequence_palette.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_sequence_theme.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/ez_theme.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/format_genomic_coord.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/gene_to_region.html</loc></url>
@@ -56,6 +60,7 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_hic_triangle.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_link.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_manhattan.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_sequence.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/get_single_signal.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/granges_to_df.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/hic_palettes.html</loc></url>
