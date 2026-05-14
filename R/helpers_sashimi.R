@@ -1,4 +1,17 @@
 # ezGenomeTracks - Helper functions (split from helpers.R)
+
+# Internal helper: Get coverage value at a genomic position
+# Finds the first overlapping coverage bin and returns max(score), or 0 if none.
+#
+# @param pos Genomic position (integer)
+# @param cov_df Data frame with start, end, score columns
+# @return Numeric coverage value
+get_coverage_at_pos <- function(pos, cov_df) {
+  idx <- which(cov_df$start <= pos & cov_df$end >= pos)
+  if (length(idx) == 0) return(0)
+  return(max(cov_df$score[idx], na.rm = TRUE))
+}
+
 #' Process sashimi plot data for visualization
 #'
 #' This function processes coverage and junction data for sashimi plot visualization.
@@ -33,95 +46,12 @@ process_sashimi_data <- function(
   region,
   junction_direction = c("alternate", "up", "down")
 ) {
-  junction_direction <- match.arg(junction_direction)
-  region_gr <- parse_region(region)
-
-  # Process coverage data
-  if (is.character(coverage_data) && length(coverage_data) == 1) {
-    coverage_df <- import_genomic_data(coverage_data, which = region_gr)
-  } else if (is.data.frame(coverage_data)) {
-    required_cols <- c("seqnames", "start", "end", "score")
-    validate_required_columns(coverage_data, required_cols, "Coverage data frame")
-    coverage_df <- coverage_data |>
-      dplyr::filter(
-        seqnames == as.character(region_gr@seqnames),
-        end >= GenomicRanges::start(region_gr),
-        start <= GenomicRanges::end(region_gr)
-      )
-  } else {
-    stop("coverage_data must be a data frame or file path")
-  }
-
-  # Process junction data
-  if (is.character(junction_data) && length(junction_data) == 1) {
-    junction_df <- import_genomic_data(junction_data, which = region_gr)
-  } else if (is.data.frame(junction_data)) {
-    required_cols <- c("seqnames", "start", "end", "score")
-    validate_required_columns(junction_data, required_cols, "Junction data frame")
-    junction_df <- junction_data |>
-      dplyr::filter(
-        seqnames == as.character(region_gr@seqnames),
-        end >= GenomicRanges::start(region_gr),
-        start <= GenomicRanges::end(region_gr)
-      )
-  } else {
-    stop("junction_data must be a data frame or file path")
-  }
-
-  # Handle empty junction data
-
-  if (nrow(junction_df) == 0) {
-    junction_df$y_start <- numeric(0)
-    junction_df$y_end <- numeric(0)
-    junction_df$arc_direction <- character(0)
-    junction_df$start1 <- numeric(0)
-    junction_df$end1 <- numeric(0)
-    junction_df$start2 <- numeric(0)
-    junction_df$end2 <- numeric(0)
-    return(list(coverage_df = coverage_df, junction_df = junction_df))
-  }
-
-  # Sort junctions by start position and assign direction
-  junction_df <- junction_df |>
-    dplyr::arrange(start) |>
-    dplyr::mutate(
-      arc_direction = if (junction_direction == "alternate") {
-        ifelse(dplyr::row_number() %% 2 == 1, "up", "down")
-      } else {
-        junction_direction
-      }
-    )
-
-  # Helper function to get coverage value at a position
-  get_coverage_at_pos <- function(pos, cov_df) {
-    # Find overlapping coverage bin
-    idx <- which(cov_df$start <= pos & cov_df$end >= pos)
-    if (length(idx) == 0) {
-      return(0)
-    }
-    # Return the score of the first matching bin (or max if multiple)
-    return(max(cov_df$score[idx], na.rm = TRUE))
-  }
-
-  # Calculate y-positions for arc endpoints
-  junction_df <- junction_df |>
-    dplyr::mutate(
-      y_start = ifelse(
-        arc_direction == "up",
-        sapply(start, get_coverage_at_pos, cov_df = coverage_df),
-        0
-      ),
-      y_end = ifelse(
-        arc_direction == "up",
-        sapply(end, get_coverage_at_pos, cov_df = coverage_df),
-        0
-      ),
-      # Add start1/end1/start2/end2 columns for compatibility with geom_link
-      start1 = start,
-      end1 = start,
-      start2 = end,
-      end2 = end
-    )
+  process_sashimi_input(
+    coverage_data = coverage_data,
+    junction_data = junction_data,
+    region = region,
+    junction_direction = junction_direction
+  )
 
   return(list(coverage_df = coverage_df, junction_df = junction_df))
 }
@@ -171,13 +101,6 @@ process_sashimi_input <- function(
 ) {
   junction_direction <- match.arg(junction_direction)
   region_gr <- parse_region(region)
-
-  # Helper function to get coverage value at a position
-  get_coverage_at_pos <- function(pos, cov_df) {
-    idx <- which(cov_df$start <= pos & cov_df$end >= pos)
-    if (length(idx) == 0) return(0)
-    return(max(cov_df$score[idx], na.rm = TRUE))
-  }
 
   # Helper function to process a single junction source
   process_single_junction <- function(junc_input, cov_df, track_name = NULL) {
@@ -267,11 +190,7 @@ process_sashimi_input <- function(
     }
 
     # Assign names if not present
-    if (is.null(names(coverage_data)) && is.null(track_labels)) {
-      names(coverage_data) <- paste0("Track ", seq_along(coverage_data))
-    } else if (is.null(names(coverage_data)) && !is.null(track_labels)) {
-      names(coverage_data) <- track_labels
-    }
+    coverage_data <- ensure_track_names(coverage_data, track_labels)
 
     if (is.null(names(junction_data))) {
       names(junction_data) <- names(coverage_data)

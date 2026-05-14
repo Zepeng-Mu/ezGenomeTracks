@@ -29,8 +29,8 @@
 #'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
 #' @param extend_type How to interpret `extend`: "proportion" (relative to gene
 #'   length) or "bp" (absolute base pairs). Default: "proportion".
-#' @param exon_height Relative height of exons (0 to 1). Default: 0.4
-#' @param intron_width Line width for introns. Default: 0.4
+#' @param exon_height Relative height of exons (0 to 1). Default: 0.2
+#' @param intron_width Line width for introns. Default: 0.6
 #' @param exon_color Border color for exons. Default: NULL (uses strand-based colors
 #'   when `y = "strand"`, otherwise "gray50")
 #' @param exon_fill Fill color for exons. Default: NULL (uses strand-based colors
@@ -61,6 +61,8 @@
 #'   (`segment.color = NA`). To show connecting lines, use `list(segment.color = "gray50")`.
 #'   Override direction with `list(direction = "both")` for vertical repositioning too.
 #'   Other useful options: `max.overlaps`, `force`, `box.padding`, `point.padding`.
+#' @param border Logical. If TRUE, adds a black border around the plot panel.
+#'   Default: FALSE
 #' @param ... Additional arguments passed to `geom_gene()`. Note that `color`
 #'   and `colour` arguments are ignored; use `exon_color`, `exon_fill`, and
 #'   `intron_color` instead.
@@ -166,6 +168,7 @@ ez_gene <- function(
   max_labels = NULL,
   label_priority = "length",
   repel_args = list(),
+  border = FALSE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -241,7 +244,7 @@ ez_gene <- function(
     # Data frame - use as-is
     gene_data <- data
   } else {
-    stop("Data must be a file path, TxDb object, or data frame")
+    stop("data must be a file path, TxDb object, or data frame")
   }
 
   # Ensure gene body rows exist for each gene
@@ -594,6 +597,8 @@ ez_gene <- function(
       ez_gene_theme() +
       ggplot2::labs(x = NULL)
   }
+
+  if (border) p <- apply_border_theme(p)
 
   return(p)
 }

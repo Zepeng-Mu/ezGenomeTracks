@@ -48,6 +48,7 @@
 #'   Default: 2 (dashed).
 #' @param facet_label_position Position of facet labels for multi-track plots:
 #'   "top" or "left". Default: "top".
+#' @param border Logical. If TRUE, adds a black border around the plot panel. Default: FALSE
 #' @param region Deprecated. Use `ez_locusZoom()` for regional plots.
 #' @param gene Deprecated. Use `ez_locusZoom()` for regional plots.
 #' @param ... Additional arguments passed to `geom_manhattan()`.
@@ -111,6 +112,7 @@ ez_manhattan <- function(
     threshold_color = "red",
     threshold_linetype = 2,
     facet_label_position = c("top", "left"),
+    border = FALSE,
     # Deprecated parameters (kept for backward compatibility)
     region = NULL,
     gene = NULL,
@@ -177,35 +179,11 @@ ez_manhattan <- function(
   }
 
   # Auto-detect column names if not provided
-  if (is.null(chr)) {
-    chr <- detect_column(
-      plotDt,
-      c("CHR", "chr", "seqnames", "chrom", "chromosome"),
-      "chromosome"
-    )
-  }
-  if (is.null(bp)) {
-    bp <- detect_column(
-      plotDt,
-      c("BP", "bp", "start", "pos", "position", "POS"),
-      "position"
-    )
-  }
-  if (is.null(p)) {
-    p <- detect_column(
-      plotDt,
-      c("P", "p", "pvalue", "p.value", "pval", "P.value"),
-      "p-value"
-    )
-  }
-  if (is.null(snp)) {
-    snp <- detect_column(
-      plotDt,
-      c("SNP", "snp", "rsid", "id", "variant_id", "marker"),
-      "SNP",
-      required = FALSE
-    )
-  }
+  cols <- auto_detect_gwas_columns(plotDt, chr, bp, p, snp)
+  chr <- cols$chr
+  bp <- cols$bp
+  p <- cols$p
+  snp <- cols$snp
 
   # Check for single-chromosome data (should use ez_locusZoom instead)
   n_chr <- length(unique(plotDt[[chr]]))
@@ -277,30 +255,10 @@ ez_manhattan <- function(
 
     # Add faceting if multiple tracks
     if (has_track) {
-      if (facet_label_position == "left") {
-        plot_obj <- plot_obj +
-          ggplot2::facet_wrap(
-            ~track,
-            ncol = 1,
-            scales = "free_y",
-            strip.position = "left"
-          )
-      } else {
-        plot_obj <- plot_obj +
-          ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y")
-      }
+      plot_obj <- apply_facet_position(plot_obj, facet_label_position)
     }
 
     plot_obj <- plot_obj + ez_theme()
-
-    # Apply facet label theming last (after ez_theme, so it doesn't get overwritten)
-    if (has_track && facet_label_position == "left") {
-      plot_obj <- plot_obj +
-        ggplot2::theme(
-          strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
-          strip.placement = "outside"
-        )
-    }
   } else {
     # Standard single-track genome-wide Manhattan plot
     plot_obj <- ggplot2::ggplot(plotDt) +
@@ -325,6 +283,8 @@ ez_manhattan <- function(
 
     plot_obj <- plot_obj + ez_theme()
   }
+
+  if (border) plot_obj <- apply_border_theme(plot_obj)
 
   return(plot_obj)
 }

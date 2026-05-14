@@ -150,11 +150,7 @@ process_interaction_input <- function(input, region, track_labels = NULL) {
     }
   } else if (is.list(input)) {
     # Case 3: List input
-    if (is.null(names(input)) && is.null(track_labels)) {
-      names(input) <- paste0("Track ", seq_along(input))
-    } else if (is.null(names(input)) && !is.null(track_labels)) {
-      names(input) <- track_labels
-    }
+    input <- ensure_track_names(input, track_labels)
 
     track_data_list <- list()
     for (i in seq_along(input)) {

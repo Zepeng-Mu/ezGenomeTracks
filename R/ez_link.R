@@ -225,14 +225,8 @@ ez_link <- function(
         ...
       )
 
-    # Apply color scales - use palette for multiple colors when only one was provided
-    n_colors <- length(color_values)
-    if (length(colors) == 1 && n_colors > 1) {
-      plot_colors <- ez_default_palette(n_colors)
-    } else {
-      plot_colors <- rep_len(colors, n_colors)
-    }
-    names(plot_colors) <- color_values
+    # Apply color scales
+    plot_colors <- resolve_plot_colors(colors, color_values)
 
     p <- p +
       ggplot2::scale_color_manual(
@@ -264,13 +258,8 @@ ez_link <- function(
           ...
         )
 
-      # Apply color scales - use palette for multiple colors when only one was provided
-      n_colors <- length(color_values)
-      if (length(colors) == 1 && n_colors > 1) {
-        plot_colors <- ez_default_palette(n_colors)
-      } else {
-        plot_colors <- rep_len(colors, n_colors)
-      }
+      # Apply color scales
+      plot_colors <- resolve_plot_colors(colors, color_values)
 
       p <- p +
         ggplot2::scale_color_manual(

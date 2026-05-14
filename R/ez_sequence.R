@@ -43,6 +43,7 @@
 #' @param tile_height Numeric (0–1). Height of each nucleotide tile as a
 #'   proportion of the panel height. Only used when `style = "tile"`.
 #'   Default: `0.8`.
+#' @param border Logical. If TRUE, adds a black border around the plot panel. Default: FALSE
 #' @param ... Additional arguments passed to `geom_sequence()`.
 #'
 #' @return A ggplot2 object representing the sequence track, compatible with
@@ -104,6 +105,7 @@ ez_sequence <- function(
   label_size   = 3,
   label_color  = "white",
   tile_height  = 0.8,
+  border       = FALSE,
   ...
 ) {
   style <- match.arg(style)
@@ -152,6 +154,8 @@ ez_sequence <- function(
     scale_x_genome_region(region) +
     ggplot2::coord_cartesian(clip = "off") +
     ez_sequence_theme()
+
+  if (border) p <- apply_border_theme(p)
 
   p
 }

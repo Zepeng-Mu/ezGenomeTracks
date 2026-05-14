@@ -99,7 +99,7 @@ filter_labels <- function(
     if (requireNamespace(pkg_name, quietly = TRUE)) {
       # Use package::package pattern to access the OrgDb object
       candidate <- tryCatch(
-        eval(parse(text = paste0(pkg_name, "::", pkg_name))),
+        getExportedValue(pkg_name, pkg_name),
         error = function(e) NULL
       )
       if (!is.null(candidate) && methods::is(candidate, "OrgDb")) {

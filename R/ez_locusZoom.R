@@ -65,6 +65,7 @@
 #'   Default: "none" (suitable for stacking).
 #' @param y_axis_label Label for the y-axis.
 #'   Default: `expression(paste("-log"[10], "(P)"))`.
+#' @param border Logical. If TRUE, adds a black border around the plot panel. Default: FALSE
 #' @param ... Additional arguments passed to `geom_manhattan()`.
 #'
 #' @return A ggplot2 object containing the regional association plot.
@@ -162,70 +163,30 @@ ez_locusZoom <- function(
     threshold_linetype = 2,
     y_axis_style = c("none", "simple", "full"),
     y_axis_label = expression(paste("-log"[10], "(P)")),
+    border = FALSE,
     ...) {
-  # Validate that either region or gene is provided
-
-if (is.null(region) && is.null(gene)) {
-    stop(
-      "Either 'region' or 'gene' must be provided for ez_locusZoom().\n",
-      "For genome-wide Manhattan plots, use ez_manhattan() instead."
-    )
-  }
-
-  # Resolve region from gene name if provided
-  if (!is.null(gene)) {
-    if (is.null(gene_db)) {
-      stop("When using 'gene' parameter, 'gene_db' (TxDb object) must be provided.")
-    }
-    region <- gene_to_region(
-      gene_name = gene,
-      txdb = gene_db,
-      org_db = org_db,
-      extend = extend,
-      extend_type = match.arg(extend_type)
-    )
-  }
+  # Resolve region from either region string or gene name
+  region <- .resolve_region(
+    region = region, gene = gene, gene_db = gene_db,
+    org_db = org_db, extend = extend, extend_type = extend_type
+  )
 
   # Validate inputs
   y_axis_style <- match.arg(y_axis_style)
 
   # Validate input is a data frame
   if (!is.data.frame(input)) {
-    stop("Input must be a data frame containing GWAS results.")
+    stop("input must be a data frame containing GWAS results")
   }
 
   plotDt <- input
 
   # Auto-detect column names if not provided
-  if (is.null(chr)) {
-    chr <- detect_column(
-      plotDt,
-      c("CHR", "chr", "seqnames", "chrom", "chromosome"),
-      "chromosome"
-    )
-  }
-  if (is.null(bp)) {
-    bp <- detect_column(
-      plotDt,
-      c("BP", "bp", "start", "pos", "position", "POS"),
-      "position"
-    )
-  }
-  if (is.null(p)) {
-    p <- detect_column(
-      plotDt,
-      c("P", "p", "pvalue", "p.value", "pval", "P.value"),
-      "p-value"
-    )
-  }
-  if (is.null(snp)) {
-    snp <- detect_column(
-      plotDt,
-      c("SNP", "snp", "rsid", "id", "variant_id", "marker"),
-      "SNP",
-      required = FALSE
-    )
-  }
+  cols <- auto_detect_gwas_columns(plotDt, chr, bp, p, snp)
+  chr <- cols$chr
+  bp <- cols$bp
+  p <- cols$p
+  snp <- cols$snp
 
   # Filter data to region
   region_gr <- parse_region(region)
@@ -293,6 +254,8 @@ if (is.null(region) && is.null(gene)) {
 
   # Apply regional theme
   plot_obj <- plot_obj + ez_manhattan_theme(y_axis_style = y_axis_style)
+
+  if (border) plot_obj <- apply_border_theme(plot_obj)
 
   return(plot_obj)
 }

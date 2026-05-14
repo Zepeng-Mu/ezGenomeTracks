@@ -39,52 +39,13 @@ process_manhattan_input <- function(
   snp = NULL,
   track_labels = NULL
 ) {
-  # Helper function to auto-detect column names
-  detect_column <- function(data, candidates, param_name, required = TRUE) {
-    for (col in candidates) {
-      if (col %in% colnames(data)) return(col)
-    }
-    if (required) {
-      stop(paste0(
-        "Could not find ",
-        param_name,
-        " column. Expected one of: ",
-        paste(candidates, collapse = ", ")
-      ))
-    }
-    return(NULL)
-  }
-
-  # Define candidate column names
-  chr_candidates <- c("CHR", "chr", "seqnames", "chrom", "chromosome")
-  bp_candidates <- c("BP", "bp", "start", "pos", "position", "POS")
-  p_candidates <- c("P", "p", "pvalue", "p.value", "pval", "P.value")
-  snp_candidates <- c("SNP", "snp", "rsid", "id", "variant_id", "marker")
-
   if (is.data.frame(input)) {
     # Case 1: Data frame input
-    # Auto-detect column names if not provided
-    if (is.null(chr)) {
-      chr <- detect_column(input, chr_candidates, "chromosome")
-    }
-    if (is.null(bp)) {
-      bp <- detect_column(input, bp_candidates, "position")
-    }
-    if (is.null(p)) {
-      p <- detect_column(input, p_candidates, "p-value")
-    }
-    if (is.null(snp)) {
-      snp <- detect_column(input, snp_candidates, "SNP", required = FALSE)
-    }
-
+    cols <- auto_detect_gwas_columns(input, chr, bp, p, snp)
     return(input)
   } else if (is.list(input)) {
     # Case 2: List input (named or unnamed)
-    if (is.null(names(input)) && is.null(track_labels)) {
-      names(input) <- paste0("Track ", seq_along(input))
-    } else if (is.null(names(input)) && !is.null(track_labels)) {
-      names(input) <- track_labels
-    }
+    input <- ensure_track_names(input, track_labels)
 
     track_data_list <- list()
     for (i in seq_along(input)) {
@@ -92,22 +53,7 @@ process_manhattan_input <- function(
       track_element <- input[[i]]
 
       if (is.data.frame(track_element)) {
-        # Auto-detect column names for each track element if not provided
-        local_chr <- if (is.null(chr)) {
-          detect_column(track_element, chr_candidates, "chromosome")
-        } else {
-          chr
-        }
-        local_bp <- if (is.null(bp)) {
-          detect_column(track_element, bp_candidates, "position")
-        } else {
-          bp
-        }
-        local_p <- if (is.null(p)) {
-          detect_column(track_element, p_candidates, "p-value")
-        } else {
-          p
-        }
+        auto_detect_gwas_columns(track_element, chr, bp, p, snp)
 
         # Add track column
         track_element$track <- track_name

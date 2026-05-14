@@ -75,4 +75,71 @@ apply_border_theme <- function(plot) {
     )
 }
 
+# Internal helper: Resolve plot colors for multi-track/grouped data
+# When a single color is provided but multiple groups exist, falls back to
+# the default palette. Otherwise recycles colors via rep_len().
+#
+# @param colors Character vector of user-provided colors
+# @param color_values Character vector of unique group/track names
+# @return Named character vector of colors
+resolve_plot_colors <- function(colors, color_values) {
+  n_colors <- length(color_values)
+  if (length(colors) == 1 && n_colors > 1) {
+    plot_colors <- ez_default_palette(n_colors)
+  } else {
+    plot_colors <- rep_len(colors, n_colors)
+  }
+  names(plot_colors) <- color_values
+  plot_colors
+}
+
+# Internal helper: Auto-detect GWAS column names from common conventions
+# Checks for standard column names used in GWAS summary statistics.
+#
+# @param data Data frame to inspect
+# @param chr Column name for chromosome (auto-detected if NULL)
+# @param bp Column name for base pair position (auto-detected if NULL)
+# @param p Column name for p-value (auto-detected if NULL)
+# @param snp Column name for SNP ID (auto-detected if NULL, optional)
+# @return Named list with chr, bp, p, snp column names
+auto_detect_gwas_columns <- function(data, chr = NULL, bp = NULL, p = NULL, snp = NULL) {
+  if (is.null(chr)) {
+    chr <- detect_column(
+      data, c("CHR", "chr", "seqnames", "chrom", "chromosome"), "chromosome"
+    )
+  }
+  if (is.null(bp)) {
+    bp <- detect_column(
+      data, c("BP", "bp", "start", "pos", "position", "POS"), "position"
+    )
+  }
+  if (is.null(p)) {
+    p <- detect_column(
+      data, c("P", "p", "pvalue", "p.value", "pval", "P.value"), "p-value"
+    )
+  }
+  if (is.null(snp)) {
+    snp <- detect_column(
+      data, c("SNP", "snp", "rsid", "id", "variant_id", "marker"), "SNP",
+      required = FALSE
+    )
+  }
+  list(chr = chr, bp = bp, p = p, snp = snp)
+}
+
+# Internal helper: Assign default track names to a named list of inputs
+# Used by process_*_input() functions to ensure consistent track naming.
+#
+# @param input A list of data (may or may not have names)
+# @param track_labels Optional character vector of track labels
+# @return The input list with names assigned if missing
+ensure_track_names <- function(input, track_labels = NULL) {
+  if (is.null(names(input)) && is.null(track_labels)) {
+    names(input) <- paste0("Track ", seq_along(input))
+  } else if (is.null(names(input)) && !is.null(track_labels)) {
+    names(input) <- track_labels
+  }
+  input
+}
+
 #' Extract signal data for a single input element

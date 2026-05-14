@@ -170,7 +170,7 @@ ez_coverage <- function(
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
     "bin_width must be positive integer" = is.null(bin_width) ||
-      (bin_width > 0 && is.integer(bin_width))
+      (bin_width > 0 && is.numeric(bin_width))
   )
 
   # Resolve default colors
@@ -289,14 +289,8 @@ ez_coverage <- function(
     p <- ggplot2::ggplot(plotDt, aes_mapping) +
       geom_coverage(type = type, area_border = area_border, alpha = alpha, ...)
 
-    # Apply color scales - use palette for multiple colors when only one was provided
-    n_colors <- length(color_values)
-    if (length(colors) == 1 && n_colors > 1) {
-      plot_colors <- ez_default_palette(n_colors)
-    } else {
-      plot_colors <- rep_len(colors, n_colors)
-    }
-    names(plot_colors) <- color_values
+    # Apply color scales
+    plot_colors <- resolve_plot_colors(colors, color_values)
 
     p <- p +
       ggplot2::scale_fill_manual(
@@ -321,14 +315,8 @@ ez_coverage <- function(
       p <- ggplot2::ggplot(plotDt, aes_mapping) +
         geom_coverage(type = type, area_border = area_border, alpha = alpha, ...)
 
-      # Apply color scales - use palette for multiple colors when only one was provided
-      n_colors <- length(color_values)
-      if (length(colors) == 1 && n_colors > 1) {
-        plot_colors <- ez_default_palette(n_colors)
-      } else {
-        plot_colors <- rep_len(colors, n_colors)
-      }
-      names(plot_colors) <- color_values
+      # Apply color scales
+      plot_colors <- resolve_plot_colors(colors, color_values)
 
       p <- p +
         ggplot2::scale_fill_manual(

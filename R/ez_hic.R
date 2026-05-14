@@ -34,6 +34,7 @@
 #'   Hi-C layer for better performance with large matrices. Default: FALSE
 #' @param rasterize_dpi Resolution for rasterization in dots per inch. Default: 300
 #' @param show_diagonal Logical. If TRUE, show the diagonal (self-interactions). Default: TRUE
+#' @param border Logical. If TRUE, adds a black border around the plot panel. Default: FALSE
 #' @param ... Additional arguments passed to geom_hic or geom_hic_triangle
 #'
 #' @return A ggplot2 object
@@ -93,6 +94,7 @@ ez_hic <- function(
   rasterize = FALSE,
   rasterize_dpi = 300,
   show_diagonal = TRUE,
+  border = FALSE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -200,6 +202,8 @@ ez_hic <- function(
       ) +
       ez_hic_theme()
   }
+
+  if (border) p <- apply_border_theme(p)
 
   return(p)
 }

@@ -178,13 +178,7 @@ ez_sashimi <- function(
   # Set up colors for tracks
   if (has_track) {
     track_names <- unique(coverage_df$track)
-    n_tracks <- length(track_names)
-    if (length(colors) == 1 && n_tracks > 1) {
-      plot_colors <- ez_default_palette(n_tracks)
-    } else {
-      plot_colors <- rep_len(colors, n_tracks)
-    }
-    names(plot_colors) <- track_names
+    plot_colors <- resolve_plot_colors(colors, track_names)
   } else {
     plot_colors <- colors[1]
   }
@@ -280,24 +274,7 @@ ez_sashimi <- function(
     }
 
     # Add faceting for multiple tracks
-    if (facet_label_position == "left") {
-      p <- p +
-        ggplot2::facet_wrap(
-          ~track,
-          ncol = 1,
-          scales = "free_y",
-          strip.position = "left"
-        ) +
-        ggplot2::theme(
-          strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1),
-          strip.placement = "inside",
-          panel.spacing.y = ggplot2::unit(0, "pt")
-        )
-    } else {
-      p <- p +
-        ggplot2::facet_wrap(~track, ncol = 1, scales = "free_y") +
-        ggplot2::theme(panel.spacing.y = ggplot2::unit(0, "pt"))
-    }
+    p <- apply_facet_position(p, facet_label_position)
   } else {
     # Single track mode
     p <- ggplot2::ggplot() +
@@ -398,42 +375,21 @@ ez_sashimi <- function(
   }
 
   # Calculate y-axis limits to accommodate both coverage and arcs
-  if (has_track) {
-    # For multi-track, we use free_y scales, so no global ylim needed
-    # But we still need to set coord_cartesian for clipping
-    max_coverage <- max(coverage_df$score, na.rm = TRUE)
-    if (nrow(junction_df) > 0) {
-      max_arc_height <- max(
-        abs(junction_df$start2 - junction_df$start1) * height_factor,
-        na.rm = TRUE
-      )
-      has_up_arcs <- any(junction_df$arc_direction == "up")
-      has_down_arcs <- any(junction_df$arc_direction == "down")
+  max_coverage <- max(coverage_df$score, na.rm = TRUE)
+  if (nrow(junction_df) > 0) {
+    max_arc_height <- max(
+      abs(junction_df$start2 - junction_df$start1) * height_factor,
+      na.rm = TRUE
+    )
+    has_up_arcs <- any(junction_df$arc_direction == "up")
+    has_down_arcs <- any(junction_df$arc_direction == "down")
 
-      y_upper <- max_coverage +
-        if (has_up_arcs) max_arc_height * 1.5 else max_coverage * 0.1
-      y_lower <- if (has_down_arcs) -(max_arc_height * 1.5) else 0
-    } else {
-      y_upper <- max_coverage * 1.1
-      y_lower <- 0
-    }
+    y_upper <- max_coverage +
+      if (has_up_arcs) max_arc_height * 1.5 else max_coverage * 0.1
+    y_lower <- if (has_down_arcs) -(max_arc_height * 1.5) else 0
   } else {
-    max_coverage <- max(coverage_df$score, na.rm = TRUE)
-    if (nrow(junction_df) > 0) {
-      max_arc_height <- max(
-        abs(junction_df$start2 - junction_df$start1) * height_factor,
-        na.rm = TRUE
-      )
-      has_up_arcs <- any(junction_df$arc_direction == "up")
-      has_down_arcs <- any(junction_df$arc_direction == "down")
-
-      y_upper <- max_coverage +
-        if (has_up_arcs) max_arc_height * 1.5 else max_coverage * 0.1
-      y_lower <- if (has_down_arcs) -(max_arc_height * 1.5) else 0
-    } else {
-      y_upper <- max_coverage * 1.1
-      y_lower <- 0
-    }
+    y_upper <- max_coverage * 1.1
+    y_lower <- 0
   }
 
   # Apply theme and scales

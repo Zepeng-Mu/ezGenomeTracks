@@ -112,47 +112,11 @@ geom_manhattan <- function(
   }
 
   # Set column names with auto-detection
-  if (is.null(chr)) {
-    chr <- detect_column(
-      data,
-      c("CHR", "chr", "seqnames", "chrom", "chromosome"),
-      "chromosome"
-    )
-  }
-  if (is.null(bp)) {
-    bp <- detect_column(
-      data,
-      c("BP", "bp", "start", "pos", "position", "POS"),
-      "position"
-    )
-  }
-  if (is.null(p)) {
-    p <- detect_column(
-      data,
-      c("P", "p", "pvalue", "p.value", "pval", "P.value"),
-      "p-value"
-    )
-  }
-  if (is.null(snp)) {
-    # SNP column is optional
-    snp <- detect_column(
-      data,
-      c("SNP", "snp", "rsid", "id", "variant_id", "marker"),
-      "SNP",
-      required = FALSE
-    )
-  }
-
-  # Validate required columns exist
-  if (!chr %in% colnames(data)) {
-    stop(paste0("Chromosome column '", chr, "' not found in data."))
-  }
-  if (!bp %in% colnames(data)) {
-    stop(paste0("Position column '", bp, "' not found in data."))
-  }
-  if (!p %in% colnames(data)) {
-    stop(paste0("P-value column '", p, "' not found in data."))
-  }
+  cols <- auto_detect_gwas_columns(data, chr, bp, p, snp)
+  chr <- cols$chr
+  bp <- cols$bp
+  p <- cols$p
+  snp <- cols$snp
 
   # Prepare data with standardized column names
   # First, add r2 values to original data BEFORE arranging to preserve correspondence

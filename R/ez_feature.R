@@ -1,22 +1,4 @@
 # ezGenomeTracks - Feature functions (split from ez_wrappers.R)
-#' Easy peak track visualization
-#'
-#' This function creates a peak track visualization from a BED file or data frame.
-#' It is a wrapper around geom_feature that provides a simpler interface.
-#'
-#' @param input A BED file path or data frame with peak data
-#' @param region Genomic region to display (e.g., "chr1:1000000-2000000").
-#'   Either `region` or `gene` (with `gene_db`) must be provided.
-#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
-#'   When provided, the region is automatically determined from the gene coordinates
-#'   in `gene_db`. Either `region` or `gene` must be provided.
-#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
-#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
-#'   auto-detects available OrgDb packages.
-#' @param extend Numeric. Amount to extend the region beyond the gene body when
-#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
-#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
-#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' Create a feature track from genomic regions
 #'
 #' @description
@@ -27,7 +9,18 @@
 #' @param input Either a file path to a BED file or a data frame containing
 #'   genomic coordinates with columns for chromosome, start, and end positions.
 #' @param region Genomic region to display in the format "chr:start-end".
+#'   Either `region` or `gene` (with `gene_db`) must be provided.
 #'   Example: "chr1:1000000-2000000"
+#' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
+#'   When provided, the region is automatically determined from the gene coordinates
+#'   in `gene_db`. Either `region` or `gene` must be provided.
+#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
+#' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
+#'   auto-detects available OrgDb packages.
+#' @param extend Numeric. Amount to extend the region beyond the gene body when
+#'   using `gene` parameter. Default: 0.1 (10% of gene length on each side).
+#' @param extend_type How to interpret `extend`: "proportion" (relative to gene
+#'   length) or "bp" (absolute base pairs). Default: "proportion".
 #' @param color Border color of the features. Default: "black"
 #' @param fill Fill color of the features. When `use_score = TRUE`, this will be
 #'   used as the high value in the color gradient. Default: "gray70"
@@ -37,6 +30,8 @@
 #' @param use_score Logical indicating whether to use the 'score' column for
 #'   fill color. If TRUE, a gradient from white to the specified fill color will
 #'   be used. Default: FALSE
+#' @param border Logical. If TRUE, adds a black border around the plot panel.
+#'   Default: FALSE
 #' @param ... Additional arguments passed to `geom_feature()`
 #'
 #' @return A ggplot2 object representing the feature track.
@@ -49,8 +44,7 @@
 #' features will be colored by their score values.
 #'
 #' @export
-#' @importFrom ggplot2 ggplot aes scale_fill_gradient scale_fill_identity
-#'   theme_void ylim
+#' @importFrom ggplot2 ggplot aes scale_fill_gradient scale_fill_identity ylim
 #' @importFrom methods is
 #'
 #' @examples
@@ -81,6 +75,7 @@ ez_feature <- function(
   alpha = 0.7,
   height = 0.8,
   use_score = FALSE,
+  border = FALSE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -101,7 +96,14 @@ ez_feature <- function(
   }
 
   if (is.data.frame(input)) {
-    # It's a data frame, create the plot directly
+    # Filter data to the specified region
+    region_gr <- parse_region(region)
+    input <- input[
+      input$seqnames == as.character(GenomicRanges::seqnames(region_gr)) &
+      input$start < GenomicRanges::end(region_gr) &
+      input$end > GenomicRanges::start(region_gr),
+    ]
+
     # Note: geom_feature's default_aes already maps start->xmin, end->xmax
     if (use_score && "score" %in% colnames(input)) {
       p <- ggplot2::ggplot(input) +
@@ -128,10 +130,12 @@ ez_feature <- function(
     p <- p +
       scale_x_genome_region(region) +
       ggplot2::ylim(0, 1) + # Fixed y-axis for features
-      ggplot2::theme_void()
+      ez_feature_theme()
+
+    if (border) p <- apply_border_theme(p)
 
     return(p)
   } else {
-    stop("Input must be a file path or data frame")
+    stop("input must be a file path or data frame")
   }
 }

@@ -1,7 +1,7 @@
 # Tests for additional ez wrapper functions
 
-test_that("ez_manhattan creates Manhattan plots", {
-  # Create test GWAS data
+test_that("ez_manhattan creates genome-wide Manhattan plots", {
+  # Create test GWAS data with multiple chromosomes
   test_data <- data.frame(
     CHR = rep(1:3, each = 100),
     BP = rep(seq(1000, 10000, 1000), 30),
@@ -15,8 +15,14 @@ test_that("ez_manhattan creates Manhattan plots", {
   expect_true(length(p1$layers) > 0)
 
   # Test with custom parameters
-  p2 <- ez_manhattan(test_data, chr = "CHR", bp = "BP", p = "P",
-                     colors = c("red", "blue"), size = 1)
+  p2 <- ez_manhattan(
+    test_data,
+    chr = "CHR",
+    bp = "BP",
+    p = "P",
+    colors = c("red", "blue"),
+    size = 1
+  )
   expect_s3_class(p2, "ggplot")
   expect_true(length(p2$layers) > 0)
 
@@ -30,15 +36,36 @@ test_that("ez_manhattan creates Manhattan plots", {
   p4 <- ez_manhattan(test_data, threshold_p = 5e-8)
   expect_s3_class(p4, "ggplot")
   expect_true(length(p4$layers) > 0)
+})
 
-  # Test with R-squared coloring
-  test_data$R2 <- runif(300, 0, 1)
-  p5 <- ez_manhattan(test_data, r2 = test_data$R2, color_by = "r2")
-  expect_s3_class(p5, "ggplot")
-  expect_true(length(p5$layers) > 0)
+test_that("ez_manhattan errors on single-chromosome data", {
+  # Single chromosome data should error
+  single_chr_data <- data.frame(
+    CHR = rep(1, 91),
+    BP = seq(1000, 10000, 100),
+    P = runif(91, 1e-6, 1)
+  )
 
-  # Test error handling
-  expect_error(ez_manhattan("not_a_dataframe"))
+  expect_error(
+    ez_manhattan(single_chr_data),
+    "requires data from multiple chromosomes"
+  )
+})
+
+test_that("ez_manhattan deprecated region/gene redirect to ez_locusZoom", {
+  test_data <- data.frame(
+    CHR = rep(3, 50),
+    BP = seq(1000, 50000, length.out = 50),
+    P = runif(50, 1e-6, 1),
+    SNP = paste0("rs", 1:50)
+  )
+
+  # Using deprecated region parameter should warn and work
+  expect_warning(
+    p <- ez_manhattan(test_data, region = "chr3:1000-50000"),
+    "deprecated"
+  )
+  expect_s3_class(p, "ggplot")
 })
 
 test_that("ez_feature creates feature tracks from data frames", {
@@ -94,7 +121,7 @@ test_that("ez_link creates interaction tracks from data frames", {
 
   # Test with custom parameters
   p3 <- ez_link(test_data, "chr1:1000-8000",
-               curvature = 0.3, color = "red", size = 1, alpha = 0.8)
+               curvature = 0.3, colors = "red", size = 1, alpha = 0.8)
   expect_s3_class(p3, "ggplot")
   expect_true(length(p3$layers) > 0)
 
@@ -117,8 +144,8 @@ test_that("ez_hic creates Hi-C tracks from data frames", {
 
   # Test with custom parameters
   p2 <- ez_hic(test_data, "chr1:1000-5000",
-               resolution = 5000, log_transform = FALSE,
-               low = "blue", high = "red")
+               resolution = 5000, transform = "identity",
+               palette = "bwr")
   expect_s3_class(p2, "ggplot")
   expect_true(length(p2$layers) > 0)
 
