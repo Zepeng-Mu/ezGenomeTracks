@@ -70,6 +70,8 @@
 #'   in the data for discrete/continuous coloring. Default: "r2" if `r2` is
 #'   provided, otherwise "none".
 #' @param border Logical. If TRUE, adds a black border around the plot panel. Default: FALSE
+#' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
+#'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
 #' @param ... Additional arguments passed to `geom_manhattan()`.
 #'
 #' @return A ggplot2 object containing the regional association plot.
@@ -169,6 +171,7 @@ ez_locusZoom <- function(
     y_axis_label = expression(paste("-log"[10], "(P)")),
     color_by = NULL,
     border = FALSE,
+    label_chr = TRUE,
     ...) {
   # Resolve region from either region string or gene name
   region <- .resolve_region(
@@ -261,6 +264,8 @@ ez_locusZoom <- function(
   plot_obj <- plot_obj + ez_manhattan_theme(y_axis_style = y_axis_style)
 
   if (border) plot_obj <- apply_border_theme(plot_obj)
+
+  if (!label_chr) plot_obj <- plot_obj + ggplot2::labs(x = NULL)
 
   return(plot_obj)
 }

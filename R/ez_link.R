@@ -41,6 +41,8 @@
 #' @param facet_label_position Position of facet labels: "top" or "left" (default: "top")
 #' @param border Logical. If `TRUE`, adds a black border around the plotting panel (default: FALSE)
 #' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
+#' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
+#'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
 #' @param ... Additional arguments passed to `geom_link()`
 #'
 #' @return A ggplot2 object representing the link track.
@@ -108,6 +110,7 @@ ez_link <- function(
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
+  label_chr = TRUE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -124,6 +127,8 @@ ez_link <- function(
   direction <- match.arg(direction)
   color_by <- match.arg(color_by)
   facet_label_position <- match.arg(facet_label_position)
+
+  chr <- gsub("^chr", "", as.character(GenomicRanges::seqnames(parse_region(region))), ignore.case = TRUE)
 
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1
@@ -303,7 +308,8 @@ ez_link <- function(
       axis.ticks.y = ggplot2::element_blank(),
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor.y = ggplot2::element_blank()
-    )
+    ) +
+    ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL)
 
   # Apply border after theme (so it doesn't get overwritten)
   if (border) {

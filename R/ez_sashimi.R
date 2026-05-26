@@ -50,6 +50,8 @@
 #'   Only applies when using multiple tracks via named list input.
 #' @param border Logical. If `TRUE`, adds a black border around the plotting panel (default: FALSE)
 #' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
+#' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
+#'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
 #' @param ... Additional arguments passed to geom_coverage
 #'
 #' @return A ggplot2 object representing the sashimi plot
@@ -118,6 +120,7 @@ ez_sashimi <- function(
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
+  label_chr = TRUE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -397,7 +400,7 @@ ez_sashimi <- function(
     ez_sashimi_theme(y_axis_style = y_axis_style) +
     scale_x_genome_region(region) +
     ggplot2::coord_cartesian(ylim = c(y_lower, y_upper), clip = "off") +
-    ggplot2::labs(x = paste0("Chr", chr))
+    ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL)
 
   # Apply border after theme
   if (border) {

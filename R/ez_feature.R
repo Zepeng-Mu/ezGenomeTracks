@@ -32,6 +32,8 @@
 #'   be used. Default: FALSE
 #' @param border Logical. If TRUE, adds a black border around the plot panel.
 #'   Default: FALSE
+#' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
+#'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
 #' @param ... Additional arguments passed to `geom_feature()`
 #'
 #' @return A ggplot2 object representing the feature track.
@@ -76,6 +78,7 @@ ez_feature <- function(
   height = 0.8,
   use_score = FALSE,
   border = FALSE,
+  label_chr = TRUE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -94,6 +97,8 @@ ez_feature <- function(
     region_gr <- parse_region(region)
     input <- import_genomic_data(input, which = region_gr)
   }
+
+  chr <- gsub("^chr", "", as.character(GenomicRanges::seqnames(parse_region(region))), ignore.case = TRUE)
 
   if (is.data.frame(input)) {
     # Filter data to the specified region
@@ -130,7 +135,8 @@ ez_feature <- function(
     p <- p +
       scale_x_genome_region(region) +
       ggplot2::ylim(0, 1) + # Fixed y-axis for features
-      ez_feature_theme()
+      ez_feature_theme() +
+      ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL)
 
     if (border) p <- apply_border_theme(p)
 

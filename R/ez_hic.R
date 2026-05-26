@@ -35,6 +35,8 @@
 #' @param rasterize_dpi Resolution for rasterization in dots per inch. Default: 300
 #' @param show_diagonal Logical. If TRUE, show the diagonal (self-interactions). Default: TRUE
 #' @param border Logical. If TRUE, adds a black border around the plot panel. Default: FALSE
+#' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
+#'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
 #' @param ... Additional arguments passed to geom_hic or geom_hic_triangle
 #'
 #' @return A ggplot2 object
@@ -95,6 +97,7 @@ ez_hic <- function(
   rasterize_dpi = 300,
   show_diagonal = TRUE,
   border = FALSE,
+  label_chr = TRUE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -182,7 +185,7 @@ ez_hic <- function(
         oob = scales::oob_keep
       ) +
       ggplot2::coord_cartesian(clip = "off") +
-      ggplot2::labs(x = paste0("Chr", chr), y = "", fill = "Score") +
+      ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL, y = "", fill = "Score") +
       ez_hic_theme()
   } else {
     # Square view: both axes are genomic positions
@@ -196,8 +199,8 @@ ez_hic <- function(
       ) +
       ggplot2::coord_fixed(ratio = 1) +
       ggplot2::labs(
-        x = paste0("Chr", chr),
-        y = paste0("Chr", chr),
+        x = if (label_chr) paste0("Chr", chr) else NULL,
+        y = if (label_chr) paste0("Chr", chr) else NULL,
         fill = "Score"
       ) +
       ez_hic_theme()

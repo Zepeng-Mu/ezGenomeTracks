@@ -96,6 +96,8 @@
 #'   `average = TRUE`. (default: 50)
 #' @param border Logical. If `TRUE`, adds a black border around the plotting panel (default: FALSE)
 #' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
+#' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
+#'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
 #' @param ... Additional arguments passed to geom_coverage
 #' @return A ggplot2 object
 #' @export
@@ -144,6 +146,7 @@ ez_coverage <- function(
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
+  label_chr = TRUE,
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
   average_bin_width = 50,
@@ -404,7 +407,7 @@ ez_coverage <- function(
           breaks = c(y_min, y_max)
         ) +
         ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
-        ggplot2::labs(x = paste0("Chr", chr)) +
+        ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL) +
         # Max label at top
         ggplot2::geom_text(
           data = y_labels_df,
@@ -442,7 +445,7 @@ ez_coverage <- function(
           breaks = c(y_min, y_max)
         ) +
         ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
-        ggplot2::labs(x = paste0("Chr", chr)) +
+        ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL) +
         # Max label at top
         ggplot2::annotate(
           "text",
@@ -472,7 +475,7 @@ ez_coverage <- function(
         scale_x_genome_region(region) +
         ggplot2::scale_y_continuous(expand = c(0, 0)) +
         ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
-        ggplot2::labs(x = paste0("Chr", chr)) +
+        ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL) +
         ggplot2::geom_text(
           data = y_range_df,
           ggplot2::aes(x = .data$x, y = .data$y_max, label = .data$y_label),
@@ -491,7 +494,7 @@ ez_coverage <- function(
         scale_x_genome_region(region) +
         ggplot2::scale_y_continuous(expand = c(0, 0)) +
         ggplot2::coord_cartesian(ylim = c(y_min, y_max), clip = "off") +
-        ggplot2::labs(x = paste0("Chr", chr)) +
+        ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL) +
         ggplot2::annotate(
           "text",
           x = x_min + (x_max - x_min) * 0.01,
@@ -508,7 +511,7 @@ ez_coverage <- function(
       scale_x_genome_region(region) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
       ggplot2::coord_cartesian(ylim = c(y_min, y_max)) +
-      ggplot2::labs(x = paste0("Chr", chr))
+      ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL)
   }
 
   # Apply border after theme (so it doesn't get overwritten)

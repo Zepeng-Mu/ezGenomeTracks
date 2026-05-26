@@ -63,6 +63,8 @@
 #'   Other useful options: `max.overlaps`, `force`, `box.padding`, `point.padding`.
 #' @param border Logical. If TRUE, adds a black border around the plot panel.
 #'   Default: FALSE
+#' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
+#'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
 #' @param ... Additional arguments passed to `geom_gene()`. Note that `color`
 #'   and `colour` arguments are ignored; use `exon_color`, `exon_fill`, and
 #'   `intron_color` instead.
@@ -169,6 +171,7 @@ ez_gene <- function(
   label_priority = "length",
   repel_args = list(),
   border = FALSE,
+  label_chr = TRUE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -216,6 +219,7 @@ ez_gene <- function(
 
   # Parse the region
   region_gr <- parse_region(region)
+  chr <- gsub("^chr", "", as.character(GenomicRanges::seqnames(region_gr)), ignore.case = TRUE)
 
   # Extract region limits for clipping
   region_limits <- c(
@@ -586,7 +590,7 @@ ez_gene <- function(
           colour = axis_colors
         )
       ) +
-      ggplot2::labs(x = NULL)
+      ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL)
   } else {
     p <- p +
       ggplot2::scale_y_discrete(
@@ -595,7 +599,7 @@ ez_gene <- function(
       ) +
       scale_x_genome_region(region) +
       ez_gene_theme() +
-      ggplot2::labs(x = NULL)
+      ggplot2::labs(x = if (label_chr) paste0("Chr", chr) else NULL)
   }
 
   if (border) p <- apply_border_theme(p)
