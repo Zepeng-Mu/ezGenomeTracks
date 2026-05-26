@@ -65,6 +65,10 @@
 #'   Default: "none" (suitable for stacking).
 #' @param y_axis_label Label for the y-axis.
 #'   Default: `expression(paste("-log"[10], "(P)"))`.
+#' @param color_by How points should be colored. Can be "r2" (use the `r2`
+#'   argument for LD coloring), "none" (use a single `color`), or a column name
+#'   in the data for discrete/continuous coloring. Default: "r2" if `r2` is
+#'   provided, otherwise "none".
 #' @param border Logical. If TRUE, adds a black border around the plot panel. Default: FALSE
 #' @param ... Additional arguments passed to `geom_manhattan()`.
 #'
@@ -163,6 +167,7 @@ ez_locusZoom <- function(
     threshold_linetype = 2,
     y_axis_style = c("none", "simple", "full"),
     y_axis_label = expression(paste("-log"[10], "(P)")),
+    color_by = NULL,
     border = FALSE,
     ...) {
   # Resolve region from either region string or gene name
@@ -223,8 +228,8 @@ ez_locusZoom <- function(
   # Remove helper column
   plotDt$.original_row <- NULL
 
-  # Determine color_by based on r2 presence
-  color_by <- if (!is.null(r2)) "r2" else "none"
+  # Determine color_by based on r2 presence (user override takes priority)
+  color_by <- if (!is.null(color_by)) color_by else if (!is.null(r2)) "r2" else "none"
 
   # Create plot using geom_manhattan in regional mode
   plot_obj <- ggplot2::ggplot(plotDt) +
