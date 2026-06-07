@@ -360,10 +360,10 @@ ez_sashimi <- function(
           arc_peak = arc_span * height_factor,
           label_y = ifelse(
             arc_direction == "up",
-            (y_start + y_end) / 2 + arc_peak,
-            -arc_peak
+            (y_start + y_end) / 2 + 0.75 * arc_peak,
+            (y_start + y_end) / 2 - 0.75 * arc_peak
           ),
-          label_vjust = ifelse(arc_direction == "up", -0.3, 1.3)
+          label_vjust = 0.5
         )
 
       p <- p +
