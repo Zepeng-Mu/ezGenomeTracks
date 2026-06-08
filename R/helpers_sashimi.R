@@ -103,7 +103,9 @@ process_sashimi_input <- function(
   region_gr <- parse_region(region)
 
   # Helper function to process a single junction source
-  process_single_junction <- function(junc_input, cov_df, track_name = NULL) {
+  # direction_lookup: optional data frame with columns start, end, arc_direction
+  #   providing a globally consistent direction assignment across tracks
+  process_single_junction <- function(junc_input, cov_df, track_name = NULL, direction_lookup = NULL) {
     # Import/filter junction data
     if (methods::is(junc_input, "GRanges")) {
       junc_input <- granges_to_df(junc_input)
@@ -141,7 +143,13 @@ process_sashimi_input <- function(
     junction_df <- junction_df |>
       dplyr::arrange(start) |>
       dplyr::mutate(
-        arc_direction = if (junction_direction == "alternate") {
+        arc_direction = if (!is.null(direction_lookup)) {
+          # Use global lookup for consistency across tracks
+          lookup_key <- paste(start, end)
+          global_key <- paste(direction_lookup$start, direction_lookup$end)
+          dir <- direction_lookup$arc_direction[match(lookup_key, global_key)]
+          ifelse(is.na(dir), "up", dir)
+        } else if (junction_direction == "alternate") {
           ifelse(dplyr::row_number() %% 2 == 1, "up", "down")
         } else {
           junction_direction
@@ -205,6 +213,37 @@ process_sashimi_input <- function(
       )
     }
 
+    # Build a global arc direction lookup so the same junction has the same
+    # direction across all tracks (only needed for "alternate" mode)
+    direction_lookup <- NULL
+    if (junction_direction == "alternate") {
+      all_coords <- lapply(names(coverage_data), function(nm) {
+        junc_el <- junction_data[[nm]]
+        if (methods::is(junc_el, "GRanges")) junc_el <- granges_to_df(junc_el)
+        if (is.character(junc_el) && length(junc_el) == 1) {
+          junc_el <- import_genomic_data(junc_el, which = region_gr)
+        }
+        if (is.data.frame(junc_el)) {
+          junc_el <- junc_el |>
+            dplyr::filter(
+              seqnames == as.character(region_gr@seqnames),
+              end >= GenomicRanges::start(region_gr),
+              start <= GenomicRanges::end(region_gr)
+            )
+          return(junc_el[, c("start", "end"), drop = FALSE])
+        }
+        return(data.frame(start = integer(0), end = integer(0)))
+      })
+      all_coords_df <- unique(dplyr::bind_rows(all_coords))
+      if (nrow(all_coords_df) > 0) {
+        all_coords_df <- all_coords_df[order(all_coords_df$start), , drop = FALSE]
+        all_coords_df$arc_direction <- ifelse(
+          seq_len(nrow(all_coords_df)) %% 2 == 1, "up", "down"
+        )
+        direction_lookup <- all_coords_df[, c("start", "end", "arc_direction")]
+      }
+    }
+
     # Process each track
     coverage_list <- list()
     junction_list <- list()
@@ -238,7 +277,7 @@ process_sashimi_input <- function(
 
       # Process junction for this track
       junction_list[[track_name]] <- process_single_junction(
-        junc_element, cov_df, track_name
+        junc_element, cov_df, track_name, direction_lookup = direction_lookup
       )
     }
 
