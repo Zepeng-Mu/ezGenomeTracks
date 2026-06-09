@@ -19,6 +19,7 @@ ez_sequence(
   label_size = 3,
   label_color = "white",
   tile_height = 0.8,
+  border = FALSE,
   ...
 )
 }
@@ -75,6 +76,8 @@ nucleotide palette). Default: \code{"white"}.}
 \item{tile_height}{Numeric (0–1). Height of each nucleotide tile as a
 proportion of the panel height. Only used when \code{style = "tile"}.
 Default: \code{0.8}.}
+
+\item{border}{Logical. If TRUE, adds a black border around the plot panel. Default: FALSE}
 
 \item{...}{Additional arguments passed to \code{geom_sequence()}.}
 }

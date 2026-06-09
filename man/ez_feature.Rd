@@ -2,7 +2,7 @@
 % Please edit documentation in R/ez_feature.R
 \name{ez_feature}
 \alias{ez_feature}
-\title{Easy peak track visualization}
+\title{Create a feature track from genomic regions}
 \usage{
 ez_feature(
   input,
@@ -17,6 +17,8 @@ ez_feature(
   alpha = 0.7,
   height = 0.8,
   use_score = FALSE,
+  border = FALSE,
+  label_chr = TRUE,
   ...
 )
 }
@@ -25,6 +27,7 @@ ez_feature(
 genomic coordinates with columns for chromosome, start, and end positions.}
 
 \item{region}{Genomic region to display in the format "chr:start-end".
+Either \code{region} or \code{gene} (with \code{gene_db}) must be provided.
 Example: "chr1:1000000-2000000"}
 
 \item{gene}{Gene name/symbol to look up (e.g., "PTPRC", "TP53").
@@ -40,8 +43,7 @@ auto-detects available OrgDb packages.}
 using \code{gene} parameter. Default: 0.1 (10\% of gene length on each side).}
 
 \item{extend_type}{How to interpret \code{extend}: "proportion" (relative to gene
-length) or "bp" (absolute base pairs). Default: "proportion".
-Create a feature track from genomic regions}
+length) or "bp" (absolute base pairs). Default: "proportion".}
 
 \item{color}{Border color of the features. Default: "black"}
 
@@ -57,6 +59,12 @@ Default: 0.7}
 fill color. If TRUE, a gradient from white to the specified fill color will
 be used. Default: FALSE}
 
+\item{border}{Logical. If TRUE, adds a black border around the plot panel.
+Default: FALSE}
+
+\item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
+(e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
+
 \item{...}{Additional arguments passed to \code{geom_feature()}}
 }
 \value{
@@ -68,9 +76,6 @@ such as peaks or other genomic annotations. It can read directly from BED files
 or work with data frames containing genomic coordinates.
 }
 \details{
-This function creates a peak track visualization from a BED file or data frame.
-It is a wrapper around geom_feature that provides a simpler interface.
-
 The function automatically handles both file paths and data frames as input.
 When a file path is provided, it reads the BED file and creates the track.
 When a data frame is provided, it should contain at least 'chrom', 'start',

@@ -25,6 +25,7 @@ ez_link(
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
+  label_chr = TRUE,
   ...
 )
 }
@@ -84,6 +85,9 @@ interaction scores. Default: FALSE}
 \item{border}{Logical. If \code{TRUE}, adds a black border around the plotting panel (default: FALSE)}
 
 \item{show_legend}{Logical. If \code{TRUE}, displays the legend (default: FALSE)}
+
+\item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
+(e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
 
 \item{...}{Additional arguments passed to \code{geom_link()}}
 }

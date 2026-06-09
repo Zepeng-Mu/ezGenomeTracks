@@ -21,6 +21,7 @@ ez_manhattan(
   threshold_color = "red",
   threshold_linetype = 2,
   facet_label_position = c("top", "left"),
+  border = FALSE,
   region = NULL,
   gene = NULL,
   ...
@@ -76,6 +77,8 @@ Default: 2 (dashed).}
 
 \item{facet_label_position}{Position of facet labels for multi-track plots:
 "top" or "left". Default: "top".}
+
+\item{border}{Logical. If TRUE, adds a black border around the plot panel. Default: FALSE}
 
 \item{region}{Deprecated. Use \code{ez_locusZoom()} for regional plots.}
 

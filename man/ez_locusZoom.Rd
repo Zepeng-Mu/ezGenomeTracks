@@ -29,6 +29,9 @@ ez_locusZoom(
   threshold_linetype = 2,
   y_axis_style = c("none", "simple", "full"),
   y_axis_label = expression(paste("-log"[10], "(P)")),
+  color_by = NULL,
+  border = FALSE,
+  label_chr = TRUE,
   ...
 )
 }
@@ -107,6 +110,16 @@ Default: "none" (suitable for stacking).}
 
 \item{y_axis_label}{Label for the y-axis.
 Default: \code{expression(paste("-log"[10], "(P)"))}.}
+
+\item{color_by}{How points should be colored. Can be "r2" (use the \code{r2}
+argument for LD coloring), "none" (use a single \code{color}), or a column name
+in the data for discrete/continuous coloring. Default: "r2" if \code{r2} is
+provided, otherwise "none".}
+
+\item{border}{Logical. If TRUE, adds a black border around the plot panel. Default: FALSE}
+
+\item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
+(e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
 
 \item{...}{Additional arguments passed to \code{geom_manhattan()}.}
 }

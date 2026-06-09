@@ -21,6 +21,8 @@ ez_hic(
   rasterize = FALSE,
   rasterize_dpi = 300,
   show_diagonal = TRUE,
+  border = FALSE,
+  label_chr = TRUE,
   ...
 )
 }
@@ -69,6 +71,11 @@ Hi-C layer for better performance with large matrices. Default: FALSE}
 \item{rasterize_dpi}{Resolution for rasterization in dots per inch. Default: 300}
 
 \item{show_diagonal}{Logical. If TRUE, show the diagonal (self-interactions). Default: TRUE}
+
+\item{border}{Logical. If TRUE, adds a black border around the plot panel. Default: FALSE}
+
+\item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
+(e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
 
 \item{...}{Additional arguments passed to geom_hic or geom_hic_triangle}
 }

@@ -25,6 +25,7 @@ ez_coverage(
   facet_label_position = c("top", "left"),
   border = FALSE,
   show_legend = FALSE,
+  label_chr = TRUE,
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
   average_bin_width = 50,
@@ -90,6 +91,9 @@ to eliminate white-line rendering artifacts. Only affects \code{type = "area"}.}
 \item{border}{Logical. If \code{TRUE}, adds a black border around the plotting panel (default: FALSE)}
 
 \item{show_legend}{Logical. If \code{TRUE}, displays the legend (default: FALSE)}
+
+\item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
+(e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
 
 \item{average}{Logical. If \code{TRUE}, averages overlapping tracks into a single
 track before plotting. Applies when \code{input} is a character vector of

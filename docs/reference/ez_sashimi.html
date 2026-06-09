@@ -11,7 +11,7 @@ Supports the same flexible input types as ez_coverage."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,6 +81,7 @@ Supports the same flexible input types as <code><a href="ez_coverage.html">ez_co
 <span>  facet_label_position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"top"</span>, <span class="st">"left"</span><span class="op">)</span>,</span>
 <span>  border <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show_legend <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  label_chr <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -204,6 +205,11 @@ Only applies when using multiple tracks via named list input.</p></dd>
 
 <dt id="arg-show-legend">show_legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, displays the legend (default: FALSE)</p></dd>
+
+
+<dt id="arg-label-chr">label_chr<a class="anchor" aria-label="anchor" href="#arg-label-chr"></a></dt>
+<dd><p>Logical. If <code>TRUE</code> (default), labels the x-axis with the chromosome name
+(e.g., "Chr1"). Set to <code>FALSE</code> to suppress the x-axis label.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

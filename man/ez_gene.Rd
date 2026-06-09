@@ -27,6 +27,8 @@ ez_gene(
   max_labels = NULL,
   label_priority = "length",
   repel_args = list(),
+  border = FALSE,
+  label_chr = TRUE,
   ...
 )
 }
@@ -58,9 +60,9 @@ using \code{gene} parameter. Default: 0.1 (10\% of gene length on each side).}
 \item{extend_type}{How to interpret \code{extend}: "proportion" (relative to gene
 length) or "bp" (absolute base pairs). Default: "proportion".}
 
-\item{exon_height}{Relative height of exons (0 to 1). Default: 0.4}
+\item{exon_height}{Relative height of exons (0 to 1). Default: 0.2}
 
-\item{intron_width}{Line width for introns. Default: 0.4}
+\item{intron_width}{Line width for introns. Default: 0.6}
 
 \item{exon_color}{Border color for exons. Default: NULL (uses strand-based colors
 when \code{y = "strand"}, otherwise "gray50")}
@@ -106,6 +108,12 @@ uses horizontal-only repositioning (\code{direction = "x"}) with no connecting l
 (\code{segment.color = NA}). To show connecting lines, use \code{list(segment.color = "gray50")}.
 Override direction with \code{list(direction = "both")} for vertical repositioning too.
 Other useful options: \code{max.overlaps}, \code{force}, \code{box.padding}, \code{point.padding}.}
+
+\item{border}{Logical. If TRUE, adds a black border around the plot panel.
+Default: FALSE}
+
+\item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
+(e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
 
 \item{...}{Additional arguments passed to \code{geom_gene()}. Note that \code{color}
 and \code{colour} arguments are ignored; use \code{exon_color}, \code{exon_fill}, and
