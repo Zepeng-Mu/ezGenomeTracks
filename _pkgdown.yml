@@ -2,6 +2,9 @@ destination: docs
 
 url: https://zepeng-mu.github.io/ezGenomeTracks/
 
+exclude:
+  - .github
+
 home:
   title: ezGenomeTracks
   description: A ggplot2-based R package for creating publication-quality genomic track visualizations
