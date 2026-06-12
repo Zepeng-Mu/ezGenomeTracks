@@ -77,7 +77,7 @@
 #' facet with its own coverage and junction arcs.
 #'
 #' @export
-#' @importFrom ggplot2 ggplot aes geom_text scale_linewidth_continuous coord_cartesian labs facet_wrap theme element_text unit scale_fill_manual element_rect
+#' @importFrom ggplot2 ggplot aes geom_label scale_linewidth_continuous coord_cartesian labs facet_wrap theme element_text unit scale_fill_manual element_rect
 #' @importFrom dplyr mutate group_by summarise
 #'
 #' @examples
@@ -367,12 +367,16 @@ ez_sashimi <- function(
         )
 
       p <- p +
-        ggplot2::geom_text(
+        ggplot2::geom_label(
           data = junction_df,
           ggplot2::aes(x = label_x, y = label_y, label = score),
           color = label_color,
           size = label_size,
-          vjust = junction_df$label_vjust
+          vjust = junction_df$label_vjust,
+          fill = "white",
+          alpha = 0.6,
+          label.size = 0,
+          label.padding = ggplot2::unit(0.1, "lines")
         )
     }
   }
