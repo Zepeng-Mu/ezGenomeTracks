@@ -47,6 +47,21 @@ test_that("ez_coverage handles various input types correctly", {
   expect_true(can_render_plot(p_test_data))
 })
 
+test_that("ez_coverage adds a black baseline at y = 0", {
+  data(example_signal)
+
+  p <- ez_coverage(example_signal, region = "chr1:1000000-2000000")
+
+  baseline_layers <- Filter(function(layer) inherits(layer$geom, "GeomHline"), p$layers)
+  built_plot <- ggplot2::ggplot_build(p)
+  baseline_data <- built_plot$data[[length(built_plot$data)]]
+
+  expect_length(baseline_layers, 1)
+  expect_equal(baseline_layers[[1]]$aes_params$colour, "black")
+  expect_equal(baseline_data$yintercept, 0)
+  expect_equal(baseline_data$colour, "black")
+})
+
 test_that("ez_feature creates a feature track", {
   # Load example data
   data(example_peaks)

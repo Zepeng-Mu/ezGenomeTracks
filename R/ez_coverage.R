@@ -358,6 +358,9 @@ ez_coverage <- function(
   x_min <- GenomicRanges::start(region_gr)
   x_max <- GenomicRanges::end(region_gr)
 
+  # Keep the x-axis baseline independent from the track fill colour.
+  p <- p + ggplot2::geom_hline(yintercept = 0, colour = "black", linewidth = 0.2)
+
   # Calculate y-axis limits for annotations (track-specific if multiple tracks)
   if (is.null(y_range)) {
     y_min <- 0
