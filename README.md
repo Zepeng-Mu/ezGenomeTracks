@@ -18,6 +18,9 @@ Minimal, ggplot2-based genome browser tracks for R. Provides geoms (`geom_*`) an
 > [!NOTE]
 > `ezGenomeTracks` is in early development, many functionalities may be missing or incomplete. Feedback and contributions are welcome!
 
+> [!TIP]
+> This repository includes a reusable agent skill file at `SKILL.md`. You can copy it into your preferred agent skills directory (for example: `cp SKILL.md ~/.copilot/skills/ezgenometracks/SKILL.md`) and then load it from your favorite coding agent setup.
+
 ## Installation
 
 Install ezGenomeTracks from GitHub using `pak`, which automatically handles Bioconductor dependencies:
