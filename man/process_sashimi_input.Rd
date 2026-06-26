@@ -38,7 +38,7 @@ y_start, y_end, arc_direction, start1, start2
 \description{
 This function converts coverage and junction inputs of various types into
 standardized data frames for sashimi plot visualization. It supports the same
-input types as \code{\link{process_signal_input}} for coverage data (GRanges,
+input types as \code{\link{process_coverage_input}} for coverage data (GRanges,
 data.frame, character vector of file paths, or named list), and processes
 junction data in parallel.
 }

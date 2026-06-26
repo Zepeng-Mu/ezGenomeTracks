@@ -20,21 +20,21 @@
 #' # GRanges input
 #' library(GenomicRanges)
 #' gr <- GRanges(seqnames = "chr1", ranges = IRanges(1:100, 1:100), score = rnorm(100))
-#' process_signal_input(gr, "chr1:1-100")
+#' process_coverage_input(gr, "chr1:1-100")
 #'
 #' # Data frame input
 #' df <- data.frame(seqnames = "chr1", start = 1:100, end = 1:100, score = rnorm(100))
-#' process_signal_input(df, "chr1:1-100")
+#' process_coverage_input(df, "chr1:1-100")
 #'
 #' # Character vector input
 #' files <- c("file1.bw", "file2.bw")
-#' process_signal_input(files, "chr1:1-100", track_labels = c("Sample1", "Sample2"))
+#' process_coverage_input(files, "chr1:1-100", track_labels = c("Sample1", "Sample2"))
 #'
 #' # List input
 #' data_list <- list("Track1" = df, "Track2" = files)
-#' process_signal_input(data_list, "chr1:1-100")
+#' process_coverage_input(data_list, "chr1:1-100")
 #' }
-process_signal_input <- function(
+process_coverage_input <- function(
   input,
   region,
   track_labels = NULL,
@@ -66,7 +66,7 @@ process_signal_input <- function(
     if (length(input) == 1) {
       # Single file
       track_name <- ifelse(is.null(track_labels), "Track 1", track_labels[1])
-      return(get_single_signal(
+      return(get_single_coverage(
         input,
         region,
         name = track_name,
@@ -81,7 +81,7 @@ process_signal_input <- function(
           paste0("Track ", i),
           track_labels[i]
         )
-        track_data <- get_single_signal(
+        track_data <- get_single_coverage(
           input[i],
           region,
           name = track_name,
@@ -103,7 +103,7 @@ process_signal_input <- function(
 
       if (is.data.frame(track_element)) {
         # Data frame element
-        processed_data <- process_signal_input(
+        processed_data <- process_coverage_input(
           track_element,
           region,
           n_bins = n_bins
@@ -114,7 +114,7 @@ process_signal_input <- function(
         # Character vector element (multiple files for this track)
         if (length(track_element) == 1) {
           # Single file
-          processed_data <- get_single_signal(
+          processed_data <- get_single_coverage(
             track_element,
             region,
             name = track_name,
@@ -124,7 +124,7 @@ process_signal_input <- function(
           # Multiple files within this track
           file_data_list <- list()
           for (j in seq_along(track_element)) {
-            file_data <- get_single_signal(
+            file_data <- get_single_coverage(
               track_element[j],
               region,
               name = paste0(track_name, "_", j),

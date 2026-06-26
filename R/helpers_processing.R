@@ -23,12 +23,12 @@
 #'   end = c(50, 150, 250),
 #'   score = c(0.1, 0.5, 0.9)
 #' )
-#' region_data <- get_single_signal(df, "chr1:50-150", name = "track1")
+#' region_data <- get_single_coverage(df, "chr1:50-150", name = "track1")
 #'
 #' # Extract data from a file
-#' file_data <- get_single_signal("peaks.bed", "chr1:1000000-2000000", name = "peaks")
+#' file_data <- get_single_coverage("peaks.bed", "chr1:1000000-2000000", name = "peaks")
 #' }
-get_single_signal <- function(
+get_single_coverage <- function(
   input,
   region,
   name = NULL,

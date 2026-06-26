@@ -227,7 +227,7 @@ ez_coverage <- function(
           track_data_list[[i]] <- avg_df
         } else {
           # Single file, data frame, or GRanges — process normally
-          single_df <- process_signal_input(
+          single_df <- process_coverage_input(
             track_element,
             region,
             n_bins = n_bins
@@ -239,7 +239,7 @@ ez_coverage <- function(
       plotDt <- dplyr::bind_rows(track_data_list)
     } else {
       warning("average = TRUE has no effect for a single input. Proceeding normally.")
-      plotDt <- process_signal_input(
+      plotDt <- process_coverage_input(
         input,
         region,
         track_labels,
@@ -248,7 +248,7 @@ ez_coverage <- function(
     }
   } else {
     # Process input using helper function (handles GRanges, data.frame, character, list)
-    plotDt <- process_signal_input(
+    plotDt <- process_coverage_input(
       input,
       region,
       track_labels,
@@ -261,7 +261,7 @@ ez_coverage <- function(
 
   # Auto-detect group column when color_by = "group" and group_var not specified
 
-  # This handles the case where process_signal_input adds a "group" column
+  # This handles the case where process_coverage_input adds a "group" column
   # for character vector inputs (multiple files → overlapping tracks)
   if (
     is.null(group_var) && color_by == "group" && "group" %in% colnames(plotDt)

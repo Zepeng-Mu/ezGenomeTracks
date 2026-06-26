@@ -16,7 +16,7 @@ test_that("import_genomic_data imports files correctly", {
   unlink(temp_bed)
 })
 
-test_that("get_single_signal extracts data correctly", {
+test_that("get_single_coverage extracts data correctly", {
   # Create test data frame
   test_data <- data.frame(
     seqnames = c("chr1", "chr1", "chr2"),
@@ -26,7 +26,7 @@ test_that("get_single_signal extracts data correctly", {
   )
 
   # Test with data frame input
-  result1 <- get_single_signal(test_data, "chr1:1000-2000", name = "test_track")
+  result1 <- get_single_coverage(test_data, "chr1:1000-2000", name = "test_track")
   expect_s3_class(result1, "data.frame")
   expect_true("name" %in% colnames(result1))
   expect_equal(result1$name[1], "test_track")
@@ -37,7 +37,7 @@ test_that("get_single_signal extracts data correctly", {
   temp_bed <- tempfile(fileext = ".bed")
   writeLines(bed_content, temp_bed)
 
-  result2 <- get_single_signal(temp_bed, "chr1:1000-2000", name = "file_track")
+  result2 <- get_single_coverage(temp_bed, "chr1:1000-2000", name = "file_track")
   expect_s3_class(result2, "data.frame")
   expect_true("name" %in% colnames(result2))
   expect_equal(result2$name[1], "file_track")
@@ -46,7 +46,7 @@ test_that("get_single_signal extracts data correctly", {
   unlink(temp_bed)
 })
 
-test_that("process_signal_input handles different input types", {
+test_that("process_coverage_input handles different input types", {
   # Test data frame input
   test_df <- data.frame(
     seqnames = "chr1",
@@ -55,7 +55,7 @@ test_that("process_signal_input handles different input types", {
     score = rnorm(11)
   )
 
-  result1 <- process_signal_input(test_df, "chr1:1000-2000")
+  result1 <- process_coverage_input(test_df, "chr1:1000-2000")
   expect_s3_class(result1, "data.frame")
   expect_true(all(c("seqnames", "start", "end", "score") %in% colnames(result1)))
 
@@ -68,14 +68,14 @@ test_that("process_signal_input handles different input types", {
   writeLines(bed_content1, temp_bed1)
   writeLines(bed_content2, temp_bed2)
 
-  result2 <- process_signal_input(c(temp_bed1, temp_bed2), "chr1:1000-4000",
+  result2 <- process_coverage_input(c(temp_bed1, temp_bed2), "chr1:1000-4000",
                                  track_labels = c("Sample1", "Sample2"))
   expect_s3_class(result2, "data.frame")
   expect_true("track" %in% colnames(result2))
   expect_true("group" %in% colnames(result2))
 
   # Test list input
-  result3 <- process_signal_input(
+  result3 <- process_coverage_input(
     list("Track1" = test_df, "Track2" = c(temp_bed1, temp_bed2)),
     "chr1:1000-4000"
   )
@@ -167,12 +167,12 @@ test_that("extract_txdb_data extracts data from TxDb objects", {
 test_that("error handling works correctly", {
   # Test invalid input types
   expect_error(import_genomic_data("nonexistent_file.bed"))
-  expect_error(get_single_signal("invalid_input", "chr1:1000-2000"))
-  expect_error(process_signal_input("invalid_input", "chr1:1000-2000"))
+  expect_error(get_single_coverage("invalid_input", "chr1:1000-2000"))
+  expect_error(process_coverage_input("invalid_input", "chr1:1000-2000"))
 
   # Test missing required columns
   bad_data <- data.frame(start = 1:10, end = 11:20) # Missing seqnames and score
-  expect_error(process_signal_input(bad_data, "chr1:1000-2000"))
+  expect_error(process_coverage_input(bad_data, "chr1:1000-2000"))
 
   # Test invalid region format
   expect_error(parse_region("invalid_region"))
