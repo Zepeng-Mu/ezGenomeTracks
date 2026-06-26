@@ -9,7 +9,7 @@ It provides a flexible interface with support for grouping and multiple tracks."
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.13</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.14</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@ It provides a flexible interface with support for grouping and multiple tracks.<
 <span>  label_chr <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  average <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  summary_fun <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"median"</span>, <span class="st">"max"</span>, <span class="st">"min"</span>, <span class="st">"sum"</span><span class="op">)</span>,</span>
-<span>  average_bin_width <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>  n_bins <span class="op">=</span> <span class="fl">2000L</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -194,7 +194,7 @@ track before plotting. Applies when <code>input</code> is a character vector of
 multiple file paths (overlapping tracks), or when <code>input</code> is a named list
 whose elements are character vectors with multiple files (averages within
 each list element separately, keeping tracks independent).
-Uses <code><a href="average_signal.html">average_signal()</a></code> internally. (default: FALSE)</p></dd>
+Uses <code><a href="average_coverage.html">average_coverage()</a></code> internally. (default: FALSE)</p></dd>
 
 
 <dt id="arg-summary-fun">summary_fun<a class="anchor" aria-label="anchor" href="#arg-summary-fun"></a></dt>
@@ -202,9 +202,10 @@ Uses <code><a href="average_signal.html">average_signal()</a></code> internally.
 <code>"mean"</code>, <code>"median"</code>, <code>"max"</code>, <code>"min"</code>, <code>"sum"</code>. (default: <code>"mean"</code>)</p></dd>
 
 
-<dt id="arg-average-bin-width">average_bin_width<a class="anchor" aria-label="anchor" href="#arg-average-bin-width"></a></dt>
-<dd><p>Bin width (in bp) for the averaging grid when
-<code>average = TRUE</code>. (default: 50)</p></dd>
+<dt id="arg-n-bins">n_bins<a class="anchor" aria-label="anchor" href="#arg-n-bins"></a></dt>
+<dd><p>Maximum number of bins used when reading BigWig
+files via megadepth (default: 2000). Increase for finer detail, decrease
+for faster plotting.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

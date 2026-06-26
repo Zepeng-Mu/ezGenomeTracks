@@ -1,6 +1,7 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/404.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/LICENSE-text.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/SKILL.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/get_started.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/index.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/articles/tracks_coverage.html</loc></url>
@@ -16,12 +17,13 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/add_rect.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/add_text.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/add_vline.html</loc></url>
-<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/average_signal.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/average_coverage.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/calculate_link_ylim.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/df_to_granges.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/dot-overlap_weighted_mean.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/dot-query_bigwig_bins.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/dot-query_df_bins.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/dot-query_megadepth_bins.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/example_genes.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/example_hic.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/example_interactions.html</loc></url>
@@ -61,7 +63,7 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_link.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_manhattan.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/geom_sequence.html</loc></url>
-<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/get_single_signal.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/get_single_coverage.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/granges_to_df.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/hic_palettes.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/hstack_plot.html</loc></url>
@@ -70,6 +72,7 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/interaction_track.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/parse_region.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/plot_signal_df.html</loc></url>
+<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_coverage_input.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_gene_data.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_hic_data.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_interaction_data.html</loc></url>
@@ -77,7 +80,6 @@
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_manhattan_input.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_sashimi_data.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_sashimi_input.html</loc></url>
-<url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/process_signal_input.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/scale_fill_hic.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/scale_x_genome.html</loc></url>
 <url><loc>https://zepeng-mu.github.io/ezGenomeTracks/reference/scale_x_genome_region.html</loc></url>

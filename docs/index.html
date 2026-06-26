@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.13</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.14</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,6 +76,9 @@
 <blockquote>
 <p>[!NOTE] <code>ezGenomeTracks</code> is in early development, many functionalities may be missing or incomplete. Feedback and contributions are welcome!</p>
 </blockquote>
+<blockquote>
+<p>[!TIP] This repository includes a reusable agent skill file at <code>SKILL.md</code>. You can copy it into your preferred agent skills directory (for example: <code>cp SKILL.md ~/.copilot/skills/ezgenometracks/SKILL.md</code>) and then load it from your favorite coding agent setup.</p>
+</blockquote>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -83,6 +86,14 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Zepeng-Mu/ezGenomeTracks"</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="additional-setup-for-bigwig-files">Additional setup for BigWig files<a class="anchor" aria-label="anchor" href="#additional-setup-for-bigwig-files"></a>
+</h3>
+<p>ezGenomeTracks uses <a href="https://bioconductor.org/packages/megadepth" class="external-link">megadepth</a> for fast BigWig processing. The R package is installed automatically, but it requires a separate command-line binary. Install it once after package installation:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">megadepth</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/megadepth/man/install_megadepth.html" class="external-link">install_megadepth</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This downloads a pre-compiled binary for your OS (Linux, macOS, or Windows) and is required whenever you pass <code>.bw</code> files or remote BigWig URLs to <code><a href="reference/ez_coverage.html">ez_coverage()</a></code> or related functions.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="core-concepts">Core Concepts<a class="anchor" aria-label="anchor" href="#core-concepts"></a>
@@ -97,14 +108,14 @@
 <div class="section level2">
 <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Zepeng-Mu/ezGenomeTracks" class="external-link">ezGenomeTracks</a></span><span class="op">)</span></span>
 <span><span class="va">region</span> <span class="op">&lt;-</span> <span class="st">"chr1:100000-101000"</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="coverage--signal-track">Coverage / Signal Track<a class="anchor" aria-label="anchor" href="#coverage--signal-track"></a>
 </h3>
 <p>A numeric score over intervals.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cov_df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  seqnames <span class="op">=</span> <span class="st">"chr1"</span>,</span>
 <span>  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">100000</span>, <span class="fl">100990</span>, by <span class="op">=</span> <span class="fl">10</span><span class="op">)</span>,</span>
@@ -117,7 +128,7 @@
 <h3 id="gene--transcript-track">Gene / Transcript Track<a class="anchor" aria-label="anchor" href="#gene--transcript-track"></a>
 </h3>
 <p>Exon segments with strand.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">genes_df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  seqnames <span class="op">=</span> <span class="st">"chr1"</span>,</span>
 <span>  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100050</span>, <span class="fl">100200</span><span class="op">)</span>,</span>
@@ -133,7 +144,7 @@
 <h3 id="feature--peak-track">Feature / Peak Track<a class="anchor" aria-label="anchor" href="#feature--peak-track"></a>
 </h3>
 <p>Intervals with optional scores (height / color).</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">features_df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  seqnames <span class="op">=</span> <span class="st">"chr1"</span>,</span>
 <span>  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100120</span>, <span class="fl">100300</span><span class="op">)</span>,</span>
@@ -146,7 +157,7 @@
 <h3 id="interaction--arc-track">Interaction / Arc Track<a class="anchor" aria-label="anchor" href="#interaction--arc-track"></a>
 </h3>
 <p>Pairs of genomic intervals (same or different chromosomes) drawn as arcs.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">interactions_df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  chr1 <span class="op">=</span> <span class="st">"chr1"</span>, start1 <span class="op">=</span> <span class="fl">100120</span>, end1 <span class="op">=</span> <span class="fl">100160</span>,</span>
 <span>  chr2 <span class="op">=</span> <span class="st">"chr1"</span>, start2 <span class="op">=</span> <span class="fl">100300</span>, end2 <span class="op">=</span> <span class="fl">100340</span>,</span>
@@ -158,7 +169,7 @@
 <h3 id="manhattan-track">Manhattan Track<a class="anchor" aria-label="anchor" href="#manhattan-track"></a>
 </h3>
 <p>Association results: point positions + score (e.g. -log10(p)).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">manhattan_df</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  seqnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"chr1"</span>, <span class="fl">50</span><span class="op">)</span>,</span>
 <span>  start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">100000</span>, <span class="fl">100000</span> <span class="op">+</span> <span class="fl">49</span><span class="op">*</span><span class="fl">200</span>, by <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>,</span>
@@ -171,7 +182,7 @@
 <h3 id="hi-c--contact-matrix-track">Hi-C / Contact Matrix Track<a class="anchor" aria-label="anchor" href="#hi-c--contact-matrix-track"></a>
 </h3>
 <p>Binned pairwise contacts rendered as a triangular heatmap.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Minimal synthetic example (x/y bins with a value)</span></span>
 <span><span class="va">hic_df</span> <span class="op">&lt;-</span> <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/expand_grid.html" class="external-link">expand_grid</a></span><span class="op">(</span></span>
 <span>  bin1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">100000</span>, <span class="fl">100000</span> <span class="op">+</span> <span class="fl">4</span><span class="op">*</span><span class="fl">200</span>, by <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>,</span>
@@ -187,7 +198,7 @@
 <h2 id="composing-multiple-tracks">Composing Multiple Tracks<a class="anchor" aria-label="anchor" href="#composing-multiple-tracks"></a>
 </h2>
 <p>Stack tracks vertically with synchronized genomic x-axis.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vstack_plot.html">vstack_plot</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    coverage <span class="op">=</span> <span class="va">track_cov</span>,</span>

@@ -45,7 +45,7 @@ reference:
 - title: "Data Processing Functions"
   desc: "Functions for importing and processing track data"
   contents:
-  - process_signal_input
+  - process_coverage_input
   - process_gene_data
   - process_interaction_data
   - process_interaction_input
@@ -91,8 +91,8 @@ reference:
   - format_genomic_coord
   - extract_txdb_data
   - gene_to_region
-  - get_single_signal
-  - average_signal
+  - get_single_coverage
+  - average_coverage
   - plot_signal_df
   - calculate_link_ylim
   - stat_bin_signal

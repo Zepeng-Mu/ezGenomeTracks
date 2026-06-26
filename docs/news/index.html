@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ezGenomeTracks</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.13</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.14</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,9 +45,19 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="ezgenometracks-development-version">ezGenomeTracks (development version)<a class="anchor" aria-label="anchor" href="#ezgenometracks-development-version"></a></h2>
-<ul><li>v0.0.1 release.</li>
+<div class="section level3">
+<h3 id="major-changes-development-version">Major Changes<a class="anchor" aria-label="anchor" href="#major-changes-development-version"></a></h3>
+<ul><li>BigWig file processing now uses <code>megadepth</code> for significantly improved performance
+<ul><li>Region-based BigWig queries are 2-50x faster depending on the number of regions</li>
+<li>Particularly beneficial for remote BigWig files (HTTP/HTTPS URLs)</li>
+<li>Built-in parallelization support for processing multiple BigWig files</li>
+<li>All existing APIs remain unchanged; upgrade is transparent to users</li>
+</ul></li>
+<li>v0.0.1 release.</li>
 </ul></div>
-  </main></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
