@@ -30,6 +30,16 @@ Install ezGenomeTracks from GitHub using `pak`, which automatically handles Bioc
 pak::pak("Zepeng-Mu/ezGenomeTracks")
 ```
 
+### Additional setup for BigWig files
+
+ezGenomeTracks uses [megadepth](https://bioconductor.org/packages/megadepth) for fast BigWig processing. The R package is installed automatically, but it requires a separate command-line binary. Install it once after package installation:
+
+``` r
+megadepth::install_megadepth()
+```
+
+This downloads a pre-compiled binary for your OS (Linux, macOS, or Windows) and is required whenever you pass `.bw` files or remote BigWig URLs to `ez_coverage()` or related functions.
+
 ## Core Concepts
 
 1.  Region specification: always parse a string like `"chr1:100000-101000"`.
