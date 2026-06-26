@@ -39,6 +39,7 @@ get_single_signal <- function(input, region, name = NULL) {
       dplyr::mutate(name = name)
   } else if (is(input, "character")) {
     # Single track, file name
+    # import_genomic_data() already handles BigWig/megadepth vs rtracklayer dispatch
     track_data <- import_genomic_data(input, which = region_gr) |>
       dplyr::mutate(name = name)
   } else {

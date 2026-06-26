@@ -27,7 +27,8 @@ Imports:
     scales,
     stringr,
     AnnotationDbi,
-    GenomicFeatures
+    GenomicFeatures,
+    megadepth
 Suggests:
     testthat (>= 3.0.0),
     knitr,

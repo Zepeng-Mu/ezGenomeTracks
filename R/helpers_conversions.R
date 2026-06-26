@@ -132,7 +132,50 @@ df_to_granges <- function(
 #' signal_df <- import_genomic_data("signal.bw", which = region)
 #' }
 import_genomic_data <- function(file, which = NULL) {
-  # Import data using rtracklayer
+  # Handle non-character input (data frames, etc.)
+  if (!is.character(file)) {
+    # For non-file inputs, just use rtracklayer/granges_to_df conversion
+    if (is.data.frame(file)) {
+      return(file)
+    }
+    # For GRanges or other objects
+    gr <- rtracklayer::import(file, which = which)
+    df <- granges_to_df(gr)
+    return(df)
+  }
+
+  # Determine file type and dispatch to appropriate importer
+  file_ext <- tolower(tools::file_ext(file))
+  is_bigwig <- (file_ext == "bw" || file_ext == "bigwig")
+  is_remote <- grepl("^https?://", file)
+
+  # Use megadepth for BigWig files (local or remote) for improved performance
+  if ((is_bigwig || is_remote) && !is.null(which)) {
+    tryCatch(
+      {
+        gr <- import_bigwig_megadepth(file = file, which = which, op = "mean")
+        # Ensure output has score column for consistency
+        if (!("score" %in% names(S4Vectors::mcols(gr)))) {
+          S4Vectors::mcols(gr)$score <- 0
+        }
+        df <- granges_to_df(gr)
+        return(df)
+      },
+      error = function(e) {
+        # Fallback to rtracklayer if megadepth fails
+        warning(
+          "megadepth processing failed: ",
+          conditionMessage(e),
+          "\nFalling back to rtracklayer for: ", file
+        )
+        gr <- rtracklayer::import(file, which = which)
+        df <- granges_to_df(gr)
+        return(df)
+      }
+    )
+  }
+
+  # For other file types or when no region is specified, use rtracklayer
   gr <- rtracklayer::import(file, which = which)
 
   # Convert to data frame
