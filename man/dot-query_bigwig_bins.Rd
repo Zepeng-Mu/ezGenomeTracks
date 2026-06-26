@@ -2,22 +2,23 @@
 % Please edit documentation in R/helpers_averaging.R
 \name{.query_bigwig_bins}
 \alias{.query_bigwig_bins}
-\title{Query bigWig files at uniform bins}
+\title{Query BigWig files at shared uniform bins via megadepth}
 \usage{
 .query_bigwig_bins(files, bins_gr, nans_to_zeros = TRUE)
 }
 \arguments{
-\item{files}{Character vector of bigWig file paths.}
+\item{files}{Character vector of file paths.}
 
-\item{bins_gr}{GRanges of uniform bins.}
+\item{bins_gr}{Pre-computed GRanges of uniform bins (shared across all files).}
 
-\item{nans_to_zeros}{Replace NaNs with 0.}
+\item{nans_to_zeros}{Replace NA/NaN with 0.}
 }
 \value{
-A numeric matrix (n_bins x n_files).
+A numeric matrix (n_bins × n_files).
 }
 \description{
-Internal helper: for each bigWig file, uses \code{rtracklayer::summary()} to get
-the mean score in each bin. Returns an n_bins x n_samples matrix.
+Internal helper used by \code{\link[=average_coverage]{average_coverage()}}. Queries each BigWig file at
+exactly the same pre-computed \code{bins_gr}, so no bin-alignment is needed when
+stacking scores across samples.
 }
 \keyword{internal}

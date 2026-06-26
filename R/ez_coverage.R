@@ -89,11 +89,9 @@
 #'   multiple file paths (overlapping tracks), or when `input` is a named list
 #'   whose elements are character vectors with multiple files (averages within
 #'   each list element separately, keeping tracks independent).
-#'   Uses [average_signal()] internally. (default: FALSE)
+#'   Uses [average_coverage()] internally. (default: FALSE)
 #' @param summary_fun Summary function used when `average = TRUE`. One of
 #'   `"mean"`, `"median"`, `"max"`, `"min"`, `"sum"`. (default: `"mean"`)
-#' @param average_bin_width Bin width (in bp) for the averaging grid when
-#'   `average = TRUE`. (default: 50)
 #' @param n_bins Maximum number of bins used when reading BigWig
 #'   files via megadepth (default: 2000). Increase for finer detail, decrease
 #'   for faster plotting.
@@ -152,7 +150,6 @@ ez_coverage <- function(
   label_chr = TRUE,
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
-  average_bin_width = 50,
   n_bins = 2000L,
   ...
 ) {
@@ -195,10 +192,10 @@ ez_coverage <- function(
   if (average) {
     if (is.character(input) && length(input) > 1) {
       # Character vector of multiple files (overlapping tracks): average into one
-      plotDt <- average_signal(
+      plotDt <- average_coverage(
         inputs = input,
         region = region,
-        bin_width = average_bin_width,
+        n_bins = n_bins,
         summary_fun = summary_fun
       )
     } else if (is.list(input) && !is.data.frame(input)) {
@@ -217,10 +214,10 @@ ez_coverage <- function(
         track_element <- input[[i]]
 
         if (is.character(track_element) && length(track_element) > 1) {
-          avg_df <- average_signal(
+          avg_df <- average_coverage(
             inputs = track_element,
             region = region,
-            bin_width = average_bin_width,
+            n_bins = n_bins,
             summary_fun = summary_fun
           )
           avg_df$track <- track_name

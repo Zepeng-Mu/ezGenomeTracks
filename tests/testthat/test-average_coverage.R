@@ -1,4 +1,4 @@
-# Tests for average_signal() and related internal helpers
+# Tests for average_coverage() and related internal helpers
 
 # --- Test data setup ---
 make_sample_df <- function(starts, ends, scores, chr = "chr1") {
@@ -24,43 +24,43 @@ sample2 <- make_sample_df(
   scores = c(3, 5, 7, 1)
 )
 
-# chr1:1000-1199 → GRanges width = 200bp, seq(1000, 1199, 50) = 4 starts
+# chr1:1000-1199 → GRanges width = 200bp, n_bins=4 → 50bp each
 region <- "chr1:1000-1199"
 
 
 # ============================================================
-# average_signal() — data frame list input
+# average_coverage() — data frame list input
 # ============================================================
 
-test_that("average_signal returns correct structure with data frame inputs", {
-  result <- average_signal(
+test_that("average_coverage returns correct structure with data frame inputs", {
+  result <- average_coverage(
     inputs = list(sample1, sample2),
     region = region,
-    bin_width = 50
+    n_bins = 4
   )
 
   expect_s3_class(result, "data.frame")
   expect_true(all(c("seqnames", "start", "end", "score") %in% colnames(result)))
   expect_true(all(result$seqnames == "chr1"))
-  # 200bp region / 50bp bins = 4 bins
+  # 200bp region / n_bins=4 → 4 bins
   expect_equal(nrow(result), 4)
 })
 
-test_that("average_signal mean is between individual sample values", {
-  result <- average_signal(
+test_that("average_coverage mean is between individual sample values", {
+  result <- average_coverage(
     inputs = list(sample1, sample2),
     region = region,
-    bin_width = 50
+    n_bins = 4
   )
 
   expect_true(all(result$score >= 0))
 })
 
-test_that("average_signal with single data frame returns that signal", {
-  result <- average_signal(
+test_that("average_coverage with single data frame returns that signal", {
+  result <- average_coverage(
     inputs = list(sample1),
     region = region,
-    bin_width = 50
+    n_bins = 4
   )
 
   expect_s3_class(result, "data.frame")
@@ -73,47 +73,44 @@ test_that("average_signal with single data frame returns that signal", {
 # summary_fun parameter
 # ============================================================
 
-test_that("average_signal supports different summary functions", {
+test_that("average_coverage supports different summary functions", {
   identical_samples <- list(sample1, sample1)
 
-  result_mean <- average_signal(identical_samples, region, bin_width = 50, summary_fun = "mean")
-  result_max <- average_signal(identical_samples, region, bin_width = 50, summary_fun = "max")
-  result_min <- average_signal(identical_samples, region, bin_width = 50, summary_fun = "min")
-  result_sum <- average_signal(identical_samples, region, bin_width = 50, summary_fun = "sum")
+  result_mean <- average_coverage(identical_samples, region, n_bins = 4, summary_fun = "mean")
+  result_max  <- average_coverage(identical_samples, region, n_bins = 4, summary_fun = "max")
+  result_min  <- average_coverage(identical_samples, region, n_bins = 4, summary_fun = "min")
+  result_sum  <- average_coverage(identical_samples, region, n_bins = 4, summary_fun = "sum")
 
   # Mean/max/min of identical values = the value itself
   expect_equal(result_mean$score, c(2, 4, 6, 8))
-  expect_equal(result_max$score, c(2, 4, 6, 8))
-  expect_equal(result_min$score, c(2, 4, 6, 8))
+  expect_equal(result_max$score,  c(2, 4, 6, 8))
+  expect_equal(result_min$score,  c(2, 4, 6, 8))
   # Sum of two identical = 2x
   expect_equal(result_sum$score, c(4, 8, 12, 16))
 })
 
-test_that("average_signal rejects invalid summary_fun", {
+test_that("average_coverage rejects invalid summary_fun", {
   expect_error(
-    average_signal(list(sample1), region, summary_fun = "invalid"),
+    average_coverage(list(sample1), region, summary_fun = "invalid"),
     "should be one of"
   )
 })
 
 # ============================================================
-# bin_width and region handling
+# n_bins and region handling
 # ============================================================
 
-test_that("average_signal respects bin_width", {
-  result_50 <- average_signal(list(sample1), region, bin_width = 50)
-  result_100 <- average_signal(list(sample1), region, bin_width = 100)
+test_that("average_coverage respects n_bins", {
+  result_4  <- average_coverage(list(sample1), region, n_bins = 4)
+  result_2  <- average_coverage(list(sample1), region, n_bins = 2)
 
-  expect_equal(nrow(result_50), 4)  # 200bp / 50bp
-  expect_equal(nrow(result_100), 2) # 200bp / 100bp
+  expect_equal(nrow(result_4), 4)
+  expect_equal(nrow(result_2), 2)
 })
 
-test_that("average_signal handles bin_width that doesn't evenly divide region", {
-  # 200bp region with 60bp bins → 4 bins (last shorter)
-  result <- average_signal(list(sample1), region, bin_width = 60)
-  n_expected <- ceiling(200 / 60)
-  expect_equal(nrow(result), n_expected)
-  # Last bin should end at region_end
+test_that("average_coverage last bin ends at region end", {
+  result <- average_coverage(list(sample1), region, n_bins = 4)
+  # Last bin should end at region_end (1199)
   expect_equal(result$end[nrow(result)], 1199)
 })
 
@@ -121,31 +118,31 @@ test_that("average_signal handles bin_width that doesn't evenly divide region", 
 # Edge cases
 # ============================================================
 
-test_that("average_signal handles empty region (no signal)", {
+test_that("average_coverage handles empty region (no signal)", {
   empty_sample <- make_sample_df(
     starts = c(5000),
     ends   = c(5100),
     scores = c(10)
   )
 
-  result <- average_signal(
+  result <- average_coverage(
     inputs = list(empty_sample),
     region = region,
-    bin_width = 50
+    n_bins = 4
   )
 
   expect_equal(nrow(result), 4)
   expect_true(all(result$score == 0))
 })
 
-test_that("average_signal validates inputs", {
+test_that("average_coverage validates inputs", {
   expect_error(
-    average_signal(42, region),
+    average_coverage(42, region),
     "inputs must be"
   )
   expect_error(
-    average_signal(list(sample1), region, bin_width = -10),
-    "bin_width must be"
+    average_coverage(list(sample1), region, n_bins = -10),
+    "n_bins must be"
   )
 })
 
@@ -215,7 +212,6 @@ test_that(".query_df_bins validates input data frames", {
 # ============================================================
 
 test_that("ez_coverage with average = TRUE and character vector produces a ggplot", {
-  # Create temporary bedGraph files for testing
   tmp1 <- tempfile(fileext = ".bedGraph")
   tmp2 <- tempfile(fileext = ".bedGraph")
   writeLines(c(
@@ -233,10 +229,10 @@ test_that("ez_coverage with average = TRUE and character vector produces a ggplo
   on.exit(unlink(c(tmp1, tmp2)))
 
   result <- ez_coverage(
-    input = c(tmp1, tmp2),
+    input  = c(tmp1, tmp2),
     region = region,
     average = TRUE,
-    average_bin_width = 50
+    n_bins  = 4
   )
 
   expect_s3_class(result, "gg")
@@ -244,17 +240,13 @@ test_that("ez_coverage with average = TRUE and character vector produces a ggplo
 })
 
 test_that("ez_coverage with average = TRUE and list of data frames does NOT average", {
-  # Lists represent separate tracks — averaging should not collapse them
   result <- ez_coverage(
-    input = list(track1 = sample1, track2 = sample2),
+    input  = list(track1 = sample1, track2 = sample2),
     region = region,
     average = TRUE
   )
 
   expect_s3_class(result, "gg")
-  # Should still have multiple tracks (not averaged into one)
-  plot_data <- ggplot2::layer_data(result)
-  # The data should have been processed individually, not collapsed
   expect_true("track" %in% colnames(result$data))
   expect_equal(length(unique(result$data$track)), 2)
 })
@@ -263,7 +255,6 @@ test_that("ez_coverage with average = TRUE and list of data frames does NOT aver
 # Real-world bigWig tests (inst/extdata files)
 # ============================================================
 
-# Helper: find the package's bigWig files
 bw_files <- system.file(
   "extdata",
   c("avg_chr2-231091223_231109786_231113600_0.bw",
@@ -271,57 +262,51 @@ bw_files <- system.file(
     "avg_chr2-231091223_231109786_231113600_2.bw"),
   package = "ezGenomeTracks"
 )
-bw_region <- "chr2:231109000-231113000"
+bw_region    <- "chr2:231109000-231113000"
 bw_available <- all(nzchar(bw_files)) && all(file.exists(bw_files))
 
-test_that("average_signal works with real bigWig files", {
+test_that("average_coverage works with real bigWig files", {
   skip_if_not(bw_available, "bigWig test files not found")
 
-  result <- average_signal(
+  result <- average_coverage(
     inputs = bw_files,
     region = bw_region,
-    bin_width = 100
+    n_bins = 40
   )
 
   expect_s3_class(result, "data.frame")
   expect_true(all(c("seqnames", "start", "end", "score") %in% colnames(result)))
   expect_true(nrow(result) > 0)
-  # All scores should be finite after nans_to_zeros
-
   expect_true(all(is.finite(result$score)))
-  # Region should be chr2
   expect_true(all(result$seqnames == "chr2"))
-  # Bins should be within the requested region
   expect_true(all(result$start >= 231109000))
-  expect_true(all(result$end <= 231113000))
+  expect_true(all(result$end   <= 231113000))
 })
 
-test_that("average_signal bigWig scores change with summary_fun", {
+test_that("average_coverage bigWig scores change with summary_fun", {
   skip_if_not(bw_available, "bigWig test files not found")
 
-  result_mean <- average_signal(bw_files, bw_region, bin_width = 200, summary_fun = "mean")
-  result_max  <- average_signal(bw_files, bw_region, bin_width = 200, summary_fun = "max")
-  result_sum  <- average_signal(bw_files, bw_region, bin_width = 200, summary_fun = "sum")
+  result_mean <- average_coverage(bw_files, bw_region, n_bins = 20, summary_fun = "mean")
+  result_max  <- average_coverage(bw_files, bw_region, n_bins = 20, summary_fun = "max")
+  result_sum  <- average_coverage(bw_files, bw_region, n_bins = 20, summary_fun = "sum")
 
-  # sum >= mean (for non-negative data with 3 samples)
   expect_true(all(result_sum$score >= result_mean$score - 1e-10))
-  # max >= mean
   expect_true(all(result_max$score >= result_mean$score - 1e-10))
 })
 
-test_that("average_signal bigWig respects bin_width", {
+test_that("average_coverage bigWig respects n_bins", {
   skip_if_not(bw_available, "bigWig test files not found")
 
-  r50  <- average_signal(bw_files[1:2], bw_region, bin_width = 50)
-  r200 <- average_signal(bw_files[1:2], bw_region, bin_width = 200)
+  r_fine   <- average_coverage(bw_files[1:2], bw_region, n_bins = 80)
+  r_coarse <- average_coverage(bw_files[1:2], bw_region, n_bins = 20)
 
-  expect_true(nrow(r50) > nrow(r200))
+  expect_true(nrow(r_fine) > nrow(r_coarse))
 })
 
-test_that("average_signal with single bigWig returns its own signal", {
+test_that("average_coverage with single bigWig returns its own signal", {
   skip_if_not(bw_available, "bigWig test files not found")
 
-  result <- average_signal(bw_files[1], bw_region, bin_width = 100)
+  result <- average_coverage(bw_files[1], bw_region, n_bins = 40)
 
   expect_s3_class(result, "data.frame")
   expect_true(nrow(result) > 0)
@@ -331,37 +316,32 @@ test_that("average_signal with single bigWig returns its own signal", {
 test_that("ez_coverage average=TRUE with bigWig character vector produces plot", {
   skip_if_not(bw_available, "bigWig test files not found")
 
-  # Character vector → overlapping tracks → average collapses to one
   p <- ez_coverage(
-    input = bw_files,
-    region = bw_region,
+    input   = bw_files,
+    region  = bw_region,
     average = TRUE,
-    average_bin_width = 100
+    n_bins  = 40
   )
 
   expect_s3_class(p, "gg")
-  # Averaged: should NOT have a "track" column (single track)
   expect_false("track" %in% colnames(p$data))
 })
 
 test_that("ez_coverage average=TRUE with named list averages within elements", {
   skip_if_not(bw_available, "bigWig test files not found")
 
-  # Named list: each element is a separate track.
-  # Elements with >1 file get averaged; single-file elements stay as-is.
   p <- ez_coverage(
     input = list(
       "Averaged" = bw_files[1:2],
       "Single"   = bw_files[3]
     ),
-    region = bw_region,
-    average = TRUE,
-    average_bin_width = 100,
+    region       = bw_region,
+    average      = TRUE,
+    n_bins       = 40,
     y_axis_style = "simple"
   )
 
   expect_s3_class(p, "gg")
-  # Should have 2 tracks
   expect_true("track" %in% colnames(p$data))
   expect_equal(sort(unique(p$data$track)), c("Averaged", "Single"))
 })
@@ -369,10 +349,9 @@ test_that("ez_coverage average=TRUE with named list averages within elements", {
 test_that("ez_coverage average=FALSE with bigWig character vector keeps overlapping tracks", {
   skip_if_not(bw_available, "bigWig test files not found")
 
-  # Without average, character vector produces overlapping (grouped) tracks
   p <- ez_coverage(
-    input = bw_files,
-    region = bw_region,
+    input   = bw_files,
+    region  = bw_region,
     average = FALSE
   )
 

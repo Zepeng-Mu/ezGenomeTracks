@@ -19,7 +19,6 @@
 A numeric matrix (n_bins x n_dfs).
 }
 \description{
-Internal helper: for each data frame, computes the overlap-weighted mean
-score onto uniform bins. Returns an n_bins x n_samples matrix.
+Compute overlap-weighted mean for data frame inputs on uniform bins
 }
 \keyword{internal}

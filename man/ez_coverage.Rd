@@ -28,7 +28,6 @@ ez_coverage(
   label_chr = TRUE,
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
-  average_bin_width = 50,
   n_bins = 2000L,
   ...
 )
@@ -101,13 +100,10 @@ track before plotting. Applies when \code{input} is a character vector of
 multiple file paths (overlapping tracks), or when \code{input} is a named list
 whose elements are character vectors with multiple files (averages within
 each list element separately, keeping tracks independent).
-Uses \code{\link[=average_signal]{average_signal()}} internally. (default: FALSE)}
+Uses \code{\link[=average_coverage]{average_coverage()}} internally. (default: FALSE)}
 
 \item{summary_fun}{Summary function used when \code{average = TRUE}. One of
 \code{"mean"}, \code{"median"}, \code{"max"}, \code{"min"}, \code{"sum"}. (default: \code{"mean"})}
-
-\item{average_bin_width}{Bin width (in bp) for the averaging grid when
-\code{average = TRUE}. (default: 50)}
 
 \item{n_bins}{Maximum number of bins used when reading BigWig
 files via megadepth (default: 2000). Increase for finer detail, decrease

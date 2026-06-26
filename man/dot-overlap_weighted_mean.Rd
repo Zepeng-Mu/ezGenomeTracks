@@ -15,8 +15,6 @@
 Numeric vector of length \code{length(bins_gr)}.
 }
 \description{
-For each bin, finds overlapping signal ranges and computes a weighted mean
-score where weights are the number of bases each signal range overlaps
-the bin.
+Overlap-weighted mean of signal onto bins
 }
 \keyword{internal}
