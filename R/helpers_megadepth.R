@@ -58,7 +58,8 @@
   scores <- rep(0, n)
 
   if (length(result_gr) > 0 && "score" %in% names(S4Vectors::mcols(result_gr))) {
-    idx <- match(GenomicRanges::start(result_gr), GenomicRanges::start(bins_gr))
+    # megadepth returns 0-based BED start coordinates; bins_gr uses 1-based GRanges
+    idx <- match(GenomicRanges::start(result_gr) + 1L, GenomicRanges::start(bins_gr))
     valid <- !is.na(idx)
     scores[idx[valid]] <- result_gr$score[valid]
   }
