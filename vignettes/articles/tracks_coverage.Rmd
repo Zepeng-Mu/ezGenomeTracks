@@ -101,7 +101,7 @@ ez_coverage(
   input = c(bw0, bw1, bw2),
   region = "chr2:231109000-231115000",
   type = "line",
-  average_bin_width = 5,
+  n_bins = 2000,
   average = T,
   y_axis_style = "full",
   facet_label_position = "left",
