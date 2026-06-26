@@ -4,7 +4,7 @@
 \alias{process_signal_input}
 \title{Process signal input into standardized data frame}
 \usage{
-process_signal_input(input, region, track_labels = NULL)
+process_signal_input(input, region, track_labels = NULL, n_bins = 2000L)
 }
 \arguments{
 \item{input}{A GRanges object, data frame, character vector of file paths, or named list.
@@ -13,6 +13,9 @@ GRanges objects are automatically converted to data frames.}
 \item{region}{A genomic region string in the format "chr:start-end"}
 
 \item{track_labels}{Optional vector of track labels (used for character vector input)}
+
+\item{n_bins}{Maximum number of bins used for BigWig queries
+through megadepth (default: 2000).}
 }
 \value{
 A data frame with standardized columns: seqnames, start, end, score,

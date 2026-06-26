@@ -8,6 +8,8 @@
 #'   GRanges objects are automatically converted to data frames.
 #' @param region A genomic region string in the format "chr:start-end"
 #' @param track_labels Optional vector of track labels (used for character vector input)
+#' @param n_bins Maximum number of bins used for BigWig queries
+#'   through megadepth (default: 2000).
 #' @return A data frame with standardized columns: seqnames, start, end, score,
 #'   and optionally track and group columns
 #' @export
@@ -32,7 +34,12 @@
 #' data_list <- list("Track1" = df, "Track2" = files)
 #' process_signal_input(data_list, "chr1:1-100")
 #' }
-process_signal_input <- function(input, region, track_labels = NULL) {
+process_signal_input <- function(
+  input,
+  region,
+  track_labels = NULL,
+  n_bins = 2000L
+) {
   if (methods::is(input, "GRanges")) {
     # Case 0: GRanges input - convert to data frame and process
     input <- granges_to_df(input)
@@ -59,7 +66,12 @@ process_signal_input <- function(input, region, track_labels = NULL) {
     if (length(input) == 1) {
       # Single file
       track_name <- ifelse(is.null(track_labels), "Track 1", track_labels[1])
-      return(get_single_signal(input, region, name = track_name))
+      return(get_single_signal(
+        input,
+        region,
+        name = track_name,
+        n_bins = n_bins
+      ))
     } else {
       # Multiple files
       track_data_list <- list()
@@ -69,7 +81,12 @@ process_signal_input <- function(input, region, track_labels = NULL) {
           paste0("Track ", i),
           track_labels[i]
         )
-        track_data <- get_single_signal(input[i], region, name = track_name)
+        track_data <- get_single_signal(
+          input[i],
+          region,
+          name = track_name,
+          n_bins = n_bins
+        )
         track_data$group <- track_name
         track_data_list[[i]] <- track_data
       }
@@ -86,7 +103,11 @@ process_signal_input <- function(input, region, track_labels = NULL) {
 
       if (is.data.frame(track_element)) {
         # Data frame element
-        processed_data <- process_signal_input(track_element, region)
+        processed_data <- process_signal_input(
+          track_element,
+          region,
+          n_bins = n_bins
+        )
         processed_data$track <- track_name
         track_data_list[[i]] <- processed_data
       } else if (is.character(track_element)) {
@@ -96,7 +117,8 @@ process_signal_input <- function(input, region, track_labels = NULL) {
           processed_data <- get_single_signal(
             track_element,
             region,
-            name = track_name
+            name = track_name,
+            n_bins = n_bins
           )
         } else {
           # Multiple files within this track
@@ -105,7 +127,8 @@ process_signal_input <- function(input, region, track_labels = NULL) {
             file_data <- get_single_signal(
               track_element[j],
               region,
-              name = paste0(track_name, "_", j)
+              name = paste0(track_name, "_", j),
+              n_bins = n_bins
             )
             file_data$track <- track_name
             file_data$group <- paste0(track_name, "_", j)

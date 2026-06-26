@@ -4,7 +4,7 @@
 \alias{get_single_signal}
 \title{Extract signal data for a single input element}
 \usage{
-get_single_signal(input, region, name = NULL)
+get_single_signal(input, region, name = NULL, n_bins = 2000L)
 }
 \arguments{
 \item{input}{Either a data frame with genomic coordinates or a character string
@@ -13,6 +13,9 @@ specifying the path to a genomic data file (BED, bigWig, GFF, etc.)}
 \item{region}{A genomic region string in the format "chr:start-end" or a GRanges object}
 
 \item{name}{Optional name to assign to the track (default: NULL)}
+
+\item{n_bins}{Maximum number of bins used for BigWig queries
+through megadepth (default: 2000).}
 }
 \value{
 A data frame containing the filtered genomic data with an optional name column

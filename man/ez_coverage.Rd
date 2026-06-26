@@ -29,6 +29,7 @@ ez_coverage(
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
   average_bin_width = 50,
+  n_bins = 2000L,
   ...
 )
 }
@@ -107,6 +108,10 @@ Uses \code{\link[=average_signal]{average_signal()}} internally. (default: FALSE
 
 \item{average_bin_width}{Bin width (in bp) for the averaging grid when
 \code{average = TRUE}. (default: 50)}
+
+\item{n_bins}{Maximum number of bins used when reading BigWig
+files via megadepth (default: 2000). Increase for finer detail, decrease
+for faster plotting.}
 
 \item{...}{Additional arguments passed to geom_coverage}
 }

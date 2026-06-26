@@ -94,6 +94,9 @@
 #'   `"mean"`, `"median"`, `"max"`, `"min"`, `"sum"`. (default: `"mean"`)
 #' @param average_bin_width Bin width (in bp) for the averaging grid when
 #'   `average = TRUE`. (default: 50)
+#' @param n_bins Maximum number of bins used when reading BigWig
+#'   files via megadepth (default: 2000). Increase for finer detail, decrease
+#'   for faster plotting.
 #' @param border Logical. If `TRUE`, adds a black border around the plotting panel (default: FALSE)
 #' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
 #' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
@@ -150,6 +153,7 @@ ez_coverage <- function(
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
   average_bin_width = 50,
+  n_bins = 2000L,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -173,7 +177,11 @@ ez_coverage <- function(
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
     "bin_width must be positive integer" = is.null(bin_width) ||
-      (bin_width > 0 && is.numeric(bin_width))
+      (bin_width > 0 && is.numeric(bin_width)),
+    "n_bins must be a positive integer" =
+      is.numeric(n_bins) &&
+      length(n_bins) == 1 &&
+      n_bins >= 1
   )
 
   # Resolve default colors
@@ -219,7 +227,11 @@ ez_coverage <- function(
           track_data_list[[i]] <- avg_df
         } else {
           # Single file, data frame, or GRanges — process normally
-          single_df <- process_signal_input(track_element, region)
+          single_df <- process_signal_input(
+            track_element,
+            region,
+            n_bins = n_bins
+          )
           single_df$track <- track_name
           track_data_list[[i]] <- single_df
         }
@@ -227,11 +239,21 @@ ez_coverage <- function(
       plotDt <- dplyr::bind_rows(track_data_list)
     } else {
       warning("average = TRUE has no effect for a single input. Proceeding normally.")
-      plotDt <- process_signal_input(input, region, track_labels)
+      plotDt <- process_signal_input(
+        input,
+        region,
+        track_labels,
+        n_bins = n_bins
+      )
     }
   } else {
     # Process input using helper function (handles GRanges, data.frame, character, list)
-    plotDt <- process_signal_input(input, region, track_labels)
+    plotDt <- process_signal_input(
+      input,
+      region,
+      track_labels,
+      n_bins = n_bins
+    )
   }
 
   # Determine plotting strategy

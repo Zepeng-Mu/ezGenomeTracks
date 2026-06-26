@@ -4,12 +4,15 @@
 \alias{import_genomic_data}
 \title{Import genomic data from a file into a tidy data frame}
 \usage{
-import_genomic_data(file, which = NULL)
+import_genomic_data(file, which = NULL, n_bins = 2000L)
 }
 \arguments{
 \item{file}{Path to the genomic data file}
 
 \item{which}{GRanges object specifying the genomic region to import (default: NULL, import all)}
+
+\item{n_bins}{Number of bins used for megadepth BigWig queries.
+Only used for BigWig inputs when \code{which} is provided. Default: 2000.}
 
 \item{format}{File format (default: NULL, auto-detected from file extension)}
 }

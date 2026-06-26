@@ -9,6 +9,8 @@
 #'   specifying the path to a genomic data file (BED, bigWig, GFF, etc.)
 #' @param region A genomic region string in the format "chr:start-end" or a GRanges object
 #' @param name Optional name to assign to the track (default: NULL)
+#' @param n_bins Maximum number of bins used for BigWig queries
+#'   through megadepth (default: 2000).
 #' @return A data frame containing the filtered genomic data with an optional name column
 #' @export
 #' @importFrom dplyr filter mutate bind_rows
@@ -26,7 +28,12 @@
 #' # Extract data from a file
 #' file_data <- get_single_signal("peaks.bed", "chr1:1000000-2000000", name = "peaks")
 #' }
-get_single_signal <- function(input, region, name = NULL) {
+get_single_signal <- function(
+  input,
+  region,
+  name = NULL,
+  n_bins = 2000L
+) {
   region_gr <- parse_region(region = region)
   if (is(input, "data.frame")) {
     # Single track, data frame
@@ -40,7 +47,11 @@ get_single_signal <- function(input, region, name = NULL) {
   } else if (is(input, "character")) {
     # Single track, file name
     # import_genomic_data() already handles BigWig/megadepth vs rtracklayer dispatch
-    track_data <- import_genomic_data(input, which = region_gr) |>
+    track_data <- import_genomic_data(
+      input,
+      which = region_gr,
+      n_bins = n_bins
+    ) |>
       dplyr::mutate(name = name)
   } else {
     stop("Input must be a data.frame or file path (character), got: ",
