@@ -95,6 +95,9 @@
 #' @param n_bins Maximum number of bins used when reading BigWig
 #'   files via megadepth (default: 2000). Increase for finer detail, decrease
 #'   for faster plotting.
+#' @param strand Strand to display: `"None"` (default, no operation), `"F"` (forward,
+#'   no operation), or `"R"` (reverse — negates the coverage signal so it plots
+#'   below zero). Useful for creating paired forward/reverse strand tracks.
 #' @param border Logical. If `TRUE`, adds a black border around the plotting panel (default: FALSE)
 #' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
 #' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
@@ -151,6 +154,7 @@ ez_coverage <- function(
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
   n_bins = 2000L,
+  strand = c("None", "F", "R"),
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -170,6 +174,7 @@ ez_coverage <- function(
   facet_label_position <- match.arg(facet_label_position)
 
   summary_fun <- match.arg(summary_fun)
+  strand <- match.arg(strand)
 
   stopifnot(
     "alpha must be between 0 and 1" = alpha >= 0 && alpha <= 1,
@@ -251,6 +256,11 @@ ez_coverage <- function(
       track_labels,
       n_bins = n_bins
     )
+  }
+
+  # Apply strand transformation: negate scores for reverse strand
+  if (strand == "R") {
+    plotDt$score <- -plotDt$score
   }
 
   # Determine plotting strategy
@@ -382,8 +392,8 @@ ez_coverage <- function(
 
   # Calculate y-axis limits for annotations (track-specific if multiple tracks)
   if (is.null(y_range)) {
-    y_min <- 0
-    y_max <- max(plotDt$score, na.rm = TRUE)
+    y_min <- if (strand == "R") min(plotDt$score, na.rm = TRUE) else 0
+    y_max <- if (strand == "R") 0 else max(plotDt$score, na.rm = TRUE)
     if (has_track) {
       # Use the global maximum across all tracks as the shared y-range
       y_range_df <- data.frame(
