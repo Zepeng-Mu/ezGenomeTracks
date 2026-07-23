@@ -6,8 +6,8 @@
 
 #' Query a BigWig file at pre-defined GRanges bins via megadepth
 #'
-#' Writes `bins_gr` directly to a temporary BED file (no re-tiling) and calls
-#' `megadepth::get_coverage()`. Results are aligned back to `bins_gr` by start
+#' Writes `bins_gr` directly to a temporary BED file (no re-tiling) and runs
+#' the `megadepth` binary through `system2()`. Results are aligned back to `bins_gr` by start
 #' position, so the returned vector always has length `length(bins_gr)`.
 #' Bins with no BigWig coverage receive a score of 0.
 #'
@@ -15,11 +15,19 @@
 #' @param bins_gr GRanges of pre-computed bins to query.
 #' @param op Summarization operation: "mean" (default), "sum", "min", "max".
 #' @param nans_to_zeros Replace NA/NaN results with 0 (default TRUE).
+#' @param verbose Logical. If `TRUE`, print megadepth progress output.
+#'   If `FALSE` (default), suppress routine megadepth messages.
 #' @return Numeric vector of length `length(bins_gr)`.
 #' @keywords internal
 #' @importFrom GenomicRanges seqnames start end
 #' @importFrom S4Vectors mcols
-.query_megadepth_bins <- function(file, bins_gr, op = "mean", nans_to_zeros = TRUE) {
+.query_megadepth_bins <- function(
+  file,
+  bins_gr,
+  op = "mean",
+  nans_to_zeros = TRUE,
+  verbose = FALSE
+) {
   op <- match.arg(op, c("sum", "mean", "min", "max"))
 
   temp_bed   <- tempfile(fileext = ".bed")
@@ -44,12 +52,34 @@
     col.names = FALSE
   )
 
-  result_gr <- megadepth::get_coverage(
-    bigwig_file = file,
-    op          = op,
-    annotation  = temp_bed,
-    prefix      = out_prefix
+  # Run megadepth directly so stderr chatter can be suppressed when verbose = FALSE.
+  find_megadepth <- get("find_megadepth", envir = asNamespace("megadepth"))
+  megadepth_bin <- find_megadepth()
+  md_args <- c(
+    file,
+    "--op", op,
+    "--annotation", temp_bed,
+    "--prefix", out_prefix,
+    "--no-annotation-stdout"
   )
+  md_out <- system2(
+    command = megadepth_bin,
+    args = md_args,
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  md_status <- attr(md_out, "status")
+  if (!is.null(md_status) && md_status != 0) {
+    stop(
+      "megadepth failed for ", file, "\n",
+      paste(md_out, collapse = "\n"),
+      call. = FALSE
+    )
+  }
+  if (isTRUE(verbose) && length(md_out) > 0) {
+    cat(paste(md_out, collapse = "\n"), "\n")
+  }
+  result_gr <- megadepth::read_coverage(paste0(out_prefix, ".annotation.tsv"))
 
   # Align result back to bins_gr by 1-based start position.
   # megadepth may return fewer rows (zero-coverage bins are absent) or in
@@ -83,13 +113,21 @@
 #' @param which GRanges specifying the genomic region to query.
 #' @param op Summary operation: "mean" (default), "sum", "min", "max".
 #' @param n_bins Number of bins used to tile `which`. Default: 2000.
+#' @param verbose Logical. If `TRUE`, print megadepth progress output.
+#'   If `FALSE` (default), suppress routine megadepth messages.
 #' @return GRanges with a `score` metadata column.
 #' @noRd
 #' @importFrom GenomicRanges reduce GRanges width start end seqnames
 #' @importFrom IRanges IRanges
 #' @importFrom S4Vectors mcols
 #' @keywords internal
-import_bigwig_megadepth <- function(file, which, op = "mean", n_bins = 2000L) {
+import_bigwig_megadepth <- function(
+  file,
+  which,
+  op = "mean",
+  n_bins = 2000L,
+  verbose = FALSE
+) {
   op <- match.arg(op, c("sum", "mean", "min", "max"))
   stopifnot(
     "which must be a non-empty GRanges object" =
@@ -115,9 +153,8 @@ import_bigwig_megadepth <- function(file, which, op = "mean", n_bins = 2000L) {
     )
   }))
 
-  scores <- .query_megadepth_bins(file, bins_gr, op = op)
+  scores <- .query_megadepth_bins(file, bins_gr, op = op, verbose = verbose)
 
   S4Vectors::mcols(bins_gr)$score <- scores
   bins_gr
 }
-

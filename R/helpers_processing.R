@@ -11,6 +11,8 @@
 #' @param name Optional name to assign to the track (default: NULL)
 #' @param n_bins Maximum number of bins used for BigWig queries
 #'   through megadepth (default: 2000).
+#' @param verbose Logical. If `TRUE`, print megadepth progress output for BigWig
+#'   imports. If `FALSE` (default), suppress routine messages.
 #' @return A data frame containing the filtered genomic data with an optional name column
 #' @export
 #' @importFrom dplyr filter mutate bind_rows
@@ -32,7 +34,8 @@ get_single_coverage <- function(
   input,
   region,
   name = NULL,
-  n_bins = 2000L
+  n_bins = 2000L,
+  verbose = FALSE
 ) {
   region_gr <- parse_region(region = region)
   if (is(input, "data.frame")) {
@@ -50,7 +53,8 @@ get_single_coverage <- function(
     track_data <- import_genomic_data(
       input,
       which = region_gr,
-      n_bins = n_bins
+      n_bins = n_bins,
+      verbose = verbose
     ) |>
       dplyr::mutate(name = name)
   } else {

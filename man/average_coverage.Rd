@@ -9,7 +9,8 @@ average_coverage(
   region,
   n_bins = 2000L,
   summary_fun = c("mean", "median", "max", "min", "sum"),
-  nans_to_zeros = TRUE
+  nans_to_zeros = TRUE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ frames each with columns \code{seqnames}, \code{start}, \code{end}, \code{score}
 
 \item{nans_to_zeros}{Logical. Replace NA/NaN per-bin scores with 0 before
 summarizing (default: TRUE).}
+
+\item{verbose}{Logical. If \code{TRUE}, print megadepth progress output when
+querying BigWig files. If \code{FALSE} (default), suppress routine messages.}
 }
 \value{
 A data frame with columns \code{seqnames}, \code{start}, \code{end}, \code{score}.

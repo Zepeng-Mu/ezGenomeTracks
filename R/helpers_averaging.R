@@ -17,6 +17,8 @@
 #'   `"mean"`, `"median"`, `"max"`, `"min"`, `"sum"` (default: `"mean"`).
 #' @param nans_to_zeros Logical. Replace NA/NaN per-bin scores with 0 before
 #'   summarizing (default: TRUE).
+#' @param verbose Logical. If `TRUE`, print megadepth progress output when
+#'   querying BigWig files. If `FALSE` (default), suppress routine messages.
 #' @return A data frame with columns `seqnames`, `start`, `end`, `score`.
 #' @export
 #' @importFrom GenomicRanges GRanges start end seqnames
@@ -46,7 +48,8 @@ average_coverage <- function(
   region,
   n_bins = 2000L,
   summary_fun = c("mean", "median", "max", "min", "sum"),
-  nans_to_zeros = TRUE
+  nans_to_zeros = TRUE,
+  verbose = FALSE
 ) {
   summary_fun <- match.arg(summary_fun)
   stopifnot(
@@ -75,7 +78,12 @@ average_coverage <- function(
 
   # Collect score matrix: rows = bins, cols = samples
   if (is.character(inputs)) {
-    score_matrix <- .query_bigwig_bins(inputs, bins_gr, nans_to_zeros)
+    score_matrix <- .query_bigwig_bins(
+      inputs,
+      bins_gr,
+      nans_to_zeros = nans_to_zeros,
+      verbose = verbose
+    )
   } else {
     score_matrix <- .query_df_bins(inputs, bins_gr, region_gr, nans_to_zeros)
   }
@@ -106,9 +114,10 @@ average_coverage <- function(
 #' @param files Character vector of file paths.
 #' @param bins_gr Pre-computed GRanges of uniform bins (shared across all files).
 #' @param nans_to_zeros Replace NA/NaN with 0.
+#' @param verbose Logical. If `TRUE`, print megadepth progress output.
 #' @return A numeric matrix (n_bins × n_files).
 #' @keywords internal
-.query_bigwig_bins <- function(files, bins_gr, nans_to_zeros = TRUE) {
+.query_bigwig_bins <- function(files, bins_gr, nans_to_zeros = TRUE, verbose = FALSE) {
   n_bins  <- length(bins_gr)
   n_files <- length(files)
   score_matrix <- matrix(0, nrow = n_bins, ncol = n_files)
@@ -121,7 +130,11 @@ average_coverage <- function(
     if (is_bigwig) {
       # Use megadepth with the shared bins — fast and already unified
       score_matrix[, i] <- .query_megadepth_bins(
-        file, bins_gr, op = "mean", nans_to_zeros = nans_to_zeros
+        file,
+        bins_gr,
+        op = "mean",
+        nans_to_zeros = nans_to_zeros,
+        verbose = verbose
       )
     } else {
       # Non-BigWig (bedGraph, BED, etc.): import full region then overlap-weight
@@ -229,4 +242,3 @@ average_coverage <- function(
 
   scores
 }
-

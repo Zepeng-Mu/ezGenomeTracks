@@ -120,6 +120,8 @@ df_to_granges <- function(
 #' @param which GRanges object specifying the genomic region to import (default: NULL, import all)
 #' @param n_bins Number of bins used for megadepth BigWig queries.
 #'   Only used for BigWig inputs when `which` is provided. Default: 2000.
+#' @param verbose Logical. If `TRUE`, print megadepth progress output for BigWig
+#'   imports. If `FALSE` (default), suppress routine messages.
 #' @return A tidy data frame
 #' @export
 #' @importFrom rtracklayer import
@@ -133,7 +135,7 @@ df_to_granges <- function(
 #' region <- GRanges("chr1", IRanges(1000000, 2000000))
 #' signal_df <- import_genomic_data("signal.bw", which = region)
 #' }
-import_genomic_data <- function(file, which = NULL, n_bins = 2000L) {
+import_genomic_data <- function(file, which = NULL, n_bins = 2000L, verbose = FALSE) {
   # Handle non-character input (data frames, etc.)
   if (!is.character(file)) {
     # For non-file inputs, just use rtracklayer/granges_to_df conversion
@@ -159,7 +161,8 @@ import_genomic_data <- function(file, which = NULL, n_bins = 2000L) {
           file = file,
           which = which,
           op = "mean",
-          n_bins = n_bins
+          n_bins = n_bins,
+          verbose = verbose
         )
         # Ensure output has score column for consistency
         if (!("score" %in% names(S4Vectors::mcols(gr)))) {

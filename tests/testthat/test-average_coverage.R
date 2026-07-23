@@ -313,6 +313,19 @@ test_that("average_coverage with single bigWig returns its own signal", {
   expect_true(all(is.finite(result$score)))
 })
 
+test_that("average_coverage can silence megadepth progress output", {
+  skip_if_not(bw_available, "bigWig test files not found")
+
+  expect_silent(
+    average_coverage(
+      inputs = bw_files[1],
+      region = bw_region,
+      n_bins = 20,
+      verbose = FALSE
+    )
+  )
+})
+
 test_that("ez_coverage average=TRUE with bigWig character vector produces plot", {
   skip_if_not(bw_available, "bigWig test files not found")
 

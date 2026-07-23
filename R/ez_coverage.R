@@ -102,6 +102,8 @@
 #' @param show_legend Logical. If `TRUE`, displays the legend (default: FALSE)
 #' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
 #'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
+#' @param verbose Logical. If `TRUE`, print megadepth progress output for BigWig
+#'   imports. If `FALSE` (default), suppress routine messages.
 #' @param ... Additional arguments passed to geom_coverage
 #' @return A ggplot2 object
 #' @export
@@ -151,6 +153,7 @@ ez_coverage <- function(
   border = FALSE,
   show_legend = FALSE,
   label_chr = TRUE,
+  verbose = FALSE,
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
   n_bins = 2000L,
@@ -201,7 +204,8 @@ ez_coverage <- function(
         inputs = input,
         region = region,
         n_bins = n_bins,
-        summary_fun = summary_fun
+        summary_fun = summary_fun,
+        verbose = verbose
       )
     } else if (is.list(input) && !is.data.frame(input)) {
       # Named list: each element is an independent track.
@@ -223,7 +227,8 @@ ez_coverage <- function(
             inputs = track_element,
             region = region,
             n_bins = n_bins,
-            summary_fun = summary_fun
+            summary_fun = summary_fun,
+            verbose = verbose
           )
           avg_df$track <- track_name
           track_data_list[[i]] <- avg_df
@@ -232,7 +237,8 @@ ez_coverage <- function(
           single_df <- process_coverage_input(
             track_element,
             region,
-            n_bins = n_bins
+            n_bins = n_bins,
+            verbose = verbose
           )
           single_df$track <- track_name
           track_data_list[[i]] <- single_df
@@ -245,7 +251,8 @@ ez_coverage <- function(
         input,
         region,
         track_labels,
-        n_bins = n_bins
+        n_bins = n_bins,
+        verbose = verbose
       )
     }
   } else {
@@ -254,7 +261,8 @@ ez_coverage <- function(
       input,
       region,
       track_labels,
-      n_bins = n_bins
+      n_bins = n_bins,
+      verbose = verbose
     )
   }
 

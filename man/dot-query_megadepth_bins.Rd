@@ -4,7 +4,13 @@
 \alias{.query_megadepth_bins}
 \title{Query a BigWig file at pre-defined GRanges bins via megadepth}
 \usage{
-.query_megadepth_bins(file, bins_gr, op = "mean", nans_to_zeros = TRUE)
+.query_megadepth_bins(
+  file,
+  bins_gr,
+  op = "mean",
+  nans_to_zeros = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{file}{Path to BigWig file (local or remote URL).}
@@ -14,13 +20,16 @@
 \item{op}{Summarization operation: "mean" (default), "sum", "min", "max".}
 
 \item{nans_to_zeros}{Replace NA/NaN results with 0 (default TRUE).}
+
+\item{verbose}{Logical. If \code{TRUE}, print megadepth progress output.
+If \code{FALSE} (default), suppress routine megadepth messages.}
 }
 \value{
 Numeric vector of length \code{length(bins_gr)}.
 }
 \description{
-Writes \code{bins_gr} directly to a temporary BED file (no re-tiling) and calls
-\code{megadepth::get_coverage()}. Results are aligned back to \code{bins_gr} by start
+Writes \code{bins_gr} directly to a temporary BED file (no re-tiling) and runs
+the \code{megadepth} binary through \code{system2()}. Results are aligned back to \code{bins_gr} by start
 position, so the returned vector always has length \code{length(bins_gr)}.
 Bins with no BigWig coverage receive a score of 0.
 }

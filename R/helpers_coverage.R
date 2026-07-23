@@ -10,6 +10,8 @@
 #' @param track_labels Optional vector of track labels (used for character vector input)
 #' @param n_bins Maximum number of bins used for BigWig queries
 #'   through megadepth (default: 2000).
+#' @param verbose Logical. If `TRUE`, print megadepth progress output for BigWig
+#'   imports. If `FALSE` (default), suppress routine messages.
 #' @return A data frame with standardized columns: seqnames, start, end, score,
 #'   and optionally track and group columns
 #' @export
@@ -38,7 +40,8 @@ process_coverage_input <- function(
   input,
   region,
   track_labels = NULL,
-  n_bins = 2000L
+  n_bins = 2000L,
+  verbose = FALSE
 ) {
   if (methods::is(input, "GRanges")) {
     # Case 0: GRanges input - convert to data frame and process
@@ -70,7 +73,8 @@ process_coverage_input <- function(
         input,
         region,
         name = track_name,
-        n_bins = n_bins
+        n_bins = n_bins,
+        verbose = verbose
       ))
     } else {
       # Multiple files
@@ -85,7 +89,8 @@ process_coverage_input <- function(
           input[i],
           region,
           name = track_name,
-          n_bins = n_bins
+          n_bins = n_bins,
+          verbose = verbose
         )
         track_data$group <- track_name
         track_data_list[[i]] <- track_data
@@ -106,7 +111,8 @@ process_coverage_input <- function(
         processed_data <- process_coverage_input(
           track_element,
           region,
-          n_bins = n_bins
+          n_bins = n_bins,
+          verbose = verbose
         )
         processed_data$track <- track_name
         track_data_list[[i]] <- processed_data
@@ -118,7 +124,8 @@ process_coverage_input <- function(
             track_element,
             region,
             name = track_name,
-            n_bins = n_bins
+            n_bins = n_bins,
+            verbose = verbose
           )
         } else {
           # Multiple files within this track
@@ -128,7 +135,8 @@ process_coverage_input <- function(
               track_element[j],
               region,
               name = paste0(track_name, "_", j),
-              n_bins = n_bins
+              n_bins = n_bins,
+              verbose = verbose
             )
             file_data$track <- track_name
             file_data$group <- paste0(track_name, "_", j)

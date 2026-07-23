@@ -26,9 +26,11 @@ ez_coverage(
   border = FALSE,
   show_legend = FALSE,
   label_chr = TRUE,
+  verbose = FALSE,
   average = FALSE,
   summary_fun = c("mean", "median", "max", "min", "sum"),
   n_bins = 2000L,
+  strand = c("None", "F", "R"),
   ...
 )
 }
@@ -95,6 +97,9 @@ to eliminate white-line rendering artifacts. Only affects \code{type = "area"}.}
 \item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
 (e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
 
+\item{verbose}{Logical. If \code{TRUE}, print megadepth progress output for BigWig
+imports. If \code{FALSE} (default), suppress routine messages.}
+
 \item{average}{Logical. If \code{TRUE}, averages overlapping tracks into a single
 track before plotting. Applies when \code{input} is a character vector of
 multiple file paths (overlapping tracks), or when \code{input} is a named list
@@ -108,6 +113,10 @@ Uses \code{\link[=average_coverage]{average_coverage()}} internally. (default: F
 \item{n_bins}{Maximum number of bins used when reading BigWig
 files via megadepth (default: 2000). Increase for finer detail, decrease
 for faster plotting.}
+
+\item{strand}{Strand to display: \code{"None"} (default, no operation), \code{"F"} (forward,
+no operation), or \code{"R"} (reverse — negates the coverage signal so it plots
+below zero). Useful for creating paired forward/reverse strand tracks.}
 
 \item{...}{Additional arguments passed to geom_coverage}
 }

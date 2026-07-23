@@ -4,7 +4,7 @@
 \alias{.query_bigwig_bins}
 \title{Query BigWig files at shared uniform bins via megadepth}
 \usage{
-.query_bigwig_bins(files, bins_gr, nans_to_zeros = TRUE)
+.query_bigwig_bins(files, bins_gr, nans_to_zeros = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{files}{Character vector of file paths.}
@@ -12,6 +12,8 @@
 \item{bins_gr}{Pre-computed GRanges of uniform bins (shared across all files).}
 
 \item{nans_to_zeros}{Replace NA/NaN with 0.}
+
+\item{verbose}{Logical. If \code{TRUE}, print megadepth progress output.}
 }
 \value{
 A numeric matrix (n_bins × n_files).

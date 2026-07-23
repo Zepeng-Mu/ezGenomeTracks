@@ -4,7 +4,13 @@
 \alias{process_coverage_input}
 \title{Process signal input into standardized data frame}
 \usage{
-process_coverage_input(input, region, track_labels = NULL, n_bins = 2000L)
+process_coverage_input(
+  input,
+  region,
+  track_labels = NULL,
+  n_bins = 2000L,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{input}{A GRanges object, data frame, character vector of file paths, or named list.
@@ -16,6 +22,9 @@ GRanges objects are automatically converted to data frames.}
 
 \item{n_bins}{Maximum number of bins used for BigWig queries
 through megadepth (default: 2000).}
+
+\item{verbose}{Logical. If \code{TRUE}, print megadepth progress output for BigWig
+imports. If \code{FALSE} (default), suppress routine messages.}
 }
 \value{
 A data frame with standardized columns: seqnames, start, end, score,

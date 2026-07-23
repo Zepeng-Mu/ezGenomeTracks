@@ -4,7 +4,13 @@
 \alias{get_single_coverage}
 \title{Extract signal data for a single input element}
 \usage{
-get_single_coverage(input, region, name = NULL, n_bins = 2000L)
+get_single_coverage(
+  input,
+  region,
+  name = NULL,
+  n_bins = 2000L,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{input}{Either a data frame with genomic coordinates or a character string
@@ -16,6 +22,9 @@ specifying the path to a genomic data file (BED, bigWig, GFF, etc.)}
 
 \item{n_bins}{Maximum number of bins used for BigWig queries
 through megadepth (default: 2000).}
+
+\item{verbose}{Logical. If \code{TRUE}, print megadepth progress output for BigWig
+imports. If \code{FALSE} (default), suppress routine messages.}
 }
 \value{
 A data frame containing the filtered genomic data with an optional name column

@@ -4,7 +4,7 @@
 \alias{import_genomic_data}
 \title{Import genomic data from a file into a tidy data frame}
 \usage{
-import_genomic_data(file, which = NULL, n_bins = 2000L)
+import_genomic_data(file, which = NULL, n_bins = 2000L, verbose = FALSE)
 }
 \arguments{
 \item{file}{Path to the genomic data file}
@@ -13,6 +13,9 @@ import_genomic_data(file, which = NULL, n_bins = 2000L)
 
 \item{n_bins}{Number of bins used for megadepth BigWig queries.
 Only used for BigWig inputs when \code{which} is provided. Default: 2000.}
+
+\item{verbose}{Logical. If \code{TRUE}, print megadepth progress output for BigWig
+imports. If \code{FALSE} (default), suppress routine messages.}
 
 \item{format}{File format (default: NULL, auto-detected from file extension)}
 }
