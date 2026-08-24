@@ -29,6 +29,7 @@ ez_gene(
   repel_args = list(),
   border = FALSE,
   label_chr = TRUE,
+  auto_import = TRUE,
   ...
 )
 }
@@ -114,6 +115,10 @@ Default: FALSE}
 
 \item{label_chr}{Logical. If \code{TRUE} (default), labels the x-axis with the chromosome name
 (e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
+
+\item{auto_import}{Logical. If TRUE (default), automatically imports GTF/GFF files
+passed as character file paths. Set to FALSE to disable auto-import and treat
+character input as a literal file path for rtracklayer import. Default: TRUE}
 
 \item{...}{Additional arguments passed to \code{geom_gene()}. Note that \code{color}
 and \code{colour} arguments are ignored; use \code{exon_color}, \code{exon_fill}, and
