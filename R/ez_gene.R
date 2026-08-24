@@ -65,6 +65,9 @@
 #'   Default: FALSE
 #' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
 #'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
+#' @param auto_import Logical. If TRUE (default), automatically imports GTF/GFF files
+#'   passed as character file paths. Set to FALSE to disable auto-import and treat
+#'   character input as a literal file path for rtracklayer import. Default: TRUE
 #' @param ... Additional arguments passed to `geom_gene()`. Note that `color`
 #'   and `colour` arguments are ignored; use `exon_color`, `exon_fill`, and
 #'   `intron_color` instead.
@@ -172,6 +175,7 @@ ez_gene <- function(
   repel_args = list(),
   border = FALSE,
   label_chr = TRUE,
+  auto_import = TRUE,
   ...
 ) {
   # Resolve region from either region string or gene name
@@ -183,6 +187,15 @@ ez_gene <- function(
     extend = extend,
     extend_type = extend_type
   )
+
+  # AUTO-IMPORT GTF FILES: Check if data is a GTF/GFF file path
+  if (is.character(data) && length(data) == 1 && auto_import) {
+    if (grepl("\\.(gtf|gff)(\\.(gz|bz2|xz))?$", data, ignore.case = TRUE)) {
+      # This is a GTF/GFF file; auto-import it
+      data <- import_gtf(data, region = region, verbose = FALSE)
+      # After import, data is now a data frame, so skip to data frame processing below
+    }
+  }
 
   # Match label_style argument
   label_style <- match.arg(label_style)
@@ -229,7 +242,8 @@ ez_gene <- function(
 
   # Process data based on input type
   if (is.character(data) && length(data) == 1) {
-    # GTF/GFF file path
+    # GTF/GFF file path (either auto_import was FALSE or file didn't match .gtf/.gff pattern)
+    # Use rtracklayer directly for non-GTF files or when auto_import is disabled
     gene_gr <- rtracklayer::import(data, which = region_gr)
     gene_data <- process_gene_data(
       gene_gr,
