@@ -19,10 +19,12 @@
 #'   Example: "chr1:1000000-2000000". Either `region` or `gene` (with `gene_db`)
 #'   must be provided.
 #' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
-#'   When provided, the region is automatically determined from the gene coordinates
-#'   in `gene_db`. Either `region` or `gene` must be provided.
-#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter.
-#'   Can be the same as `data` if `data` is also a TxDb.
+#'   When provided, the region is automatically determined from the gene coordinates.
+#'   If `gene_db` is not specified, `data` is used for coordinate lookup (recommended).
+#'   Either `region` or `gene` must be provided.
+#' @param gene_db Optional. TxDb object, GTF/GFF file path, or data frame for gene coordinate
+#'   lookup when using `gene` parameter. If NULL (default), uses `data` for lookup.
+#'   Only required if you want to use a different annotation source than `data`.
 #' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
 #'   auto-detects available OrgDb packages.
 #' @param extend Numeric. Amount to extend the region beyond the gene body when
@@ -178,6 +180,32 @@ ez_gene <- function(
   auto_import = TRUE,
   ...
 ) {
+  # AUTO-IMPORT GTF FILES: Check if data is a GTF/GFF file path
+  if (is.character(data) && length(data) == 1 && auto_import) {
+    if (grepl("\\.(gtf|gff)(\\.(gz|bz2|xz))?$", data, ignore.case = TRUE)) {
+      # This is a GTF/GFF file; auto-import it
+      data <- import_gtf(data, region = region, verbose = FALSE)
+      # After import, data is now a data frame, so skip to data frame processing below
+    }
+  }
+
+  # CONSOLIDATE DATA AND GENE_DB: If gene is provided but gene_db is NULL,
+  # use data as the lookup source (if it's a data frame or can be used as one)
+  if (!is.null(gene) && is.null(gene_db)) {
+    if (is.data.frame(data)) {
+      gene_db <- data
+    } else if (is.character(data) && length(data) == 1) {
+      # If data is still a character file path (non-GTF), we can't use it for gene lookup
+      stop(
+        "When using 'gene' parameter with a file path in 'data', ",
+        "provide 'gene_db' explicitly (TxDb, GTF/GFF path, or data frame from import_gtf())"
+      )
+    } else if (methods::is(data, "TxDb")) {
+      # If data is a TxDb, use it for both gene models and lookup
+      gene_db <- data
+    }
+  }
+
   # Resolve region from either region string or gene name
   region <- .resolve_region(
     region = region,
@@ -187,15 +215,6 @@ ez_gene <- function(
     extend = extend,
     extend_type = extend_type
   )
-
-  # AUTO-IMPORT GTF FILES: Check if data is a GTF/GFF file path
-  if (is.character(data) && length(data) == 1 && auto_import) {
-    if (grepl("\\.(gtf|gff)(\\.(gz|bz2|xz))?$", data, ignore.case = TRUE)) {
-      # This is a GTF/GFF file; auto-import it
-      data <- import_gtf(data, region = region, verbose = FALSE)
-      # After import, data is now a data frame, so skip to data frame processing below
-    }
-  }
 
   # Match label_style argument
   label_style <- match.arg(label_style)
