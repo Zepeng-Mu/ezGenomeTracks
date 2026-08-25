@@ -12,6 +12,48 @@
 ) {
   extend_type <- match.arg(extend_type)
 
+  normalize_gene_db <- function(gene_db, region = NULL) {
+    if (is.character(gene_db) && length(gene_db) == 1) {
+      if (grepl("\\.(gtf|gff)(\\.(gz|bz2|xz))?$", gene_db, ignore.case = TRUE)) {
+        return(import_gtf(gene_db, region = region, verbose = FALSE))
+      }
+      stop(
+        "'gene_db' character input is only supported for GTF/GFF file paths. ",
+        "For other formats, provide a TxDb object or a data frame returned by import_gtf()."
+      )
+    }
+    gene_db
+  }
+
+  gene_to_region_df <- function(gene_name, gene_df, extend, extend_type) {
+    if (!is.data.frame(gene_df)) {
+      stop("'gene_db' must be a TxDb object, GTF/GFF file path, or annotation data frame.")
+    }
+    validate_gtf_df(gene_df)
+    gene_rows <- gene_df[gene_df$type == "gene", , drop = FALSE]
+    if (nrow(gene_rows) == 0) {
+      stop("No rows with type == 'gene' found in 'gene_db' data frame.")
+    }
+    matched <- gene_rows[
+      gene_rows$gene_id == gene_name |
+        (!is.null(gene_rows$gene_name) && gene_rows$gene_name == gene_name),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(matched) == 0) {
+      stop("Gene '", gene_name, "' not found in the provided gene_db data frame.")
+    }
+    target <- matched[which.max(matched$end - matched$start + 1), , drop = FALSE]
+    chr <- as.character(target$seqnames[1])
+    start <- as.numeric(target$start[1])
+    end <- as.numeric(target$end[1])
+    gene_len <- end - start + 1
+    extension <- if (extend_type == "proportion") round(gene_len * extend) else round(extend)
+    extended_start <- max(1, start - extension)
+    extended_end <- end + extension
+    paste0(chr, ":", extended_start, "-", extended_end)
+  }
+
   # Case 1: region provided directly
   if (!is.null(region)) {
     if (!is.null(gene)) {
@@ -26,9 +68,18 @@
   if (!is.null(gene)) {
     if (is.null(gene_db)) {
       stop(
-        "When using 'gene' parameter, 'gene_db' (TxDb object) must be provided ",
-        "for coordinate lookup."
+        "When using 'gene' parameter, provide 'gene_db' as a TxDb object, ",
+        "a GTF/GFF file path, or a data frame from import_gtf()."
       )
+    }
+    gene_db <- normalize_gene_db(gene_db, region = NULL)
+    if (is.data.frame(gene_db)) {
+      return(gene_to_region_df(
+        gene_name = gene,
+        gene_df = gene_db,
+        extend = extend,
+        extend_type = extend_type
+      ))
     }
     return(gene_to_region(
       gene_name = gene,
