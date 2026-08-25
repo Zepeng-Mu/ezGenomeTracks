@@ -278,8 +278,12 @@ ez_gene <- function(
     }
     gene_data <- extract_txdb_data(input, region_gr)
   } else if (is.data.frame(input)) {
-    # Data frame - use as-is
-    gene_data <- input
+    # Data frame - filter to region
+    gene_data <- input[
+      input$seqnames == as.character(GenomicRanges::seqnames(region_gr)) &
+        input$end >= region_limits[1] &
+        input$start <= region_limits[2],
+    ]
   } else {
     stop("input must be a file path, TxDb object, or data frame")
   }
@@ -628,7 +632,7 @@ ez_gene <- function(
     p <- p +
       ggplot2::scale_y_discrete(
         expand = c(0.1, 0.1),
-        drop = FALSE
+        drop = TRUE
       ) +
       scale_x_genome_region(region) +
       ez_gene_theme() +
