@@ -104,10 +104,12 @@
 #' @param region Genomic region to display (e.g., "chr1:1000000-2000000").
 #'   Either `region` or `gene` (with `gene_db`) must be provided.
 #' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
-#'   When provided, the region is automatically determined from the gene coordinates
-#'   in `gene_db`. Either `region` or `gene` must be provided.
-#' @param gene_db TxDb object for gene coordinate lookup when using `gene` parameter
-#'   (e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).
+#'   When provided, the region is automatically determined from the gene coordinates.
+#'   If `gene_db` is not specified, uses a data frame from `input` if available (recommended).
+#'   Either `region` or `gene` must be provided.
+#' @param gene_db Optional. TxDb object, GTF/GFF file path, or data frame for gene coordinate
+#'   lookup when using `gene` parameter. If NULL (default) and `input` is a data frame,
+#'   uses `input` for lookup. Only required if `input` is not a data frame annotation.
 #' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
 #'   auto-detects available OrgDb packages.
 #' @param extend Numeric. Amount to extend the region beyond the gene body when
@@ -211,6 +213,20 @@ ez_coverage <- function(
   strand = c("None", "F", "R"),
   ...
 ) {
+  # CONSOLIDATE INPUT AND GENE_DB: If gene is provided but gene_db is NULL,
+  # use input as the lookup source (if it's a data frame)
+  if (!is.null(gene) && is.null(gene_db)) {
+    if (is.data.frame(input)) {
+      gene_db <- input
+    } else if (is.list(input) && !is.data.frame(input)) {
+      # If input is a named list, can't auto-use it for gene lookup
+      stop(
+        "When using 'gene' parameter with a list in 'input', ",
+        "provide 'gene_db' explicitly (TxDb, GTF/GFF path, or data frame from import_gtf())"
+      )
+    }
+  }
+
   # Resolve region from either region string or gene name
   region <- .resolve_region(
     region = region,

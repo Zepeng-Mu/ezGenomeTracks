@@ -41,11 +41,13 @@ ez_coverage(
 Either \code{region} or \code{gene} (with \code{gene_db}) must be provided.}
 
 \item{gene}{Gene name/symbol to look up (e.g., "PTPRC", "TP53").
-When provided, the region is automatically determined from the gene coordinates
-in \code{gene_db}. Either \code{region} or \code{gene} must be provided.}
+When provided, the region is automatically determined from the gene coordinates.
+If \code{gene_db} is not specified, uses a data frame from \code{input} if available (recommended).
+Either \code{region} or \code{gene} must be provided.}
 
-\item{gene_db}{TxDb object for gene coordinate lookup when using \code{gene} parameter
-(e.g., TxDb.Hsapiens.UCSC.hg38.knownGene).}
+\item{gene_db}{Optional. TxDb object, GTF/GFF file path, or data frame for gene coordinate
+lookup when using \code{gene} parameter. If NULL (default) and \code{input} is a data frame,
+uses \code{input} for lookup. Only required if \code{input} is not a data frame annotation.}
 
 \item{org_db}{Optional OrgDb object for gene symbol mapping. If NULL (default),
 auto-detects available OrgDb packages.}
