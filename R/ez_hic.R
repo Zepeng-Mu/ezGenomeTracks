@@ -80,7 +80,7 @@
 #' ez_hic(hic_data, gene = "PTPRC", gene_db = TxDb.Hsapiens.UCSC.hg38.knownGene)
 #' }
 ez_hic <- function(
-  data,
+  input,
   region = NULL,
   gene = NULL,
   gene_db = NULL,
@@ -116,7 +116,7 @@ ez_hic <- function(
   # Process the input data
   upper_triangle <- (style == "triangle")
   hic_df <- process_hic_data(
-    data = data,
+    data = input,
     region = region,
     resolution = resolution,
     upper_triangle = upper_triangle

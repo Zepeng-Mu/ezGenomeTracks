@@ -11,7 +11,7 @@
 #' uses `"darkgreen"` and minus strand uses `"orange2"`. To use uniform colors
 #' instead, explicitly set `exon_color`, `exon_fill`, and `intron_color`.
 #'
-#' @param data Input data source, which can be:
+#' @param input Input data source, which can be:
 #'   - A file path to a GTF/GFF file
 #'   - A TxDb object from the GenomicFeatures package
 #'   - A data frame with gene annotation data
@@ -20,11 +20,11 @@
 #'   must be provided.
 #' @param gene Gene name/symbol to look up (e.g., "PTPRC", "TP53").
 #'   When provided, the region is automatically determined from the gene coordinates.
-#'   If `gene_db` is not specified, `data` is used for coordinate lookup (recommended).
+#'   If `gene_db` is not specified, `input` is used for coordinate lookup (recommended).
 #'   Either `region` or `gene` must be provided.
 #' @param gene_db Optional. TxDb object, GTF/GFF file path, or data frame for gene coordinate
-#'   lookup when using `gene` parameter. If NULL (default), uses `data` for lookup.
-#'   Only required if you want to use a different annotation source than `data`.
+#'   lookup when using `gene` parameter. If NULL (default), uses `input` for lookup.
+#'   Only required if you want to use a different annotation source than `input`.
 #' @param org_db Optional OrgDb object for gene symbol mapping. If NULL (default),
 #'   auto-detects available OrgDb packages.
 #' @param extend Numeric. Amount to extend the region beyond the gene body when
@@ -56,7 +56,7 @@
 #'   When set, labels are filtered based on label_priority.
 #' @param label_priority Priority criterion for filtering labels when max_labels is set.
 #'   Options: "length" (default, prioritizes longer genes), "name" (alphabetical),
-#'   or a column name in the data to sort by.
+#'   or a column name in the input to sort by.
 #' @param repel_args Named list of additional arguments passed to geom_text_repel()
 #'   when label_style = "repel" or "auto" (with ggrepel installed). Default behavior
 #'   uses horizontal-only repositioning (`direction = "x"`) with no connecting lines
@@ -78,7 +78,7 @@
 #'
 #' @details
 #' The function automatically processes different input types:
-#' - For GTF/GFF files: Uses rtracklayer to import and process the data
+#' - For GTF/GFF files: Uses rtracklayer to import and process the input
 #' - For TxDb objects: Extracts gene models using GenomicFeatures
 #' - For data frames: Expects columns for chromosome, start, end, strand, and type
 #'
@@ -153,7 +153,7 @@
 #' ez_gene(txdb, gene = "PTPRC", gene_db = txdb)
 #' }
 ez_gene <- function(
-  data,
+  input,
   region = NULL,
   gene = NULL,
   gene_db = NULL,
@@ -180,29 +180,29 @@ ez_gene <- function(
   auto_import = TRUE,
   ...
 ) {
-  # AUTO-IMPORT GTF FILES: Check if data is a GTF/GFF file path
-  if (is.character(data) && length(data) == 1 && auto_import) {
-    if (grepl("\\.(gtf|gff)(\\.(gz|bz2|xz))?$", data, ignore.case = TRUE)) {
+  # AUTO-IMPORT GTF FILES: Check if input is a GTF/GFF file path
+  if (is.character(input) && length(input) == 1 && auto_import) {
+    if (grepl("\\.(gtf|gff)(\\.(gz|bz2|xz))?$", input, ignore.case = TRUE)) {
       # This is a GTF/GFF file; auto-import it
-      data <- import_gtf(data, region = region, verbose = FALSE)
-      # After import, data is now a data frame, so skip to data frame processing below
+      input <- import_gtf(input, region = region, verbose = FALSE)
+      # After import, input is now a data frame, so skip to data frame processing below
     }
   }
 
   # CONSOLIDATE DATA AND GENE_DB: If gene is provided but gene_db is NULL,
-  # use data as the lookup source (if it's a data frame or can be used as one)
+  # use input as the lookup source (if it's a data frame or can be used as one)
   if (!is.null(gene) && is.null(gene_db)) {
-    if (is.data.frame(data)) {
-      gene_db <- data
-    } else if (is.character(data) && length(data) == 1) {
-      # If data is still a character file path (non-GTF), we can't use it for gene lookup
+    if (is.data.frame(input)) {
+      gene_db <- input
+    } else if (is.character(input) && length(input) == 1) {
+      # If input is still a character file path (non-GTF), we can't use it for gene lookup
       stop(
-        "When using 'gene' parameter with a file path in 'data', ",
+        "When using 'gene' parameter with a file path in 'input', ",
         "provide 'gene_db' explicitly (TxDb, GTF/GFF path, or data frame from import_gtf())"
       )
-    } else if (methods::is(data, "TxDb")) {
-      # If data is a TxDb, use it for both gene models and lookup
-      gene_db <- data
+    } else if (methods::is(input, "TxDb")) {
+      # If input is a TxDb, use it for both gene models and lookup
+      gene_db <- input
     }
   }
 
@@ -259,29 +259,29 @@ ez_gene <- function(
     GenomicRanges::end(region_gr)
   )
 
-  # Process data based on input type
-  if (is.character(data) && length(data) == 1) {
+  # Process input based on input type
+  if (is.character(input) && length(input) == 1) {
     # GTF/GFF file path (either auto_import was FALSE or file didn't match .gtf/.gff pattern)
     # Use rtracklayer directly for non-GTF files or when auto_import is disabled
-    gene_gr <- rtracklayer::import(data, which = region_gr)
+    gene_gr <- rtracklayer::import(input, which = region_gr)
     gene_data <- process_gene_data(
       gene_gr,
       gene_id = gene_id,
       gene_name = gene_name
     )
-  } else if (methods::is(data, "TxDb")) {
+  } else if (methods::is(input, "TxDb")) {
     # TxDb object
     if (!requireNamespace("GenomicFeatures", quietly = TRUE)) {
       stop(
         "Package 'GenomicFeatures' is required for TxDb support. Install it with: BiocManager::install('GenomicFeatures')"
       )
     }
-    gene_data <- extract_txdb_data(data, region_gr)
-  } else if (is.data.frame(data)) {
+    gene_data <- extract_txdb_data(input, region_gr)
+  } else if (is.data.frame(input)) {
     # Data frame - use as-is
-    gene_data <- data
+    gene_data <- input
   } else {
-    stop("data must be a file path, TxDb object, or data frame")
+    stop("input must be a file path, TxDb object, or data frame")
   }
 
   # Ensure gene body rows exist for each gene
