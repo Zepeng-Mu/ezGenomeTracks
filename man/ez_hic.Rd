@@ -5,7 +5,7 @@
 \title{Easy Hi-C track visualization}
 \usage{
 ez_hic(
-  data,
+  input,
   region = NULL,
   gene = NULL,
   gene_db = NULL,
@@ -27,13 +27,6 @@ ez_hic(
 )
 }
 \arguments{
-\item{data}{Input data. Can be:
-\itemize{
-\item A matrix: Dense contact matrix
-\item A data frame: Sparse format with (pos1, pos2, score) or (bin1, bin2, score)
-\item A file path: Tab-delimited matrix file
-}}
-
 \item{region}{Genomic region to display (e.g., "chr1:1000000-2000000").
 Either \code{region} or \code{gene} (with \code{gene_db}) must be provided.}
 
@@ -78,6 +71,13 @@ Hi-C layer for better performance with large matrices. Default: FALSE}
 (e.g., "Chr1"). Set to \code{FALSE} to suppress the x-axis label.}
 
 \item{...}{Additional arguments passed to geom_hic or geom_hic_triangle}
+
+\item{data}{Input data. Can be:
+\itemize{
+\item A matrix: Dense contact matrix
+\item A data frame: Sparse format with (pos1, pos2, score) or (bin1, bin2, score)
+\item A file path: Tab-delimited matrix file
+}}
 }
 \value{
 A ggplot2 object

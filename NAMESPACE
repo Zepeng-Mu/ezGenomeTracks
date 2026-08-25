@@ -167,10 +167,7 @@ importFrom(grid,
   unit
 )
 importFrom(methods,is)
-importFrom(rlang,
-  .data,
-  `%||%`
-)
+importFrom(rlang,.data)
 importFrom(rtracklayer,import)
 importFrom(scales,
   label_number,

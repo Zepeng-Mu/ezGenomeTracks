@@ -19,7 +19,6 @@
 #' @return A ggplot2 layer that can be added to a plot.
 #' @export
 #' @importFrom ggplot2 GeomRect GeomTile GeomPath layer aes ggproto Geom
-#' @importFrom rlang `%||%`
 #'
 #' @examples
 #' \dontrun{

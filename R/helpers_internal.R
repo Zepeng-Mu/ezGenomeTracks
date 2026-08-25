@@ -1,4 +1,6 @@
 # ezGenomeTracks - Helper functions (split from helpers.R)
+
+`%||%` <- function(x, y) if (is.null(x)) y else x
 detect_column <- function(data, candidates, param_name, required = TRUE) {
   for (col in candidates) {
     if (col %in% colnames(data)) return(col)

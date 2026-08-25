@@ -5,7 +5,7 @@
 \title{Easy gene track visualization}
 \usage{
 ez_gene(
-  data,
+  input,
   region = NULL,
   gene = NULL,
   gene_db = NULL,
@@ -34,7 +34,7 @@ ez_gene(
 )
 }
 \arguments{
-\item{data}{Input data source, which can be:
+\item{input}{Input data source, which can be:
 \itemize{
 \item A file path to a GTF/GFF file
 \item A TxDb object from the GenomicFeatures package
@@ -47,12 +47,12 @@ must be provided.}
 
 \item{gene}{Gene name/symbol to look up (e.g., "PTPRC", "TP53").
 When provided, the region is automatically determined from the gene coordinates.
-If \code{gene_db} is not specified, \code{data} is used for coordinate lookup (recommended).
+If \code{gene_db} is not specified, \code{input} is used for coordinate lookup (recommended).
 Either \code{region} or \code{gene} must be provided.}
 
 \item{gene_db}{Optional. TxDb object, GTF/GFF file path, or data frame for gene coordinate
-lookup when using \code{gene} parameter. If NULL (default), uses \code{data} for lookup.
-Only required if you want to use a different annotation source than \code{data}.}
+lookup when using \code{gene} parameter. If NULL (default), uses \code{input} for lookup.
+Only required if you want to use a different annotation source than \code{input}.}
 
 \item{org_db}{Optional OrgDb object for gene symbol mapping. If NULL (default),
 auto-detects available OrgDb packages.}
@@ -103,7 +103,7 @@ When set, labels are filtered based on label_priority.}
 
 \item{label_priority}{Priority criterion for filtering labels when max_labels is set.
 Options: "length" (default, prioritizes longer genes), "name" (alphabetical),
-or a column name in the data to sort by.}
+or a column name in the input to sort by.}
 
 \item{repel_args}{Named list of additional arguments passed to geom_text_repel()
 when label_style = "repel" or "auto" (with ggrepel installed). Default behavior
@@ -142,7 +142,7 @@ instead, explicitly set \code{exon_color}, \code{exon_fill}, and \code{intron_co
 \details{
 The function automatically processes different input types:
 \itemize{
-\item For GTF/GFF files: Uses rtracklayer to import and process the data
+\item For GTF/GFF files: Uses rtracklayer to import and process the input
 \item For TxDb objects: Extracts gene models using GenomicFeatures
 \item For data frames: Expects columns for chromosome, start, end, strand, and type
 }

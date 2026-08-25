@@ -54,6 +54,7 @@ reference:
   - process_manhattan_input
   - process_hic_data
   - import_genomic_data
+  - import_gtf
   - interaction_track
 
 - title: "Themes and Scales"

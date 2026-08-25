@@ -22,7 +22,7 @@ Imports:
     S4Vectors,
     methods,
     dplyr,
-    rlang,
+    rlang (>= 1.1.7),
     scales,
     stringr,
     AnnotationDbi,
