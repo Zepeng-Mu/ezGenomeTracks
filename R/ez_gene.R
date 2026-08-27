@@ -67,9 +67,9 @@
 #'   Default: FALSE
 #' @param label_chr Logical. If `TRUE` (default), labels the x-axis with the chromosome name
 #'   (e.g., "Chr1"). Set to `FALSE` to suppress the x-axis label.
-#' @param auto_import Logical. If TRUE (default), automatically imports GTF/GFF files
-#'   passed as character file paths. Set to FALSE to disable auto-import and treat
-#'   character input as a literal file path for rtracklayer import. Default: TRUE
+#' @param auto_import Deprecated. GTF/GFF file paths are always imported via
+#'   [import_gtf()] to provide a standardized data-frame schema. This parameter
+#'   is retained for backward compatibility and is ignored.
 #' @param ... Additional arguments passed to `geom_gene()`. Note that `color`
 #'   and `colour` arguments are ignored; use `exon_color`, `exon_fill`, and
 #'   `intron_color` instead.
@@ -78,7 +78,7 @@
 #'
 #' @details
 #' The function automatically processes different input types:
-#' - For GTF/GFF files: Uses rtracklayer to import and process the input
+#' - For GTF/GFF files: Uses [import_gtf()] to create a standardized annotation data frame
 #' - For TxDb objects: Extracts gene models using GenomicFeatures
 #' - For data frames: Expects columns for chromosome, start, end, strand, and type
 #'
@@ -180,12 +180,10 @@ ez_gene <- function(
   auto_import = TRUE,
   ...
 ) {
-  # AUTO-IMPORT GTF FILES: Check if input is a GTF/GFF file path
-  if (is.character(input) && length(input) == 1 && auto_import) {
+  # Consolidated GTF/GFF path: always standardize through import_gtf()
+  if (is.character(input) && length(input) == 1) {
     if (grepl("\\.(gtf|gff)(\\.(gz|bz2|xz))?$", input, ignore.case = TRUE)) {
-      # This is a GTF/GFF file; auto-import it
       input <- import_gtf(input, region = region, verbose = FALSE)
-      # After import, input is now a data frame, so skip to data frame processing below
     }
   }
 
@@ -261,8 +259,7 @@ ez_gene <- function(
 
   # Process input based on input type
   if (is.character(input) && length(input) == 1) {
-    # GTF/GFF file path (either auto_import was FALSE or file didn't match .gtf/.gff pattern)
-    # Use rtracklayer directly for non-GTF files or when auto_import is disabled
+    # Non-GTF file path: use generic importer and convert downstream
     gene_gr <- rtracklayer::import(input, which = region_gr)
     gene_data <- process_gene_data(
       gene_gr,
