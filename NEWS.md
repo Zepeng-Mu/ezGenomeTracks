@@ -1,3 +1,12 @@
+# ezGenomeTracks 0.0.15
+
+## Changes
+
+* Consolidated GTF/GFF loading in `ez_gene()`:
+  - GTF/GFF file paths are now standardized through `import_gtf()` to produce a consistent data-frame schema.
+  - Retained direct `rtracklayer::import()` handling only for non-GTF generic file paths.
+  - Updated `ez_gene()` documentation to reflect the canonical `import_gtf()` pathway and deprecate `auto_import` behavior.
+
 # ezGenomeTracks (development version)
 
 ## Major Changes
